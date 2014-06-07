@@ -3,6 +3,7 @@
 #include "opencvbook.cpp"
 #include "Line.h"
 #include "Chessboard.h"
+#include "preprocess.h"
 #include <vector>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -35,17 +36,18 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
 
-    //double duration = static_cast<double>(cv::getTickCount());
+    double duration = static_cast<double>(cv::getTickCount());
 
-    std::cout << "Button 2" << std::endl;
-
+    std::vector<Line> result;
+    Preprocess prep = Preprocess();
+    prep.detectLines(image, result);
 
     //cv::namedWindow("Processed image");
     //cv::imshow("Processed image", result);
 
-    //duration = static_cast<double>(cv::getTickCount()) - duration;
-    //duration = duration / cv::getTickFrequency(); // get elapsed time
-    //std::cout << "Duration: " << duration << std::endl;
+    duration = static_cast<double>(cv::getTickCount()) - duration;
+    duration = duration / cv::getTickFrequency(); // get elapsed time
+    std::cout << "Duration: " << duration << std::endl;
 
     // EMBEDD IMAGE IN GUI (NOT WORKING)
     // Convert to QImage to be able to display
