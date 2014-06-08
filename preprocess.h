@@ -8,7 +8,7 @@ class Preprocess
 {
 public:
     Preprocess();
-    void detectLines(cv::Mat&, std::vector<Line>&);
+    void getLines(cv::Mat&, cv::Mat&, std::vector<Line>&);
 
     int houghThreshold;
     int minLineLength;

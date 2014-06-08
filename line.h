@@ -11,6 +11,8 @@ public:
     Line(std::vector<cv::Point>);
     Line(cv::Point, cv::Point);
     int Intersection(Line&, cv::Point&);
+    static void Intersections(std::vector<Line>&, std::vector<cv::Point>&);
+    int ylookup(int);
 
     std::vector<cv::Point> points;
     double yIntercept;

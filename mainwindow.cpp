@@ -29,25 +29,42 @@ void MainWindow::on_pushButton_clicked()
     if (image.data){
         ui->pushButton_2->setEnabled(true);
     }
-    cv::namedWindow("Original Image");
-    cv::imshow("Original Image", image);
+    //cv::namedWindow("Original Image");
+    //cv::imshow("Original Image", image);
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
 
-    double duration = static_cast<double>(cv::getTickCount());
-
-    std::vector<Line> result;
+    std::vector<Line> houghlines;
+    cv::Mat imWithLines;
     Preprocess prep = Preprocess();
-    prep.detectLines(image, result);
+    prep.getLines(image, imWithLines, houghlines);
 
-    //cv::namedWindow("Processed image");
-    //cv::imshow("Processed image", result);
+    std::vector<cv::Point> points;
+    Line::Intersections(houghlines, points);
 
-    duration = static_cast<double>(cv::getTickCount()) - duration;
-    duration = duration / cv::getTickFrequency(); // get elapsed time
-    std::cout << "Duration: " << duration << std::endl;
+    std::cout << "Finished" << std::endl;
+
+    cv::Mat img_rgb(imWithLines.size(), CV_8UC3);
+    cvtColor(imWithLines, img_rgb, CV_GRAY2RGB);
+
+    for( size_t i = 0; i < houghlines.size(); i++ )
+    {
+        std::vector<cv::Point> l = houghlines.at(i).points;
+        cv::line(img_rgb, l[0], l[1], cv::Scalar(255,0,0), 2, CV_AA);
+    }
+
+    for (size_t i=0; i<points.size();i++)
+        cv::circle(img_rgb, points.at(i),3,cv::Scalar(0,255,0),2);
+
+    cv::imshow("Intersections", img_rgb);
+    cv::waitKey(0);
+
+    //double duration = static_cast<double>(cv::getTickCount());
+    //duration = static_cast<double>(cv::getTickCount()) - duration;
+    //duration = duration / cv::getTickFrequency(); // get elapsed time
+    //std::cout << "Duration: " << duration << std::endl;
 
     // EMBEDD IMAGE IN GUI (NOT WORKING)
     // Convert to QImage to be able to display

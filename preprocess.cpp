@@ -10,11 +10,10 @@ Preprocess::Preprocess()
     maxLineGap = 139;
 }
 
-void Preprocess::detectLines(cv::Mat& image, std::vector<Line>& lines){
+void Preprocess::getLines(cv::Mat& image, cv::Mat& dst, std::vector<Line>& lines){
     std::cout << "preprocess..." << std::endl;
-    cv::Mat tmp;
-    edgeDetection(image, tmp);
-    lineDetection(tmp, lines);
+    edgeDetection(image, dst);
+    lineDetection(dst, lines);
 }
 
 void Preprocess::edgeDetection(cv::Mat& src, cv::Mat& dst){
@@ -39,6 +38,7 @@ void Preprocess::lineDetection(cv::Mat& src, std::vector<Line>& lines)
         lines.push_back(l);
     }
     /// Show the result
+    /*
     for( size_t i = 0; i < houghlines.size(); i++ )
     {
         cv::Vec4i l = houghlines[i];
@@ -46,6 +46,8 @@ void Preprocess::lineDetection(cv::Mat& src, std::vector<Line>& lines)
     }
 
     cv::imshow("Probabilistic Hough", src);
-    cv::waitKey();
+    cv::waitKey(0);
+    */
+
 }
 
