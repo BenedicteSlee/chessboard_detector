@@ -4,7 +4,11 @@
 #include "Line.h"
 #include "Chessboard.h"
 #include "preprocess.h"
+#include "boarddetector.h"
+#include "cvutils.h"
+#include "typedefs.h"
 #include <vector>
+#include <numeric>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -36,45 +40,71 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
 
+    // Find houghlines
     std::vector<Line> houghlines;
     cv::Mat imWithLines;
-    Preprocess prep = Preprocess();
-    prep.getLines(image, imWithLines, houghlines);
+    Preprocess prep = Preprocess(image);
+    prep.getLines(houghlines);
 
-    std::vector<cv::Point> points;
-    Line::Intersections(houghlines, points);
+    // chessboard detector
+    BoardDetector cbd = BoardDetector(image, houghlines);
 
-    std::cout << "Finished" << std::endl;
+    // plot possible squares
+    Squares possibleSquares = cbd.getPossibleSquares();
 
+    cv::RNG rng = cv::RNG(1234);
+    for (size_t i = 0; i < possibleSquares.size(); ++i) {
+        cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
+        cv::fillConvexPoly(image, possibleSquares.at(i).getCorners(), col);
+        cv::imshow("polys", image);
+        cv::waitKey(0);
+    }
+
+    // convert to rgb
     cv::Mat img_rgb(imWithLines.size(), CV_8UC3);
-    cvtColor(imWithLines, img_rgb, CV_GRAY2RGB);
+    //cvtColor(imWithLines, img_rgb, CV_GRAY2RGB);
+    img_rgb = image;
 
+    cv::imshow("polys", image);
+    cv::waitKey(0);
+
+    // add lines to image
     for( size_t i = 0; i < houghlines.size(); i++ )
     {
         std::vector<cv::Point> l = houghlines.at(i).points;
         cv::line(img_rgb, l[0], l[1], cv::Scalar(255,0,0), 2, CV_AA);
     }
 
-    for (size_t i=0; i<points.size();i++)
-        cv::circle(img_rgb, points.at(i),3,cv::Scalar(0,255,0),2);
+    // find intersections
+    std::vector<cv::Point> points, newpoints;
+    cv::Point limits(img_rgb.size[1], img_rgb.size[0]);
+    std::vector<double> distances;
 
+    Line::Intersections(houghlines, points, limits);
+    Line::RemoveDuplicateIntersections(points,newpoints, distances);
+
+    //std::cout << accumulate(distances.begin(), distances.end(), 0.0) / distances.size() << std::endl;
+
+    // add lines to image
+    for( size_t i = 0; i < houghlines.size(); i++ )
+    {
+        std::vector<cv::Point> l = houghlines.at(i).points;
+        cv::line(img_rgb, l[0], l[1], cv::Scalar(255,0,0), 1, CV_AA);
+    }
+
+    // add circles to image
+    //cv::RNG rng = cv::RNG(1234);
+    cv::Scalar col = cv::Scalar(0,255,0);
+    for (size_t i=0; i<newpoints.size();i++){
+        //cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
+        cv::circle(img_rgb, newpoints.at(i),5, col,1);
+        //cv::imshow("Intersections", img_rgb);
+        //std::cout << newpoints.at(i) << std::endl;
+        //cv::waitKey(2);
+    }
     cv::imshow("Intersections", img_rgb);
-    cv::waitKey(0);
+    cv::destroyAllWindows();
 
-    //double duration = static_cast<double>(cv::getTickCount());
-    //duration = static_cast<double>(cv::getTickCount()) - duration;
-    //duration = duration / cv::getTickFrequency(); // get elapsed time
-    //std::cout << "Duration: " << duration << std::endl;
-
-    // EMBEDD IMAGE IN GUI (NOT WORKING)
-    // Convert to QImage to be able to display
-    // cv::cvtColor(image,image, CV_BayerRG2RGB);
-    //QImage img = QImage((const unsigned char*)(image.data),image.cols,image.rows,QImage::Format_RGB888);
-
-    // Display on lable
-    //ui->label->setPixmap(QPixmap::fromImage(img));
-    // Resize label to fit image
-    //ui->label->resize(ui->label->pixmap()->size());
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -83,5 +113,4 @@ void MainWindow::on_pushButton_3_clicked()
     vec.push_back(1);
     vec.push_back(2);
     std::cout << vec[0] << "," << vec[1] << std::endl;
-
 }

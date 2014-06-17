@@ -18,21 +18,28 @@ SOURCES += main.cpp\
     cvutils.cpp \
     Line.cpp \
     Chessboard.cpp \
-    preprocess.cpp
+    preprocess.cpp \
+    boarddetector.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
     Chessboard.h \
-    preprocess.h
+    preprocess.h \
+    boarddetector.h \
+    cvutils.h \
+    typedefs.h
 
 FORMS    += mainwindow.ui
 
-INCLUDEPATH += /usr/local/include/
+INCLUDEPATH += /usr/local/Cellar/opencv/2.4.8.2/include/ \
+    /usr/local/include/
 LIBS += -L/usr/local/lib \
      -lopencv_core \
      -lopencv_imgproc \
      -lopencv_features2d\
-     -lopencv_highgui
+     -lopencv_highgui \
+     -lboost_math_c99 \
+
 
 SUBDIRS += \
     tests/tests.pro \

@@ -1,7 +1,10 @@
 #ifndef CHESSBOARD_H
 #define CHESSBOARD_H
+
 #include <opencv2/opencv.hpp>
 #include <vector>
+
+#include "cvutils.h"
 #include "Line.h"
 
 class Square
@@ -24,8 +27,6 @@ protected:
 
 private:
     std::vector<cv::Point> corners;
-
-
 };
 
 class Chessboard : public Square
@@ -36,7 +37,5 @@ public:
     Square& at(int, int);
     std::vector<Square> squares;
 };
-
-
 
 #endif // CHESSBOARD_H

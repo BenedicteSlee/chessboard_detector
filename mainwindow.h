@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <opencv2/opencv.hpp>
+#include "Line.h"
+#include "chessboard.h"
+
 
 namespace Ui {
 class MainWindow;

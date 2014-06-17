@@ -40,14 +40,6 @@ void Preprocess::lineDetection(cv::Mat& src)
         lines.push_back(l);
     }
 
-    int cols = image.cols;
-    int rows = image.rows;
-
-    Square frame = Square(cv::Point(0,0), cv::Point(cols, 0), cv::Point(cols, rows), cv::Point(0,rows));
-
-    Points frameintersections;
-    Line::Intersections(frame.borders, frameintersections, cv::Point(cols,rows));
-
     int i = 1;
 
 

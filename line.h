@@ -3,6 +3,8 @@
 
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include "cvutils.h"
+#include "typedefs.h"
 
 class Line
 {
@@ -11,7 +13,11 @@ public:
     Line(std::vector<cv::Point>);
     Line(cv::Point, cv::Point);
     int Intersection(Line&, cv::Point&);
-    static void Intersections(std::vector<Line>&, std::vector<cv::Point>&);
+    static void Intersections(std::vector<Line>& lines, std::vector<cv::Point>& intersections, cv::Point limits); //TODO make own class called Lines with these methods?
+    static void RemoveDuplicateIntersections(std::vector<cv::Point>&, std::vector<cv::Point>&, std::vector<double>&);
+
+    void FrameIntersections(const cv::Mat& image, Points frameintersections);
+
     int ylookup(int);
 
     std::vector<cv::Point> points;
@@ -22,7 +28,7 @@ private:
     double x1, y1, x2, y2;
     void calcSlope();
     void calcIntercept();
-
 };
+
 
 #endif // LINE_H

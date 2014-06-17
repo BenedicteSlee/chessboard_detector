@@ -1,17 +1,40 @@
-#ifndef CVUTILS_CPP
-#define CVUTILS_CPP
-
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <fstream>
+#include <math.h>
+#include "cvutils.h"
 
 using namespace cv;
 using namespace std;
 
-namespace utils {
+//double duration = static_cast<double>(cv::getTickCount());
+//duration = static_cast<double>(cv::getTickCount()) - duration;
+//duration = duration / cv::getTickFrequency(); // get elapsed time
+//std::cout << "Duration: " << duration << std::endl;
 
-void PrintMatToConsole(Mat& mat, int lastRow, int lastCol)
+void cvutils::PrintJpg(cv::Mat& img, const std::string& filename, int quality){
+    std::vector<int> imwriteparams;
+    imwriteparams.push_back(CV_IMWRITE_JPEG_QUALITY);
+    imwriteparams.push_back(quality);
+    cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/images/"+filename+".jpg",img, imwriteparams);
+}
+
+cv::Point cvutils::MeanPoint(Points points){
+    std::vector<int> xvals(points.size());
+    std::vector<int> yvals(points.size());
+
+    for (size_t i=0;i<points.size();i++){
+        xvals[i] = points[i].x;
+        yvals[i] = points[i].y;
+    }
+
+    double meanx =  cv::mean(xvals)[0];
+    double meany = cv::mean(yvals)[0];
+    return cv::Point(meanx,meany);
+}
+
+void cvutils::PrintMatToConsole(Mat& mat, int lastRow, int lastCol)
 {
         if (lastRow == 0)
             lastRow = mat.rows;
@@ -28,7 +51,7 @@ void PrintMatToConsole(Mat& mat, int lastRow, int lastCol)
         }
 }
 
-void PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName){
+void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName){
         if (lastRow == 0)
             lastRow = mat.rows;
         if (lastCol == 0)
@@ -56,6 +79,6 @@ void PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName){
         }
 
 }
-}
 
-#endif
+
+

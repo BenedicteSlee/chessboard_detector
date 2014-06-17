@@ -3,20 +3,24 @@
 
 #include <opencv2/opencv.hpp>
 #include "Line.h"
+#include "cvutils.h"
+#include "typedefs.h"
 
 class Preprocess
 {
 public:
-    Preprocess();
-    void getLines(cv::Mat&, cv::Mat&, std::vector<Line>&);
+    Preprocess(cv::Mat&);
+    void getLines(Lines&);
 
     int houghThreshold;
     int minLineLength;
     int maxLineGap;
 
 private:
-    void edgeDetection(cv::Mat&, cv::Mat&);
-    void lineDetection(cv::Mat&, std::vector<Line>&);
+    Lines lines;
+    cv::Mat image;
+    void edgeDetection(cv::Mat&);
+    void lineDetection(cv::Mat&);
 };
 
 #endif // PREPROCESS_H
