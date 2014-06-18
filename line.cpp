@@ -87,8 +87,9 @@ int Line::Intersection(Line& otherline, cv::Point& result){
 }
 
 // Static methods
-void Line::Intersections(std::vector<Line>& lines, std::vector<cv::Point>& intersections, cv::Point limits)
+void Line::Intersections(std::vector<Line>& lines, std::vector<cv::Point>& intersections, cv::Point limits, std::vector<double>& distances)
 {
+    Points unsortedIntersections;
     cv::Point p;
     for (size_t i=0; i < lines.size(); i++){
         Line line1 = lines.at(i);
@@ -98,10 +99,13 @@ void Line::Intersections(std::vector<Line>& lines, std::vector<cv::Point>& inter
             int check = line1.Intersection(line2,p);
             //if (line1.ylookup(p.x) != -1)
             if (check != -1 && p.x >= 0 && p.y >= 0 && p.x <= limits.x && p.y <= limits.y)
-                intersections.push_back(p);
+                unsortedIntersections.push_back(p);
 
         }
     }
+
+    Line::RemoveDuplicateIntersections(unsortedIntersections, intersections, distances);
+    std::sort(intersections.begin(), intersections.end(), cvutils::pointIsLess);
 }
 
 void Line::RemoveDuplicateIntersections(std::vector<cv::Point> & src, std::vector<cv::Point> & dst, std::vector<double>& distances)

@@ -81,4 +81,42 @@ void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName
 }
 
 
+bool cvutils::pointIsLess(Point a, Point b)
+// Ref: http://stackoverflow.com/questions/6989100/sort-points-in-clockwise-order
+{
+    if (a.x >= 0 && b.x < 0)
+        return true;
+    if (a.x == 0 && b.x == 0)
+        return a.y > b.y;
+
+    std::vector<cv::Point> points;
+    points.push_back(a);
+    points.push_back(b);
+
+    cv::Point c = centerpoint(points);
+    double det = (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
+    if (det < 0)
+        return true;
+    if (det > 0)
+        return false;
+
+    double d1 = (a.x - c.x) * (a.x - c.x) + (a.y - c.y) * (a.y - c.y);
+    double d2 = (b.x - c.x) * (b.x - c.x) + (b.y - c.y) * (b.y - c.y);
+
+    return d1 > d2;
+}
+
+cv::Point cvutils::centerpoint(Points points){
+    double xsum = 0;
+    double ysum = 0;
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        xsum += points[i].x;
+        ysum += points[i].y;
+    }
+
+    return cv::Point(xsum/(double) points.size(), ysum/ (double) points.size());
+}
+
+
 

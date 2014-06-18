@@ -13,8 +13,8 @@ public:
     Line(std::vector<cv::Point>);
     Line(cv::Point, cv::Point);
     int Intersection(Line&, cv::Point&);
-    static void Intersections(std::vector<Line>& lines, std::vector<cv::Point>& intersections, cv::Point limits); //TODO make own class called Lines with these methods?
-    static void RemoveDuplicateIntersections(std::vector<cv::Point>&, std::vector<cv::Point>&, std::vector<double>&);
+    static void Intersections(std::vector<Line>& lines, std::vector<cv::Point>& intersections, cv::Point limits, std::vector<double>& distances); //TODO make own class called Lines with these methods?
+    static void RemoveDuplicateIntersections(std::vector<cv::Point>& src, std::vector<cv::Point>& dst, std::vector<double>& distances);
 
     void FrameIntersections(const cv::Mat& image, Points frameintersections);
 

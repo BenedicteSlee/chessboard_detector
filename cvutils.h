@@ -11,6 +11,8 @@ cv::Point MeanPoint(Points);
 void PrintMatToConsole(cv::Mat&, int, int);
 void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
+bool pointIsLess(cv::Point a, cv::Point b);
+cv::Point centerpoint(Points);
 
 // Template functions
 template<typename T>

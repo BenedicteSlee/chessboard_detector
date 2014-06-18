@@ -80,8 +80,8 @@ void MainWindow::on_pushButton_2_clicked()
     cv::Point limits(img_rgb.size[1], img_rgb.size[0]);
     std::vector<double> distances;
 
-    Line::Intersections(houghlines, points, limits);
-    Line::RemoveDuplicateIntersections(points,newpoints, distances);
+    Line::Intersections(houghlines, points, limits, distances);
+
 
     //std::cout << accumulate(distances.begin(), distances.end(), 0.0) / distances.size() << std::endl;
 
@@ -95,12 +95,12 @@ void MainWindow::on_pushButton_2_clicked()
     // add circles to image
     //cv::RNG rng = cv::RNG(1234);
     cv::Scalar col = cv::Scalar(0,255,0);
-    for (size_t i=0; i<newpoints.size();i++){
+    for (size_t i=0; i<points.size();i++){
         //cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-        cv::circle(img_rgb, newpoints.at(i),5, col,1);
-        //cv::imshow("Intersections", img_rgb);
+        cv::circle(img_rgb, points.at(i),5, col,1);
+        cv::imshow("Intersections", img_rgb);
         //std::cout << newpoints.at(i) << std::endl;
-        //cv::waitKey(2);
+        cv::waitKey(2);
     }
     cv::imshow("Intersections", img_rgb);
     cv::destroyAllWindows();

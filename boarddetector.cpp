@@ -28,6 +28,8 @@ Squares BoardDetector::getPossibleSquares()
 
 void BoardDetector::categorizeLines(){
 
+
+    
     for (size_t i=0; i<lines.size();i++)
     {
         if (lines[i].slope < 0.1 && lines[i].slope > -0.1) // TODO: make numbers dynamic based on iamge size!
@@ -41,7 +43,7 @@ void BoardDetector::categorizeLines(){
     }
     
     // TODO: sort horizontal lines
-
+    
     
     
     
@@ -95,8 +97,8 @@ void BoardDetector::findIntersections()
     cv::Point limits(image.size[1], image.size[0]);
     std::vector<double> distances;
 
-    Line::Intersections(lines, points, limits);
-    Line::RemoveDuplicateIntersections(points,newpoints, distances);
+    Line::Intersections(lines, points, limits, distances);
+
 
 }
 

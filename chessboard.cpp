@@ -13,17 +13,13 @@ Square::Square()
 
 Square::Square(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
 {
-    std::cout << "Creating a square..." << std::endl;
+
     corners.reserve(4);
     vanishingPoints.reserve(2);
     borders.reserve(4);
 
-    corners.push_back(corner1);
-    corners.push_back(corner2);
-    corners.push_back(corner3);
-    corners.push_back(corner4);
 
-    init();
+    init(corner1, corner2, corner3, corner4);
 }
 
 std::vector<cv::Point> Square::getCorners(){
@@ -31,17 +27,23 @@ std::vector<cv::Point> Square::getCorners(){
 }
 
 void Square::setCorners(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4){
+    init(corner1, corner2, corner3, corner4);
+}
+
+void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4){
     corners.push_back(corner1);
     corners.push_back(corner2);
     corners.push_back(corner3);
     corners.push_back(corner4);
 
-    init();
-}
-
-void Square::init(){
+    sortCorners();
     calcBorders();
     calcVanishingPoints();
+}
+
+void Square::sortCorners(){
+    cornersSorted = corners;
+    std::sort(cornersSorted.begin(), cornersSorted.end(), cvutils::pointIsLess);
 }
 
 void Square::calcBorders()
