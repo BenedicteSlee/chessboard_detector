@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     Line.cpp \
     Chessboard.cpp \
     preprocess.cpp \
-    boarddetector.cpp
+    boarddetector.cpp \
+    corner.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -27,7 +28,8 @@ HEADERS  += mainwindow.h \
     preprocess.h \
     boarddetector.h \
     cvutils.h \
-    typedefs.h
+    typedefs.h \
+    corner.h
 
 FORMS    += mainwindow.ui
 

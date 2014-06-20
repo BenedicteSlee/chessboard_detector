@@ -34,12 +34,27 @@ Line::Line(cv::Point point1, cv::Point point2)
 
 }
 
-int Line::ylookup(int x)
+int Line::ylookup(int x, int type)
 {
-    if (x < std::min(x1,x2) || x > std::max(x1,x2))
-        return -1;
+    if (type == 0){
+        if (x < std::min(x1,x2) || x > std::max(x1,x2))
+            return -1;
+    }
     return slope*x + yIntercept;
 }
+
+int Line::xlookup(int y, int type)
+{
+    if (type == 0){
+        if (y < std::min(y1,y2) || y > std::max(y1,y2))
+            return -1;
+    }
+    if (slope != 0){
+        return - yIntercept / slope;
+    }
+    return -1;
+}
+
 
 void Line::calcSlope(){
     if ((x2 - x1) != 0){
@@ -100,17 +115,16 @@ void Line::Intersections(std::vector<Line>& lines, std::vector<cv::Point>& inter
             //if (line1.ylookup(p.x) != -1)
             if (check != -1 && p.x >= 0 && p.y >= 0 && p.x <= limits.x && p.y <= limits.y)
                 unsortedIntersections.push_back(p);
-
         }
     }
 
     Line::RemoveDuplicateIntersections(unsortedIntersections, intersections, distances);
-    std::sort(intersections.begin(), intersections.end(), cvutils::pointIsLess);
+    std::sort(intersections.begin(), intersections.end(), cvutils::pointIsLess); // TODO !!! This sorting does not work
 }
 
 void Line::RemoveDuplicateIntersections(std::vector<cv::Point> & src, std::vector<cv::Point> & dst, std::vector<double>& distances)
 {
-    std::cout << "Original vector length: " << src.size() << std::endl;
+
     double tol = 5; // distance tolerance in pixels
     std::vector<cv::Point> vec;
     vec = src;
@@ -138,26 +152,10 @@ void Line::RemoveDuplicateIntersections(std::vector<cv::Point> & src, std::vecto
     }
 
     dst = vec;
-    std::cout << "New vector length: " << dst.size() << std::endl;
+
 
 }
 
-void Line::FrameIntersections(const cv::Mat& image, Points frameintersections)
-{
-    int cols = image.cols;
-    int rows = image.rows;
-
-    Square frame = Square(cv::Point(0,0), cv::Point(cols, 0), cv::Point(cols, rows), cv::Point(0,rows));
-
-    cv::Point p;
-    int check;
-    for (size_t i = 0; i < 4; ++i) {
-        check = this->Intersection(frame.borders.at(i), p);
-        if (check != -1){
-            frameintersections.push_back(p);
-        }
-    }
-}
 
 
 

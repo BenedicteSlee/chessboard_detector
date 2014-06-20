@@ -18,7 +18,8 @@ public:
 
     void FrameIntersections(const cv::Mat& image, Points frameintersections);
 
-    int ylookup(int);
+    int ylookup(int, int type = 0);
+    int xlookup(int, int type = 0);
 
     std::vector<cv::Point> points;
     double yIntercept;

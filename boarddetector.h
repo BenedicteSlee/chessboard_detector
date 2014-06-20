@@ -11,7 +11,9 @@ public:
     ~BoardDetector();
     BoardDetector(cv::Mat&,std::vector<Line>);
 
-    Squares getPossibleSquares();
+    Lines get_hlinesSorted();
+    Lines get_vlinesSorted();
+    Squares get_PossibleSquares();
 
 private:
     void categorizeLines();
@@ -23,8 +25,10 @@ private:
     std::vector<Line> lines;
     std::vector<double> slopes;
     cv::Point vanishingPoint;
-    std::vector<int> horizontalLines;
-    std::vector<int> nonHorizontalLines;
+    std::vector<int> hlines;
+    std::vector<int> vlines;
+    std::vector<int> hlinesSorted;
+    std::vector<int> vlinesSorted;
     Squares possibleSquares;
 };
 

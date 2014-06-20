@@ -14,7 +14,9 @@ void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point a, cv::Point b);
 cv::Point centerpoint(Points);
 
-// Template functions
+bool pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b);
+
+
 template<typename T>
 std::vector<double> Stats(std::vector<T> input){
     std::vector<double> output(2);

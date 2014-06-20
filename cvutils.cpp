@@ -13,6 +13,7 @@ using namespace std;
 //duration = duration / cv::getTickFrequency(); // get elapsed time
 //std::cout << "Duration: " << duration << std::endl;
 
+
 void cvutils::PrintJpg(cv::Mat& img, const std::string& filename, int quality){
     std::vector<int> imwriteparams;
     imwriteparams.push_back(CV_IMWRITE_JPEG_QUALITY);
@@ -36,52 +37,61 @@ cv::Point cvutils::MeanPoint(Points points){
 
 void cvutils::PrintMatToConsole(Mat& mat, int lastRow, int lastCol)
 {
-        if (lastRow == 0)
-            lastRow = mat.rows;
-        if (lastCol == 0)
-            lastCol = mat.cols;
+    if (lastRow == 0)
+        lastRow = mat.rows;
+    if (lastCol == 0)
+        lastCol = mat.cols;
+
+    for(int i = 0; i < lastRow; i++)
+    {
+        for (int j = 0; j < lastCol; j++)
+        {
+            cout<< mat.at<double>(i, j) << "\t";
+        }
+        cout<<endl;
+    }
+}
+
+void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName){
+    if (lastRow == 0)
+        lastRow = mat.rows;
+    if (lastCol == 0)
+        lastCol = mat.cols;
+
+    ofstream myfile;
+
+    myfile.open(fileName);
+
+    if (!myfile.is_open()){
+        cout << "Cannot open the file" << endl;
+    } else {
+        cout << "Printing..." << endl;
 
         for(int i = 0; i < lastRow; i++)
         {
             for (int j = 0; j < lastCol; j++)
             {
-                cout<< mat.at<double>(i, j) << "\t";
+                myfile << mat.at<double>(i, j) << "\t";
             }
-            cout<<endl;
+            myfile << endl;
         }
-}
 
-void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName){
-        if (lastRow == 0)
-            lastRow = mat.rows;
-        if (lastCol == 0)
-            lastCol = mat.cols;
-
-        ofstream myfile;
-
-        myfile.open(fileName);
-
-        if (!myfile.is_open()){
-            cout << "Cannot open the file" << endl;
-        } else {
-            cout << "Printing..." << endl;
-
-            for(int i = 0; i < lastRow; i++)
-            {
-                for (int j = 0; j < lastCol; j++)
-                {
-                    myfile << mat.at<double>(i, j) << "\t";
-                }
-                myfile << endl;
-            }
-
-            myfile.close();
-        }
+        myfile.close();
+    }
 
 }
 
 
-bool cvutils::pointIsLess(Point a, Point b)
+bool cvutils::pointIsLess(Point a, Point b) // for sorting corners in square starting at upper left corner
+{
+    if (a.y < b.y)
+        return true;
+    if (a.y > b.y)
+        return false;
+    if (a.x < b.x)
+        return true;
+
+/*
 // Ref: http://stackoverflow.com/questions/6989100/sort-points-in-clockwise-order
 {
     if (a.x >= 0 && b.x < 0)
@@ -116,7 +126,18 @@ cv::Point cvutils::centerpoint(Points points){
     }
 
     return cv::Point(xsum/(double) points.size(), ysum/ (double) points.size());
+    */
 }
 
 
 
+
+
+bool cvutils::pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b)
+{
+    if (a.second < b.second)
+        return true;
+
+    return false;
+
+}

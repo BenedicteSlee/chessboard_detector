@@ -1,6 +1,7 @@
 #include "chessboard.h"
 #include "Line.h"
 #include <stdexcept>
+#include <opencv2/opencv.hpp>
 
 // S Q U A R E
 Square::Square()
@@ -11,22 +12,29 @@ Square::Square()
     borders.reserve(4);
 }
 
-Square::Square(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
+Square::Square(cv::Mat &image_, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
 {
-
+    image = image_;
     corners.reserve(4);
     vanishingPoints.reserve(2);
     borders.reserve(4);
 
-
     init(corner1, corner2, corner3, corner4);
 }
+
+int Square::get_meanGray()
+{
+    calcMeanGray();
+    return meanGray;
+}
+
 
 std::vector<cv::Point> Square::getCorners(){
     return corners;
 }
 
-void Square::setCorners(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4){
+void Square::setCorners(cv::Mat& image_, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4){
+    image = image_;
     init(corner1, corner2, corner3, corner4);
 }
 
@@ -52,6 +60,24 @@ void Square::calcBorders()
     borders.push_back(Line(corners.at(1),corners.at(2)));
     borders.push_back(Line(corners.at(2),corners.at(3)));
     borders.push_back(Line(corners.at(3),corners.at(0)));
+}
+
+void Square::calcMeanGray()
+{
+    cv::Mat gray;
+    cv::cvtColor(image, gray, CV_RGB2GRAY);
+
+    int n = 0;
+    uchar val = 0;
+    for (int y = 0; y < gray.rows; ++y)
+    {
+        for (int x = 0; x < gray.cols; ++x)
+        {
+            val += (int) gray.at<uchar>(y,x);
+            n += 1;
+        }
+    }
+    meanGray = val / n;
 }
 
 void Square::calcVanishingPoints()
