@@ -1,6 +1,6 @@
 #include "Line.h"
 #include "typedefs.h"
-#include "chessboard.h"
+#include "square.h"
 #include <vector>
 
 Line::Line(){

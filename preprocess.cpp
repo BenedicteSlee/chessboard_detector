@@ -1,7 +1,7 @@
 #include "preprocess.h"
 #include "Line.h"
 #include "typedefs.h"
-#include "chessboard.h"
+#include "square.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
 

@@ -1,7 +1,7 @@
 #include "boarddetector.h"
 #include "Line.h"
 #include "cvutils.h"
-#include "chessboard.h"
+#include "square.h"
 #include <vector>
 #include <cmath>
 

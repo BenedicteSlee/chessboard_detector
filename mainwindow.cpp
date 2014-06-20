@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 #include "opencvbook.cpp"
 #include "Line.h"
-#include "Chessboard.h"
+#include "square.h"
 #include "preprocess.h"
 #include "boarddetector.h"
 #include "cvutils.h"
@@ -75,8 +75,24 @@ void MainWindow::on_pushButton_2_clicked()
     // plot possible squares
     Squares possibleSquares = cbd.get_PossibleSquares();
 
-    int meancol = possibleSquares[1].get_meanGray();
+    // get mean color
+    std::vector<int> meancols;
+    int meancol;
+    for (size_t i = 0; i < possibleSquares.size(); ++i) {
+        meancols.push_back(possibleSquares[i].get_meanGray());
+        std::cout << possibleSquares[i].get_meanGray() << std::endl;
+        meancol += possibleSquares[i].get_meanGray() / (double) possibleSquares.size();
+    }
 
+    // create binary image
+    cv::Mat gray, binary;
+    cv::cvtColor(image, gray, CV_RGB2GRAY);
+    cv::normalize(gray, gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::threshold(gray, binary, meancol, 255, 4);
+    cv::imshow("binary", binary);
+    cv::waitKey(0);
+
+    // NEXTSTEP make binary image better, then extract class corner from intersections
     cv::RNG rng = cv::RNG(1234);
     for (size_t i = 0; i < possibleSquares.size(); ++i) {
         cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));

@@ -5,7 +5,7 @@
 #include <QFileDialog>
 #include <opencv2/opencv.hpp>
 #include "Line.h"
-#include "chessboard.h"
+#include "square.h"
 
 
 namespace Ui {

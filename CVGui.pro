@@ -17,19 +17,19 @@ SOURCES += main.cpp\
     opencvbook.cpp \
     cvutils.cpp \
     Line.cpp \
-    Chessboard.cpp \
     preprocess.cpp \
     boarddetector.cpp \
-    corner.cpp
+    corner.cpp \
+    square.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
-    Chessboard.h \
     preprocess.h \
     boarddetector.h \
     cvutils.h \
     typedefs.h \
-    corner.h
+    corner.h \
+    square.h
 
 FORMS    += mainwindow.ui
 
