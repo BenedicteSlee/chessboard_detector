@@ -30,6 +30,7 @@ private:
     std::vector<int> hlinesSorted;
     std::vector<int> vlinesSorted;
     Squares possibleSquares;
+    void createIntersections();
 };
 
 #endif // POSTPROCESS_H

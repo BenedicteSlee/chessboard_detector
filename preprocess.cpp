@@ -20,11 +20,18 @@ void Preprocess::getLines(Lines& lines_){
     lines_ = lines;
 }
 
-void Preprocess::edgeDetection(cv::Mat& dst){
-    cv::Mat gray, blur;
-    cv::cvtColor(image,gray,cv::COLOR_RGB2GRAY);
-    cv::GaussianBlur(gray, blur, cv::Size(0,0), 2);
-    cv::Canny(blur, dst, 30, 200, 3);
+void Preprocess::edgeDetection(cv::Mat& dst, bool doBlur){
+    cv::Mat gray;
+    if (image.channels() == 3){
+        cv::cvtColor(image,gray,cv::COLOR_RGB2GRAY);
+    } else {
+        gray = image;
+    }
+
+    if (doBlur){
+        cv::GaussianBlur(gray, gray, cv::Size(0,0), 2);
+    }
+    cv::Canny(gray, dst, 30, 200, 3);
 }
 
 void Preprocess::lineDetection(cv::Mat& src)

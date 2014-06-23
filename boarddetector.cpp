@@ -197,6 +197,5 @@ void BoardDetector::createPossibleSquares()
             possibleSquares.push_back(square);
         }
     }
-
 }
 

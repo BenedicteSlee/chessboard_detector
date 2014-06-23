@@ -20,7 +20,7 @@ int Square::get_meanGray()
 }
 
 
-std::vector<cv::Point> Square::getCorners(){
+std::vector<cv::Point> Square::get_Corners(){
     return corners;
 }
 

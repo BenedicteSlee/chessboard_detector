@@ -19,7 +19,7 @@ public:
 private:
     Lines lines;
     cv::Mat image;
-    void edgeDetection(cv::Mat&);
+    void edgeDetection(cv::Mat&, bool doBlur = true);
     void lineDetection(cv::Mat&);
 };
 

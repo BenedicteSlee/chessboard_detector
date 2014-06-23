@@ -7,37 +7,45 @@
 #include "cvutils.h"
 #include "Line.h"
 #include "typedefs.h"
+#include "corner.h"
 
 class Square
 {
 public:
 
+    // Constructors
     ~Square(){}
     Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4);
 
-    int get_meanGray();
-    std::vector<cv::Point> getCorners();
-    void setCorners(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
+    // Init
     void init(cv::Point, cv::Point, cv::Point, cv::Point);
-    cv::Point center;
-    std::vector<Line> borders;
-    Line upperBorder, rightBorder, lowerBorder, leftBorder;
-    cv::Point upperLeft, upperRight, lowerRight, lowerLeft;
 
-    std::vector<cv::Point> vanishingPoints;
+    // Get and set methods
+    int get_meanGray();
+    std::vector<cv::Point> get_Corners();
+    void set_Corners(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
+
+    // Methods
     void draw();
 
-protected:
-    void calcVanishingPoints();
-    void calcBorders();
-    void calcMeanGray();
-    void sortCorners();
-
 private:
+    // Variables
     int meanGray;
     cv::Mat& image;
     std::vector<cv::Point> corners;
     std::vector<cv::Point> cornersSorted;
+    cv::Point center;
+    std::vector<Line> borders;
+    Line upperBorder, rightBorder, lowerBorder, leftBorder;
+    cv::Point upperLeft, upperRight, lowerRight, lowerLeft;
+    std::vector<cv::Point> vanishingPoints;
+    std::vector<corner> corners;
+
+    // Methods
+    void calcVanishingPoints();
+    void calcBorders();
+    void calcMeanGray();
+    void sortCorners();
 };
 
 class Chessboard : public Square
