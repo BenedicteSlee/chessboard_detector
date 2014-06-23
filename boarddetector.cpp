@@ -2,6 +2,7 @@
 #include "Line.h"
 #include "cvutils.h"
 #include "square.h"
+#include "typedefs.h"
 #include <vector>
 #include <cmath>
 
@@ -16,7 +17,7 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     lines = lines_;
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
-    findIntersections();
+    createCorners();
     findVanishingPoint();
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
     createPossibleSquares();
@@ -166,17 +167,6 @@ void BoardDetector::findVanishingPoint(){
     vanishingPoint = cvutils::MeanPoint(voters);
 }
 
-void BoardDetector::findIntersections()
-{
-    std::vector<cv::Point> points, newpoints;
-    cv::Point limits(image.size[1], image.size[0]);
-    std::vector<double> distances;
-
-    Line::Intersections(lines, points, limits, distances);
-
-
-}
-
 void BoardDetector::createPossibleSquares()
 {
     for (size_t i = 0; i < hlinesSorted.size()-1; ++i) {
@@ -195,6 +185,27 @@ void BoardDetector::createPossibleSquares()
             Square square(image, upperLeft, upperRight, lowerRight, lowerLeft);
 
             possibleSquares.push_back(square);
+        }
+    }
+}
+
+void BoardDetector::createCorners()
+{
+
+    Points added;
+    for (size_t i = 0; i < possibleSquares.size(); ++i)
+    {
+        Square square = possibleSquares.at(i); // TODO use pointers such that the actual square will be modified
+        Points cpoints = square.getCornerpointsSorted();
+
+        int radius = 10;
+        foreach (cv::Point p, cpoints) {
+            Corner newcorner = Corner(p, radius);
+            square.addCorner(newcorner);
+            if (!cvutils::containsPoint(added, p)){
+                corners.push_back(newcorner);
+                added.push_back(p);
+            }
         }
     }
 }

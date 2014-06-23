@@ -15,7 +15,7 @@ bool pointIsLess(cv::Point a, cv::Point b);
 cv::Point centerpoint(Points);
 
 bool pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b);
-
+bool containsPoint(const Points& points, const cv::Point& point);
 
 template<typename T>
 std::vector<double> Stats(std::vector<T> input){

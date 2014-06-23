@@ -4,16 +4,18 @@
 #include <opencv2/opencv.hpp>
 #include "typedefs.h"
 
-class corner
+class Corner
 {
 public:
-    corner(cv::Point cornerpoint, Points nbors, int radius);
+    Corner(cv::Point cornerpoint, int radius);
 
     Points get_nbors();
     cv::Point get_leftNbor();
     cv::Point get_rightNbor();
     cv::Point get_topNbor();
     cv::Point get_bottomNbor();
+
+    void setNbors(Points nbors);
 
 private:
     cv::Point initialCornerpoint;

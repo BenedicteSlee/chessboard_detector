@@ -129,15 +129,24 @@ cv::Point cvutils::centerpoint(Points points){
     */
 }
 
-
-
-
-
 bool cvutils::pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b)
 {
     if (a.second < b.second)
         return true;
 
     return false;
+
+}
+
+bool cvutils::containsPoint(const Points& points, const cv::Point& point)
+{
+    if (points.empty()){
+        return false;
+    }
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        if (point == points.at(i))
+            return true;
+    }
 
 }

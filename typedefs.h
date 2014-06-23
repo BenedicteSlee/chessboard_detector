@@ -5,10 +5,12 @@
 
 class Line;
 class Square;
+class Corner;
 
 typedef std::vector<cv::Point> Points;
 typedef std::vector<Line> Lines;
 typedef std::vector<Square> Squares;
+typedef std::vector<Corner> Corners;
 
 
 #endif // TYPEDEFS_H

@@ -9,6 +9,8 @@ QT       += core gui \
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+CONFIG += c++11
+
 TARGET = CVGui
 TEMPLATE = app
 
@@ -20,7 +22,8 @@ SOURCES += main.cpp\
     preprocess.cpp \
     boarddetector.cpp \
     corner.cpp \
-    square.cpp
+    square.cpp \
+    board.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -29,7 +32,8 @@ HEADERS  += mainwindow.h \
     cvutils.h \
     typedefs.h \
     corner.h \
-    square.h
+    square.h \
+    board.h
 
 FORMS    += mainwindow.ui
 

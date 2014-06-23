@@ -4,6 +4,7 @@
 #include <vector>
 #include "Line.h"
 #include "cvutils.h"
+#include "corner.h"
 
 class BoardDetector
 {
@@ -18,7 +19,7 @@ public:
 private:
     void categorizeLines();
     void findVanishingPoint();
-    void findIntersections();
+    void createCorners();
     void createPossibleSquares();
 
     cv::Mat image;
@@ -30,7 +31,8 @@ private:
     std::vector<int> hlinesSorted;
     std::vector<int> vlinesSorted;
     Squares possibleSquares;
-    void createIntersections();
+    std::vector<Corner> corners;
+
 };
 
 #endif // POSTPROCESS_H

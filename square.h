@@ -12,7 +12,6 @@
 class Square
 {
 public:
-
     // Constructors
     ~Square(){}
     Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4);
@@ -20,26 +19,31 @@ public:
     // Init
     void init(cv::Point, cv::Point, cv::Point, cv::Point);
 
-    // Get and set methods
-    int get_meanGray();
-    std::vector<cv::Point> get_Corners();
-    void set_Corners(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
 
     // Methods
     void draw();
+
+    // Get and set methods
+    int get_meanGray();
+    std::vector<cv::Point> getCornerpoints;
+    void setCornerpoints(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
+    std::vector<cv::Point> getCornerpointsSorted() const;
+
+    // Add features
+    void addCorner(Corner corner);
 
 private:
     // Variables
     int meanGray;
     cv::Mat& image;
-    std::vector<cv::Point> corners;
-    std::vector<cv::Point> cornersSorted;
+    std::vector<cv::Point> cornerpoints;
+    std::vector<cv::Point> cornerpointsSorted;
+    std::vector<Corner> corners;
     cv::Point center;
     std::vector<Line> borders;
     Line upperBorder, rightBorder, lowerBorder, leftBorder;
     cv::Point upperLeft, upperRight, lowerRight, lowerLeft;
     std::vector<cv::Point> vanishingPoints;
-    std::vector<corner> corners;
 
     // Methods
     void calcVanishingPoints();

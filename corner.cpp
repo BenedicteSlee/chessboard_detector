@@ -4,30 +4,34 @@
 #include <opencv2/opencv.hpp>
 
 
-corner::corner(cv::Point cornerpoint, Points nbors_, int radius_)
+Corner::Corner(cv::Point cornerpoint, int radius_)
 {
     initialCornerpoint = cornerpoint;
     radius = radius_;
-    nbors = nbors_;
-    std::sort(nbors.begin(), nbors.end(), cvutils::pointIsLess);
+
 }
 
-cv::Point corner::get_topNbor()
+void Corner::setNbors(Points nbors_){
+   std::sort(nbors_.begin(), nbors_.end(), cvutils::pointIsLess);
+   nbors = nbors_;
+}
+
+cv::Point Corner::get_topNbor()
 {
     return nbors[0];
 }
 
-cv::Point corner::get_rightNbor()
+cv::Point Corner::get_rightNbor()
 {
     return nbors[1];
 }
 
-cv::Point corner::get_bottomNbor()
+cv::Point Corner::get_bottomNbor()
 {
     return nbors[2];
 }
 
-cv::Point corner::get_leftNbor()
+cv::Point Corner::get_leftNbor()
 {
     return nbors[3];
 }
