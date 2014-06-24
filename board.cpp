@@ -4,7 +4,7 @@ board::board()
 {
 }
 
-std::vector<square> board::getSquares(int row, int col) const
+std::vector<Square> board::getSquares(int row, int col) const
 {
 
 }

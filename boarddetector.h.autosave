@@ -16,7 +16,7 @@ public:
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
     Squares get_PossibleSquares();
-
+    Corners getCorners();
 
 
 private:
@@ -24,7 +24,7 @@ private:
     void findVanishingPoint();
     void createCorners();
     void createPossibleSquares();
-
+    
     cv::Mat image;
     std::vector<Line> lines;
     std::vector<double> slopes;

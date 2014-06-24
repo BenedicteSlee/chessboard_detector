@@ -91,6 +91,7 @@ void MainWindow::on_pushButton_2_clicked()
     cv::imshow("binary", binary);
     cv::waitKey(0);
 
+    
 
     /* //PLOT POSSIBLE SQUARES
     cv::RNG rng = cv::RNG(1234);

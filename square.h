@@ -25,7 +25,7 @@ public:
 
     // Get and set methods
     int get_meanGray();
-    std::vector<cv::Point> getCornerpoints;
+    Points getCornerpoints();
     void setCornerpoints(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
     std::vector<cv::Point> getCornerpointsSorted() const;
 

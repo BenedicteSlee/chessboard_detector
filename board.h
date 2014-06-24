@@ -10,11 +10,11 @@ class board
 public:
     board();
 
-    std::vector<square> getSquares(int row, int col) const;
+    std::vector<Square> getSquares(int row, int col) const;
     //void setSquares(const std::vector<square> &value);
 
 private:
-    std::vector<square> squares;
+    std::vector<Square> squares;
 
 };
 
