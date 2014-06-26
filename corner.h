@@ -3,11 +3,12 @@
 
 #include <opencv2/opencv.hpp>
 #include "typedefs.h"
+#include "Line.h"
 
 class Corner
 {
 public:
-    Corner(cv::Point cornerpoint, int radius);
+    Corner(const cv::Mat&, cv::Point, Lines, int);
 
     Points get_nbors();
     cv::Point get_leftNbor();
@@ -18,12 +19,16 @@ public:
     void setNbors(Points nbors);
 
 private:
+    cv::Mat image_gray;
+    cv::Mat area;
     cv::Point initialCornerpoint;
+    cv::Point cornerpoint;
     int radius;
     Points nbors;
-
-
-
+    std::vector<int> meancols;
+    std::vector<int> stdevcols;
+    Lines lines;
+    void calcCols();
 };
 
 #endif // CORNER_H

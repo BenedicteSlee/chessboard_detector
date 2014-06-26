@@ -28,6 +28,7 @@ public:
     Points getCornerpoints();
     void setCornerpoints(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
     std::vector<cv::Point> getCornerpointsSorted() const;
+    Lines getBordersSorted() const;
 
     // Add features
     void addCorner(Corner corner);

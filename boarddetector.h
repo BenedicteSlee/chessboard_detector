@@ -16,8 +16,7 @@ public:
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
     Squares get_PossibleSquares();
-
-
+    Corners getCorners();
 
 private:
     void categorizeLines();
@@ -26,6 +25,7 @@ private:
     void createPossibleSquares();
 
     cv::Mat image;
+    cv::Mat image_gray;
     std::vector<Line> lines;
     std::vector<double> slopes;
     cv::Point vanishingPoint;
@@ -35,10 +35,6 @@ private:
     std::vector<int> vlinesSorted;
     Squares possibleSquares;
     Corners corners;
-
-    bool cornersCreated;
-    bool possibleSquaresCreated;
-
 
 };
 

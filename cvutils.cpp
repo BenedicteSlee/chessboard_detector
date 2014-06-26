@@ -83,37 +83,34 @@ void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName
 
 
 bool cvutils::pointIsLess(Point a, Point b) // for sorting corners in square starting at upper left corner
-{
-    if (a.y < b.y)
+{   // Ref: http://stackoverflow.com/questions/6989100/sort-points-in-clockwise-order
+
+    cv::Point center = cv::Point((a.x + b.x)*0.5, (a.y + b.y) * 0.5);
+
+    if (a.x >= center.x && b.x < center.x ){
         return true;
-    if (a.y > b.y)
+    }
+    if (a.x < center.x && b.x >= center.x){
         return false;
-    if (a.x < b.x)
-        return true;
+    }
+    if (a.x == center.x && b.x == center.x) {
+        if (a.y - center.y >= 0 || b.y - center.y >= 0)
+            return a.y > b.y;
+        return b.y > a.y;
+    }
 
-/*
-// Ref: http://stackoverflow.com/questions/6989100/sort-points-in-clockwise-order
-{
-    if (a.x >= 0 && b.x < 0)
-        return true;
-    if (a.x == 0 && b.x == 0)
-        return a.y > b.y;
-
-    std::vector<cv::Point> points;
-    points.push_back(a);
-    points.push_back(b);
-
-    cv::Point c = centerpoint(points);
-    double det = (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
+    int det = (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y);
     if (det < 0)
         return true;
     if (det > 0)
         return false;
 
-    double d1 = (a.x - c.x) * (a.x - c.x) + (a.y - c.y) * (a.y - c.y);
-    double d2 = (b.x - c.x) * (b.x - c.x) + (b.y - c.y) * (b.y - c.y);
-
+    // points a and b are on the same line from the center
+    // check which point is closer to the center
+    int d1 = (a.x - center.x) * (a.x - center.x) + (a.y - center.y) * (a.y - center.y);
+    int d2 = (b.x - center.x) * (b.x - center.x) + (b.y - center.y) * (b.y - center.y);
     return d1 > d2;
+
 }
 
 cv::Point cvutils::centerpoint(Points points){
@@ -126,17 +123,15 @@ cv::Point cvutils::centerpoint(Points points){
     }
 
     return cv::Point(xsum/(double) points.size(), ysum/ (double) points.size());
-    */
+
 }
 
-bool cvutils::pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b)
+template<typename T>
+bool cvutils::pairIsLess(const std::pair<T, double>& a, const std::pair<T, double>& b)
 {
-    if (a.second < b.second)
-        return true;
-
-    return false;
-
+    return a.second < b.second;
 }
+
 
 bool cvutils::containsPoint(const Points& points, const cv::Point& point)
 {
@@ -149,4 +144,27 @@ bool cvutils::containsPoint(const Points& points, const cv::Point& point)
             return true;
     }
 
+    return false;
+
 }
+
+void cvutils::sortPoints(Points& points)
+{
+    cv::Point center = centerpoint(points);
+
+    std::vector<std::pair<cv::Point, double> > atans;
+    atans.reserve(points.size());
+
+    for (size_t i = 0; i < points.size(); ++i)
+    {
+        atans[i].first = points[i];
+        atans[i].second = atan2(points[i].x - center.x, points[i].y - center.y);
+    }
+
+    std::sort(atans.begin(), atans.end(), [] (const std::pair<cv::Point, int>& left, const std::pair<cv::Point, int>& right) {
+        return left.second < right.second;});
+   // std::sort(atans.begin(), atans.end(), pairIsLess);
+}
+
+
+

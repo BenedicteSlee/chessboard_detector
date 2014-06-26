@@ -55,9 +55,9 @@
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>70</y>
+      <y>10</y>
       <width>160</width>
-      <height>80</height>
+      <height>161</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -65,6 +65,16 @@
       <widget class="QPushButton" name="pushButton">
        <property name="text">
         <string>Open Image</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="UseDefaultImage">
+       <property name="text">
+        <string>Use default image</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

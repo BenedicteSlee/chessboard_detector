@@ -14,10 +14,14 @@ BoardDetector::~BoardDetector()
 BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
 {
     image = image_;
+    if (image.channels() != 1){
+        cv::cvtColor(image, image_gray, CV_RGB2GRAY);
+        cv::normalize(image_gray, image_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    }
+
     lines = lines_;
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
-    createCorners();
     findVanishingPoint();
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
     createPossibleSquares();
@@ -48,15 +52,8 @@ Squares BoardDetector::get_PossibleSquares()
 }
 
 Corners BoardDetector::getCorners()
-{
-    if (cornersCreated){
-        return corners;
-    }
-    else
-    {
-        std::cout << "corners not created yet" << std::endl;
-    }
-    // TODO else what?
+{   
+     return corners;
 }
 
 void BoardDetector::categorizeLines(){    
@@ -210,11 +207,17 @@ void BoardDetector::createCorners()
     {
         Square square = possibleSquares.at(i); // TODO use pointers such that the actual square will be modified
         Points cpoints = square.getCornerpointsSorted();
+        Lines borders = square.getBordersSorted();
 
         int radius = 10;
         for (size_t i = 0; i < cpoints.size(); ++i) {
             cv::Point p = cpoints.at(i);
-            Corner newcorner = Corner(p, radius);
+            int idx1 = i;
+            int idx2 = (i + 1) % 4;
+            Lines lines;
+            lines.push_back(borders[idx1]);
+            lines.push_back(borders[idx2]);
+            Corner newcorner(image_gray, p, lines, radius);
             square.addCorner(newcorner);
             if (!cvutils::containsPoint(added, p)){
                 corners.push_back(newcorner);

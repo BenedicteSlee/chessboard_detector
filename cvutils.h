@@ -12,9 +12,14 @@ void PrintMatToConsole(cv::Mat&, int, int);
 void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point a, cv::Point b);
+void sortPoints(Points &); // TODO implement sortPoints
+
 cv::Point centerpoint(Points);
 
-bool pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b);
+template<typename T>
+bool pairIsLess(const std::pair<T, double>& a, const std::pair<T, double>& b);
+
+
 bool containsPoint(const Points& points, const cv::Point& point);
 
 template<typename T>
@@ -31,6 +36,7 @@ std::vector<double> Stats(std::vector<T> input){
     for (size_t i=0; i<input.size(); i++){
         stdev += pow(input[i] - mean,2) / (size-1);
     }
+
     output[0] = mean;
     output[1] = stdev;
 

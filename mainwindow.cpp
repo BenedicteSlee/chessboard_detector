@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->pushButton_2->setEnabled(false);
+    //ui->pushButton_2->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -32,7 +32,7 @@ void MainWindow::on_pushButton_clicked()
 
     image = cv::imread(fileName.toStdString().data());
     if (image.data){
-        ui->pushButton_2->setEnabled(true);
+        //ui->pushButton_2->setEnabled(true);
 
         // Convert image to graylevel and normalize
         cv::cvtColor(image, img_gray, CV_RGB2GRAY);
@@ -42,7 +42,11 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButton_2_clicked()
 {
-
+    if (ui->UseDefaultImage->isChecked()){
+        image = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
+        cv::cvtColor(image, img_gray, CV_RGB2GRAY);
+        cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    }
     // Find houghlines
     std::vector<Line> houghlines;
     
@@ -60,6 +64,7 @@ void MainWindow::on_pushButton_2_clicked()
     Lines hlinesSorted = cbd.get_hlinesSorted();
     Lines vlinesSorted = cbd.get_vlinesSorted();
 
+
     for( size_t i = 0; i < hlinesSorted.size(); i++ )
     {
         std::vector<cv::Point> l = hlinesSorted.at(i).points;
@@ -67,6 +72,7 @@ void MainWindow::on_pushButton_2_clicked()
         cv::imshow("lines", img_rgb);
         cv::waitKey(0);
     }
+
     for( size_t i = 0; i < vlinesSorted.size(); i++ )
     {
         std::vector<cv::Point> l = vlinesSorted.at(i).points;
@@ -91,17 +97,17 @@ void MainWindow::on_pushButton_2_clicked()
     cv::imshow("binary", binary);
     cv::waitKey(0);
 
-    
-
-    /* //PLOT POSSIBLE SQUARES
+     //PLOT POSSIBLE SQUARES
     cv::RNG rng = cv::RNG(1234);
     for (size_t i = 0; i < possibleSquares.size(); ++i) {
         cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-        cv::fillConvexPoly(image, possibleSquares.at(i).getCorners(), col);
+        cv::fillConvexPoly(image, possibleSquares.at(i).getCornerpoints(), col);
         cv::imshow("poly", image);
         cv::waitKey(1);
     }
-    */
+    cv::waitKey();
+
+    // look at intersections
 
 
  /*
@@ -116,35 +122,23 @@ void MainWindow::on_pushButton_2_clicked()
         //cv::waitKey(2);
     }
     cv::imshow("Intersections", img_rgb);
-   // cv::destroyAllWindows();
    */
+    //cv::destroyAllWindows();
 }
 
 void MainWindow::on_pushButton_3_clicked()
 {
-    cv::Point p1(0,0);
-    cv::Point p2(0,1);
-    cv::Point p3(1,1);
-    cv::Point p4(1,0);
+    cv::Mat src = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
-    Points points;
-    points.push_back(p1);
-    points.push_back(p2);
-    points.push_back(p3);
-    points.push_back(p4);
+    cv::Point points[4] = {cv::Point(3,1), cv::Point(5,3), cv::Point(4,1), cv::Point(2,3)};
 
-    Points check = points;
+    Points pts;
+    pts.push_back(cv::Point(1,1));
+    pts.push_back(cv::Point(10,3));
+    pts.push_back(cv::Point(4,1));
+    pts.push_back(cv::Point(2,2));
+    int i = 1;
+    std::sort(pts.begin(), pts.end(), cvutils::pointIsLess);
 
-    std::sort(points.begin(), points.end(), cvutils::pointIsLess);
-
-    std::vector<std::pair<int, double> > vec;
-    std::pair<int, double> v1(1,2.0);
-    std::pair<int,double> v2(2,1.0);
-
-    vec.push_back(v1);
-    vec.push_back(v2);
-
-    bool check1 = cvutils::pairIsLess(v2, v1);
-
-    std::cout << check << std::endl;
+    int j = 2;
 }

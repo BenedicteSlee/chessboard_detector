@@ -50,10 +50,11 @@ void Square::sortCorners(){
 
 void Square::calcBorders()
 {
+    borders.push_back(Line(cornerpoints.at(3),cornerpoints.at(0)));
     borders.push_back(Line(cornerpoints.at(0),cornerpoints.at(1)));
     borders.push_back(Line(cornerpoints.at(1),cornerpoints.at(2)));
     borders.push_back(Line(cornerpoints.at(2),cornerpoints.at(3)));
-    borders.push_back(Line(cornerpoints.at(3),cornerpoints.at(0)));
+
 }
 
 void Square::calcMeanGray()
@@ -122,6 +123,11 @@ std::vector<cv::Point> Square::getCornerpointsSorted() const
     return cornerpointsSorted;
 }
 
+
+Lines Square::getBordersSorted() const
+{
+    return borders;
+}
 void Square::addCorner(Corner corner)
 {
     corners.push_back(corner); // TODO insert in sorted order
