@@ -154,7 +154,7 @@ void BoardDetector::findVanishingPoint(){
         }
     }
 
-    cv::Point meanpoint = cvutils::MeanPoint(vpoints);
+    cv::Point meanpoint = cvutils::centerpoint(vpoints);
 
     std::vector<double> dists(vpoints.size());
     std::vector<double> stdevs(vpoints.size());
@@ -174,7 +174,7 @@ void BoardDetector::findVanishingPoint(){
             voters.push_back(vpoints[i]);
         }
     }
-    vanishingPoint = cvutils::MeanPoint(voters);
+    vanishingPoint = cvutils::centerpoint(voters);
 }
 
 void BoardDetector::createPossibleSquares()
@@ -201,7 +201,6 @@ void BoardDetector::createPossibleSquares()
 
 void BoardDetector::createCorners()
 {
-
     Points added;
     for (size_t i = 0; i < possibleSquares.size(); ++i)
     {

@@ -21,20 +21,6 @@ void cvutils::PrintJpg(cv::Mat& img, const std::string& filename, int quality){
     cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/images/"+filename+".jpg",img, imwriteparams);
 }
 
-cv::Point cvutils::MeanPoint(Points points){
-    std::vector<int> xvals(points.size());
-    std::vector<int> yvals(points.size());
-
-    for (size_t i=0;i<points.size();i++){
-        xvals[i] = points[i].x;
-        yvals[i] = points[i].y;
-    }
-
-    double meanx =  cv::mean(xvals)[0];
-    double meany = cv::mean(yvals)[0];
-    return cv::Point(meanx,meany);
-}
-
 void cvutils::PrintMatToConsole(Mat& mat, int lastRow, int lastCol)
 {
     if (lastRow == 0)
@@ -81,11 +67,10 @@ void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName
 
 }
 
-
 bool cvutils::pointIsLess(Point a, Point b) // for sorting corners in square starting at upper left corner
 {   // Ref: http://stackoverflow.com/questions/6989100/sort-points-in-clockwise-order
 
-    cv::Point center = cv::Point((a.x + b.x)*0.5, (a.y + b.y) * 0.5);
+    cv::Point2d center = cv::Point((a.x + b.x)*0.5, (a.y + b.y) * 0.5);
 
     if (a.x >= center.x && b.x < center.x ){
         return true;
@@ -113,7 +98,8 @@ bool cvutils::pointIsLess(Point a, Point b) // for sorting corners in square sta
 
 }
 
-cv::Point cvutils::centerpoint(Points points){
+
+cv::Point2d cvutils::centerpoint(Points points){
     double xsum = 0;
     double ysum = 0;
 
@@ -122,12 +108,11 @@ cv::Point cvutils::centerpoint(Points points){
         ysum += points[i].y;
     }
 
-    return cv::Point(xsum/(double) points.size(), ysum/ (double) points.size());
+    return cv::Point2d(xsum/(double) points.size(), ysum/ (double) points.size());
 
 }
 
-template<typename T>
-bool cvutils::pairIsLess(const std::pair<T, double>& a, const std::pair<T, double>& b)
+bool cvutils::pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b)
 {
     return a.second < b.second;
 }
@@ -149,22 +134,27 @@ bool cvutils::containsPoint(const Points& points, const cv::Point& point)
 }
 
 void cvutils::sortPoints(Points& points)
-{
-    cv::Point center = centerpoint(points);
+{ // Ref: http://www.cplusplus.com/forum/general/116020/
+    cv::Point2d center = centerpoint(points);
 
-    std::vector<std::pair<cv::Point, double> > atans;
-    atans.reserve(points.size());
+    std::vector<std::pair<int, double> > atans(points.size());
 
     for (size_t i = 0; i < points.size(); ++i)
     {
-        atans[i].first = points[i];
-        atans[i].second = atan2(points[i].x - center.x, points[i].y - center.y);
+        atans[i].first = i;
+        atans[i].second = atan2(points[i].y - center.y, points[i].x - center.x);
+        std::cout << points[i].x << "," << points[i].y << " : " << atans[i].second << std::endl;
     }
 
-    std::sort(atans.begin(), atans.end(), [] (const std::pair<cv::Point, int>& left, const std::pair<cv::Point, int>& right) {
-        return left.second < right.second;});
-   // std::sort(atans.begin(), atans.end(), pairIsLess);
+    std::sort(atans.begin(), atans.end(),
+              [] (const std::pair<int, double>& left, const std::pair<int, double>& right) -> bool
+                    {return left.second > right.second;});
+
+
+    Points originalPoints = points;
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        points[i] = originalPoints[atans[i].first];
+    }
+
 }
-
-
-

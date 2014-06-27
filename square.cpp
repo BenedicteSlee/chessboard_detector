@@ -44,8 +44,7 @@ void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::P
 
 void Square::sortCorners(){
     cornerpointsSorted = cornerpoints;
-    std::sort(cornerpointsSorted.begin(), cornerpointsSorted.end(), cvutils::pointIsLess);
-
+    cvutils::sortPoints(cornerpointsSorted);
 }
 
 void Square::calcBorders()

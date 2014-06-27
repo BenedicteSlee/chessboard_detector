@@ -134,11 +134,13 @@ void MainWindow::on_pushButton_3_clicked()
 
     Points pts;
     pts.push_back(cv::Point(1,1));
-    pts.push_back(cv::Point(10,3));
-    pts.push_back(cv::Point(4,1));
     pts.push_back(cv::Point(2,2));
+    pts.push_back(cv::Point(1,2));
+    pts.push_back(cv::Point(2,1));
     int i = 1;
-    std::sort(pts.begin(), pts.end(), cvutils::pointIsLess);
+
+    cvutils::sortPoints(pts);
+
 
     int j = 2;
 }

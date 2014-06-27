@@ -7,17 +7,16 @@
 
 namespace cvutils {
 
-cv::Point MeanPoint(Points);
 void PrintMatToConsole(cv::Mat&, int, int);
 void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point a, cv::Point b);
-void sortPoints(Points &); // TODO implement sortPoints
+void sortPoints(Points &);
 
-cv::Point centerpoint(Points);
 
-template<typename T>
-bool pairIsLess(const std::pair<T, double>& a, const std::pair<T, double>& b);
+cv::Point2d centerpoint(Points);
+
+bool pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b);
 
 
 bool containsPoint(const Points& points, const cv::Point& point);
