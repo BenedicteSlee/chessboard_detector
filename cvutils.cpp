@@ -143,7 +143,7 @@ void cvutils::sortPoints(Points& points)
     {
         atans[i].first = i;
         atans[i].second = atan2(points[i].y - center.y, points[i].x - center.x);
-        std::cout << points[i].x << "," << points[i].y << " : " << atans[i].second << std::endl;
+
     }
 
     std::sort(atans.begin(), atans.end(),
@@ -157,4 +157,13 @@ void cvutils::sortPoints(Points& points)
         points[i] = originalPoints[atans[i].first];
     }
 
+}
+
+int cvutils::sumderiv(std::vector<int> input)
+{
+    int result = 0;
+    for (size_t i = 1; i < input.size(); ++i) {
+        result += abs(input[i] - input[i-1]);
+    }
+    return result;
 }

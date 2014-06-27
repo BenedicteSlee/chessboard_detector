@@ -13,6 +13,7 @@ void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point a, cv::Point b);
 void sortPoints(Points &);
 
+int sumderiv(std::vector<int>);
 
 cv::Point2d centerpoint(Points);
 

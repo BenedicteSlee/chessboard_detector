@@ -10,6 +10,8 @@
 #include <vector>
 #include <numeric>
 #include <math.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -70,7 +72,7 @@ void MainWindow::on_pushButton_2_clicked()
         std::vector<cv::Point> l = hlinesSorted.at(i).points;
         cv::line(img_rgb, l[0], l[1], cv::Scalar(255,0,0), 1, CV_AA);
         cv::imshow("lines", img_rgb);
-        cv::waitKey(0);
+        cv::waitKey(1);
     }
 
     for( size_t i = 0; i < vlinesSorted.size(); i++ )
@@ -78,7 +80,7 @@ void MainWindow::on_pushButton_2_clicked()
         std::vector<cv::Point> l = vlinesSorted.at(i).points;
         cv::line(img_rgb, l[0], l[1], cv::Scalar(255,0,0), 1, CV_AA);
         cv::imshow("lines", img_rgb);
-        cv::waitKey(0);
+        cv::waitKey(1);
     }
 
     // get mean color
@@ -87,7 +89,7 @@ void MainWindow::on_pushButton_2_clicked()
     int meancol = 0;
     for (size_t i = 0; i < possibleSquares.size(); ++i) {
         meancols.push_back(possibleSquares[i].get_meanGray());
-        std::cout << possibleSquares[i].get_meanGray() << std::endl;
+        //std::cout << possibleSquares[i].get_meanGray() << std::endl;
         meancol += possibleSquares[i].get_meanGray() / (double) possibleSquares.size();
     }
 
@@ -109,6 +111,15 @@ void MainWindow::on_pushButton_2_clicked()
 
     // look at intersections
 
+    Corners corners = cbd.getCorners();
+    int i = 1;
+    /*
+    for (size_t i = 0; i < corners.size(); ++i) {
+        cv::imshow("corner", corners.at(i).getArea());
+        cv::waitKey();
+    }
+    cv::waitKey();
+*/
 
  /*
     // add circles to image
@@ -128,19 +139,13 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::on_pushButton_3_clicked()
 {
-    cv::Mat src = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
-    cv::Point points[4] = {cv::Point(3,1), cv::Point(5,3), cv::Point(4,1), cv::Point(2,3)};
-
-    Points pts;
-    pts.push_back(cv::Point(1,1));
-    pts.push_back(cv::Point(2,2));
-    pts.push_back(cv::Point(1,2));
-    pts.push_back(cv::Point(2,1));
-    int i = 1;
-
-    cvutils::sortPoints(pts);
+    if (ui->UseDefaultImage->isChecked()){
+        image = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
+        cv::cvtColor(image, img_gray, CV_RGB2GRAY);
+        cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    }
 
 
-    int j = 2;
+
 }

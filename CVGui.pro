@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     boarddetector.cpp \
     corner.cpp \
     square.cpp \
-    board.cpp
+    board.cpp \
+    layers.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -33,7 +34,8 @@ HEADERS  += mainwindow.h \
     typedefs.h \
     corner.h \
     square.h \
-    board.h
+    board.h \
+    layers.h
 
 FORMS    += mainwindow.ui
 
@@ -44,6 +46,7 @@ LIBS += -L/usr/local/lib \
      -lopencv_imgproc \
      -lopencv_features2d\
      -lopencv_highgui \
+     -lopencv_calib3d \
      -lboost_math_c99 \
 
 

@@ -1,45 +1,23 @@
-#include "corner.h"
-#include "cvutils.h"
-#include "typedefs.h"
 #include "layers.h"
+
 #include <opencv2/opencv.hpp>
+#include "typedefs.h"
+#include "cvutils.h"
 
-Corner::Corner(const cv::Mat& image_, cv::Point cornerpoint_, Lines lines_, int radius_)
+Layers::Layers(const cv::Mat& area) : area(area)
 {
-    image_gray = image_;
-    lines = lines_;
-    initialCornerpoint = cornerpoint_;
-    cornerpoint = cornerpoint_;
-    radius = radius_;
-
-    // Create area around cornerpoint
-    area = image_gray(cv::Rect(cornerpoint.x - radius,cornerpoint.y - radius, radius*2 , radius*2));
-
-    Layers layers(area);
-    nRegions = layers.nRegions;
-
+    init();
+    binarize();
+    vote();
+    classify();
 }
 
-cv::Mat Corner::getArea()
-{
-    return area;
-}
-
-int Corner::getNRegions()
-{
-    return nRegions;
-}
-
- /*
-void Corner::createLayers()
-{
-
+void Layers::init(){
     int nc = area.cols;
     int nr = area.rows;
 
     int nLayers = std::min(nc, nr) / 2 - 1;
     std::vector<Points> layercorners(nLayers);
-
     for (int i = 0; i < nLayers; i++) {
         cv::Point upperleft = cv::Point(i, i);
         cv::Point upperright = cv::Point(nc-1-i, i);
@@ -51,8 +29,7 @@ void Corner::createLayers()
         layercorners[i] = points;
     }
 
-    std::vector<std::vector<int>> layers(nLayers);
-
+    layers.reserve(nLayers);
     for (int i = 0; i < nLayers; i++)
     {
 
@@ -88,12 +65,54 @@ void Corner::createLayers()
             count++;
         }
 
-        layers[i] = layer;
+        layers.push_back(layer);
+    }
+}
 
-        for (size_t i = 0; i < layer.size(); ++i) {
-            std::cout << layer[i] << std::endl;
+void Layers::binarize()
+{
+    for (size_t i = 0; i < layers.size(); i++) {
+        std::vector<int> layer = layers[i];
+        int meancol = (int) cv::mean(layer)[0];
+        std::vector<int> bin(layer.size());
+        for (size_t j = 0; j < bin.size(); j++) {
+            if (layer[j] < meancol){
+                bin[j] = 0;
+            } else {
+                bin[j] = 1;
+            }
+
         }
+        binary.push_back(bin);
+    }
+}
+
+void Layers::vote()
+{
+    std::vector<int> nRegionsVotes(binary.size());
+    for (size_t i = 0; i < binary.size(); ++i) {
+        std::vector<int> bin = binary[i];
+        nRegionsVotes[i] = cvutils::sumderiv(bin);
     }
 
+    std::vector<int> histogram(4,0);
+    for( int i=0; i< (int) nRegionsVotes.size(); ++i )
+      ++histogram[ nRegionsVotes[i] ];
+
+    int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
+    int count = 0;
+    for (size_t i = 0; i < nRegionsVotes.size(); ++i) {
+        if (nRegionsVotes[i] == vote)
+            count++;
+    }
+
+    if (nRegionsVotes.size() > 0 && count/nRegionsVotes.size() > 0.7)
+        nRegions = vote;
+    else
+        nRegions = 0;
+
 }
-*/
+
+void Layers::classify(){
+
+}

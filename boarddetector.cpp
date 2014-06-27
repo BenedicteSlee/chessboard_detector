@@ -208,7 +208,7 @@ void BoardDetector::createCorners()
         Points cpoints = square.getCornerpointsSorted();
         Lines borders = square.getBordersSorted();
 
-        int radius = 10;
+        int radius = 10; // TODO make dynamic
         for (size_t i = 0; i < cpoints.size(); ++i) {
             cv::Point p = cpoints.at(i);
             int idx1 = i;

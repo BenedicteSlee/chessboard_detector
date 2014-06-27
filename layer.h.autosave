@@ -1,0 +1,15 @@
+#ifndef LAYER_H
+#define LAYER_H
+
+#include <opencv2/opencv.hpp>
+
+class Layers
+{
+public:
+    Layers(const cv::Mat& area);
+private:
+    cv::Mat& area;
+    void init();
+};
+
+#endif // LAYER_H

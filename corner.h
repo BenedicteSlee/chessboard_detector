@@ -7,16 +7,11 @@
 
 class Corner
 {
+
 public:
     Corner(const cv::Mat&, cv::Point, Lines, int);
-
-    Points get_nbors();
-    cv::Point get_leftNbor();
-    cv::Point get_rightNbor();
-    cv::Point get_topNbor();
-    cv::Point get_bottomNbor();
-
-    void setNbors(Points nbors);
+    cv::Mat getArea();
+    int getNRegions();
 
 private:
     cv::Mat image_gray;
@@ -28,7 +23,8 @@ private:
     std::vector<int> meancols;
     std::vector<int> stdevcols;
     Lines lines;
-    void calcCols();
+    int nRegions;
+
 };
 
 #endif // CORNER_H
