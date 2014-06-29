@@ -167,3 +167,27 @@ int cvutils::sumderiv(std::vector<int> input)
     }
     return result;
 }
+
+
+void cvutils::dilate(std::vector<int> & binaryPixels)
+{
+    int start = 0;
+    int count = 0;
+    int a = binaryPixels[0];
+    for (int i = 1; i < (int) binaryPixels.size(); ++i) {
+        int b = binaryPixels[i];
+        if (a == b){
+            count++;
+        }
+        else {
+            if (count < (int) binaryPixels.size() / 8){
+                for (int j = start; j < i; ++j) {
+                    binaryPixels[j] = b;
+                }
+            }
+            a = b;
+            count = 0;
+        }
+
+    }
+}

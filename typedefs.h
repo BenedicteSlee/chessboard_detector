@@ -12,6 +12,6 @@ typedef std::vector<cv::Point> Points;
 typedef std::vector<Line> Lines;
 typedef std::vector<Square> Squares;
 typedef std::vector<Corner> Corners;
-typedef std::vector<Layer> Layers;
+
 
 #endif // TYPEDEFS_H

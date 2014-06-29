@@ -12,6 +12,7 @@ void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point a, cv::Point b);
 void sortPoints(Points &);
+void dilate(std::vector<int>&);
 
 int sumderiv(std::vector<int>);
 

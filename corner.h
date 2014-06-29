@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include "typedefs.h"
 #include "Line.h"
-#include "layer.h"
+
 
 class Corner
 {
@@ -15,7 +15,6 @@ public:
     int getNRegions();
 
 private:
-    cv::Mat image_gray;
     cv::Mat area;
     cv::Point initialCornerpoint;
     cv::Point cornerpoint;
@@ -25,6 +24,7 @@ private:
     std::vector<std::vector<int>> binaryLayers;
 
     void classify();
+    void recalculateCornerpoint();
 };
 
 #endif // CORNER_H
