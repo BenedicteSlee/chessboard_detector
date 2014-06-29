@@ -24,7 +24,7 @@ SOURCES += main.cpp\
     corner.cpp \
     square.cpp \
     board.cpp \
-    layers.cpp
+    layer.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -35,7 +35,7 @@ HEADERS  += mainwindow.h \
     corner.h \
     square.h \
     board.h \
-    layers.h
+    layer.h
 
 FORMS    += mainwindow.ui
 

@@ -204,19 +204,19 @@ void BoardDetector::createCorners()
     Points added;
     for (size_t i = 0; i < possibleSquares.size(); ++i)
     {
+        std::cout << i << "/" << possibleSquares.size() - 1 << std::endl;
         Square square = possibleSquares.at(i); // TODO use pointers such that the actual square will be modified
         Points cpoints = square.getCornerpointsSorted();
         Lines borders = square.getBordersSorted();
 
         int radius = 10; // TODO make dynamic
-        for (size_t i = 0; i < cpoints.size(); ++i) {
-            cv::Point p = cpoints.at(i);
-            int idx1 = i;
-            int idx2 = (i + 1) % 4;
-            Lines lines;
-            lines.push_back(borders[idx1]);
-            lines.push_back(borders[idx2]);
-            Corner newcorner(image_gray, p, lines, radius);
+        for (size_t j = 0; j < cpoints.size(); ++j) {
+            std::cout << j << "/" << cpoints.size() - 1 << std::endl;
+            cv::Point p = cpoints.at(j);
+            int idx1 = j;
+            int idx2 = (j + 1) % 4;
+
+            Corner newcorner(image_gray, p, radius);
             square.addCorner(newcorner);
             if (!cvutils::containsPoint(added, p)){
                 corners.push_back(newcorner);

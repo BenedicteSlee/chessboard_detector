@@ -112,7 +112,7 @@ void MainWindow::on_pushButton_2_clicked()
     // look at intersections
 
     Corners corners = cbd.getCorners();
-    int i = 1;
+
     /*
     for (size_t i = 0; i < corners.size(); ++i) {
         cv::imshow("corner", corners.at(i).getArea());

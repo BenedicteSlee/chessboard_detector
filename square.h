@@ -50,7 +50,7 @@ private:
     void calcVanishingPoints();
     void calcBorders();
     void calcMeanGray();
-    void sortCorners();
+    void sortCornerpoints();
 };
 
 class Chessboard : public Square

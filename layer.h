@@ -4,21 +4,20 @@
 #include <opencv2/opencv.hpp>
 #include <typedefs.h>
 
-class Layers
+class Layer
 {
     friend class Corner;
 public:
-    Layers(const cv::Mat& area);
+    Layer(const std::vector<int> pixels);
 private:
-    const cv::Mat& area;
-    std::vector<std::vector<int>> layers;
-    std::vector<std::vector<int>> binary;
+    std::vector<int> pixels;
+    std::vector<int> binaryPixels;
     int nRegions;
 
-    void init();
+    static Layers createLayers(const cv::Mat&);
     void binarize();
     void vote();
-    void classify();
+    static int classify(const Layers&);
 };
 
 #endif // LAYER_H

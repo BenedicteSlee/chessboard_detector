@@ -31,7 +31,7 @@ void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::P
     cornerpoints.push_back(corner3);
     cornerpoints.push_back(corner4);
 
-    sortCorners();
+    sortCornerpoints();
     upperLeft = cornerpointsSorted[0];
     upperRight = cornerpointsSorted[1];
     lowerLeft = cornerpointsSorted[2];
@@ -42,7 +42,7 @@ void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::P
     calcMeanGray();
 }
 
-void Square::sortCorners(){
+void Square::sortCornerpoints(){
     cornerpointsSorted = cornerpoints;
     cvutils::sortPoints(cornerpointsSorted);
 }
