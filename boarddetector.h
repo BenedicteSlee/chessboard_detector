@@ -15,7 +15,9 @@ public:
 
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
-    Squares get_PossibleSquares();
+    Squares getPossibleSquares();
+    Square getPossibleSquare(int col,int row);
+    std::vector<Squares> getPossibleSquares2();
     Corners getCorners();
 
 private:
@@ -23,6 +25,7 @@ private:
     void findVanishingPoint();
     void createCorners();
     void createPossibleSquares();
+    void calcSquareSize();
 
     cv::Mat image;
     cv::Mat image_gray;
@@ -34,6 +37,7 @@ private:
     std::vector<int> hlinesSorted;
     std::vector<int> vlinesSorted;
     Squares possibleSquares;
+    std::vector<Squares > possibleSquares2;
     Corners corners;
 
 };

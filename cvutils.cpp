@@ -117,7 +117,6 @@ bool cvutils::pairIsLess(const std::pair<int, double> a, const std::pair<int, do
     return a.second < b.second;
 }
 
-
 bool cvutils::containsPoint(const Points& points, const cv::Point& point)
 {
     if (points.empty()){
@@ -168,7 +167,6 @@ int cvutils::sumderiv(std::vector<int> input)
     return result;
 }
 
-
 void cvutils::dilate(std::vector<int> & binaryPixels)
 {
     int start = 0;
@@ -191,3 +189,4 @@ void cvutils::dilate(std::vector<int> & binaryPixels)
 
     }
 }
+

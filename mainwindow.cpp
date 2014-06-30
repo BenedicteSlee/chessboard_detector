@@ -84,13 +84,13 @@ void MainWindow::on_pushButton_2_clicked()
     }
 
     // get mean color
-    Squares possibleSquares = cbd.get_PossibleSquares();
+    Squares possibleSquares = cbd.getPossibleSquares();
     std::vector<int> meancols;
     int meancol = 0;
     for (size_t i = 0; i < possibleSquares.size(); ++i) {
-        meancols.push_back(possibleSquares[i].get_meanGray());
+        meancols.push_back(possibleSquares[i].getMeanGray());
         //std::cout << possibleSquares[i].get_meanGray() << std::endl;
-        meancol += possibleSquares[i].get_meanGray() / (double) possibleSquares.size();
+        meancol += possibleSquares[i].getMeanGray() / (double) possibleSquares.size();
     }
 
     // create binary image
@@ -99,6 +99,7 @@ void MainWindow::on_pushButton_2_clicked()
     cv::imshow("binary", binary);
     cv::waitKey(0);
 
+    /*
      //PLOT POSSIBLE SQUARES
     cv::RNG rng = cv::RNG(1234);
     for (size_t i = 0; i < possibleSquares.size(); ++i) {
@@ -108,6 +109,22 @@ void MainWindow::on_pushButton_2_clicked()
         cv::waitKey(1);
     }
     cv::waitKey();
+    */
+
+    //PLOT POSSIBLE SQUARES
+   cv::RNG rng = cv::RNG(1234);
+   std::vector<Squares> possibleSquares2 = cbd.getPossibleSquares2();
+   for (size_t i = 0; i < possibleSquares2.size(); i++) {
+       Squares row = possibleSquares2.at(i);
+       for (size_t j = 0; j < row.size(); j++){
+       cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
+       cv::fillConvexPoly(image, row.at(j).getCornerpoints(), col);
+       cv::imshow("poly", image);
+       cv::waitKey(2);
+       }
+   }
+   cv::waitKey();
+
 
     // look at intersections
 

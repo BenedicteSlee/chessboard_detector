@@ -24,7 +24,9 @@ public:
     void draw();
 
     // Get and set methods
-    int get_meanGray();
+    int getMeanGray();
+    int getVLength();
+    int getHLength();
     Points getCornerpoints();
     void setCornerpoints(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
     std::vector<cv::Point> getCornerpointsSorted() const;
@@ -45,6 +47,8 @@ private:
     Line upperBorder, rightBorder, lowerBorder, leftBorder;
     cv::Point upperLeft, upperRight, lowerRight, lowerLeft;
     std::vector<cv::Point> vanishingPoints;
+    int vlength;
+    int hlength;
 
     // Methods
     void calcVanishingPoints();

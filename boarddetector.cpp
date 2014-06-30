@@ -5,7 +5,8 @@
 #include "typedefs.h"
 #include <vector>
 #include <cmath>
-
+#include <armadillo>
+#include <stdexcept>
 
 BoardDetector::~BoardDetector()
 {
@@ -25,6 +26,7 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     findVanishingPoint();
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
     createPossibleSquares();
+    calcSquareSize();
     createCorners();
 }
 
@@ -46,14 +48,30 @@ Lines BoardDetector::get_vlinesSorted()
     return output;
 }
 
-Squares BoardDetector::get_PossibleSquares()
+Squares BoardDetector::getPossibleSquares()
 {
     return possibleSquares;
 }
 
+Square BoardDetector::getPossibleSquare(int col, int row)
+{
+    int nCols = vlinesSorted.size() - 1;
+
+    int idx = row * nCols + col;
+    if (idx > (int)possibleSquares.size() - 1)
+        std::cout << "trying to access element > than possibleSquares.size()"<< std::endl;
+    Square square = possibleSquares.at(idx);
+    return square;
+}
+
+std::vector<Squares> BoardDetector::getPossibleSquares2()
+{
+    return possibleSquares2;
+}
+
 Corners BoardDetector::getCorners()
 {   
-     return corners;
+    return corners;
 }
 
 void BoardDetector::categorizeLines(){    
@@ -198,6 +216,50 @@ void BoardDetector::createPossibleSquares()
         }
     }
 }
+
+void BoardDetector::calcSquareSize()
+{
+    int nrows = hlinesSorted.size()-1;
+    int ncols = vlinesSorted.size()-1;
+
+    // get mean size per row (not for whole board because need to account for viewpoint effect
+
+    std::vector<int> hlengths(ncols);
+    std::vector<int> vlengths(ncols);
+    std::vector<int> meanHLengths(nrows);
+    std::vector<int> meanVLengths(nrows);
+
+    for (int j=0; j<nrows;j++){
+        for (int i=0; i < ncols; i++)
+        {
+            Square square = getPossibleSquare(i,j);
+            hlengths[i] = square.getHLength();
+            vlengths[i] = square.getVLength();
+
+        }
+        meanHLengths[j] = cvutils::meanNoOutliers(hlengths);
+        meanVLengths[j] = cvutils::meanNoOutliers(vlengths);
+    }
+
+    for (int j = 0; j < nrows; j++){
+        Squares row;
+        for (int i = 0; i < ncols; i++){
+            Square square = getPossibleSquare(i, j);
+            int hlength = square.getHLength();
+            int vlength = square.getVLength();
+
+            bool vlengthOk = std::abs(vlength - meanVLengths[j]) < 10; // TODO make dynamic
+            bool hlengthOk = std::abs(hlength - meanHLengths[j]) < 10; // TODO make dynamic
+            if ( vlengthOk && hlengthOk){
+                row.push_back(square);
+            }
+        }
+        possibleSquares2.push_back(row);
+    }
+
+}
+
+
 
 void BoardDetector::createCorners()
 {

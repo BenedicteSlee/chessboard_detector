@@ -30,8 +30,6 @@ int Corner::getNRegions()
 void Corner::classify(){
     int nc = area.cols;
     int nr = area.rows;
-    cv::imshow("area", area);
-    cv::waitKey(2);
 
     int nLayers = std::min(nc, nr) / 2 - 1;
     std::vector<Points> layercorners(nLayers);
@@ -141,14 +139,10 @@ void Corner::classify(){
     else
         nRegions = 0;
 
-    std::cout<< nRegions << std::endl;
-
-    int j = 1;
-
 }
 
 void Corner::recalculateCornerpoint()
-{
+{ // TODO look at: http://stackoverflow.com/questions/4292249/automatic-calculation-of-low-and-high-thresholds-for-the-canny-operation-in-open
     int meancol =  (int) cv::mean(area)[0];
     cv::Mat binArea = area;
     //cv::threshold(area, binArea, 200, 255, 1);
@@ -165,8 +159,4 @@ void Corner::recalculateCornerpoint()
                 cv::Point(houghlines[i][2], houghlines[i][3]), cv::Scalar(0,255,0), 10, 8 );
         }
 
-
-    cv::imshow("binarea", binArea);
-    cv::waitKey(2);
-    int k = 1;
 }

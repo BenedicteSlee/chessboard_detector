@@ -38,7 +38,9 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui
 
 INCLUDEPATH += /usr/local/Cellar/opencv/2.4.8.2/include/ \
-    /usr/local/include/
+    /usr/local/include/ \
+    /usr/local/Cellar/armadillo/4.100.2/include/
+
 LIBS += -L/usr/local/lib \
      -lopencv_core \
      -lopencv_imgproc \
@@ -46,6 +48,9 @@ LIBS += -L/usr/local/lib \
      -lopencv_highgui \
      -lopencv_calib3d \
      -lboost_math_c99 \
+     -larmadillo \
+     -llapack \
+     -lblas
 
 
 SUBDIRS += \

@@ -14,7 +14,10 @@ Square::Square(cv::Mat &image_, cv::Point corner1, cv::Point corner2, cv::Point 
     init(corner1, corner2, corner3, corner4);
 }
 
-int Square::get_meanGray()
+int Square::getVLength(){return vlength;}
+int Square::getHLength(){return hlength;}
+
+int Square::getMeanGray()
 {
     return meanGray;
 }
@@ -36,6 +39,9 @@ void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::P
     upperRight = cornerpointsSorted[1];
     lowerLeft = cornerpointsSorted[2];
     lowerRight = cornerpointsSorted[3];
+
+    hlength = cv::norm(upperRight-upperLeft);
+    vlength = cv::norm(upperLeft - lowerLeft);
 
     calcBorders();
     calcVanishingPoints();
@@ -117,6 +123,7 @@ void Square::draw(){
 
 
 }
+
 std::vector<cv::Point> Square::getCornerpointsSorted() const
 {
     return cornerpointsSorted;
