@@ -19,7 +19,6 @@ public:
     // Init
     void init(cv::Point, cv::Point, cv::Point, cv::Point);
 
-
     // Methods
     void draw();
 
@@ -31,9 +30,11 @@ public:
     void setCornerpoints(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
     std::vector<cv::Point> getCornerpointsSorted() const;
     Lines getBordersSorted() const;
+    int getSquareType(){return squareType;}
 
     // Add features
     void addCorner(Corner corner);
+    void determineType();
 
 private:
     // Variables
@@ -49,12 +50,14 @@ private:
     std::vector<cv::Point> vanishingPoints;
     int vlength;
     int hlength;
+    int squareType;
 
     // Methods
     void calcVanishingPoints();
     void calcBorders();
     void calcMeanGray();
     void sortCornerpoints();
+
 };
 
 class Chessboard : public Square

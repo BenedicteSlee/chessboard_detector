@@ -28,6 +28,7 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     createPossibleSquares();
     calcSquareSize();
     createCorners();
+    determineSquareTypes();
 }
 
 Lines BoardDetector::get_hlinesSorted()
@@ -259,32 +260,49 @@ void BoardDetector::calcSquareSize()
 
 }
 
+void BoardDetector::determineSquareTypes()
+{
+    for (size_t i = 0; i < possibleSquares2.size(); i++){
+        Squares& row = possibleSquares2.at(i);
+        for (size_t j = 0; j < row.size(); j++){
+            Square& square = row.at(j);
+            square.determineType();
+        }
+    }
 
+}
 
 void BoardDetector::createCorners()
 {
     Points added;
-    for (size_t i = 0; i < possibleSquares.size(); ++i)
+
+    for (size_t i = 0; i < possibleSquares2.size(); i++)
     {
+        Squares& row = possibleSquares2.at(i);
+        for (size_t j = 0; j < row.size(); j++){
+            Square& square = row.at(j);
+            Points cpoints = square.getCornerpointsSorted();
 
-        Square square = possibleSquares.at(i); // TODO use pointers such that the actual square will be modified
-        Points cpoints = square.getCornerpointsSorted();
-        Lines borders = square.getBordersSorted();
+            int radius = 10; // TODO make dynamic
 
-        int radius = 10; // TODO make dynamic
-        for (size_t j = 0; j < cpoints.size(); ++j) {
+            for (size_t k = 0; k < cpoints.size(); k++){
+                cv::Point p = cpoints.at(k);
+                Corner newcorner(image_gray, p, radius);
+                square.addCorner(newcorner);
+                if (!cvutils::containsPoint(added, p)){
+                    corners.push_back(newcorner);
+                    added.push_back(p);
 
-            cv::Point p = cpoints.at(j);
-            int idx1 = j;
-            int idx2 = (j + 1) % 4;
+                    std::cout << newcorner.getNRegions() << std::endl;
 
-            Corner newcorner(image_gray, p, radius);
-            square.addCorner(newcorner);
-            if (!cvutils::containsPoint(added, p)){
-                corners.push_back(newcorner);
-                added.push_back(p);
+                    cv::imshow("CORNER", newcorner.getArea());
+                    cv::waitKey(2);
+
+                }
+
             }
         }
     }
+
 }
 

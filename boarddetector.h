@@ -26,6 +26,7 @@ private:
     void createCorners();
     void createPossibleSquares();
     void calcSquareSize();
+    void determineSquareTypes();
 
     cv::Mat image;
     cv::Mat image_gray;

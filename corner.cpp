@@ -12,7 +12,7 @@ Corner::Corner(const cv::Mat& image, cv::Point cornerpoint, int radius)
     // Create area around cornerpoint
     area = image(cv::Rect(cornerpoint.x - radius,cornerpoint.y - radius, radius*2 , radius*2));
 
-    recalculateCornerpoint(); //TODO
+    //recalculateCornerpoint(); //TODO
 
     classify(); // set nRegions;
 }
@@ -110,14 +110,14 @@ void Corner::classify(){
     }
 
     // vote
-    std::vector<int> nRegionsVotes(layers.size());
-    for (size_t i = 0; i < binaryLayers.size(); ++i) {
+    double nLayersConsulted = binaryLayers.size() / 2; // many corners arent centered precisely on the intersection so the innermost layers dont traverse all four regions
+    std::vector<int> nRegionsVotes(nLayersConsulted);
+    for (size_t i = 0; i < nLayersConsulted; ++i) {
         std::vector<int> dilated = binaryLayers[i];
         cvutils::dilate(dilated);
         int sumderiv = cvutils::sumderiv(dilated);
         if (dilated[0] != dilated[dilated.size()-1]) // unlikely case that the layer is started right on the edge of a region
             sumderiv++;
-
         nRegionsVotes[i] = std::min(5,sumderiv); // if more than 4 regions found, set to 5. Only care about the fact that it is more than 4.
     }
 
@@ -133,12 +133,13 @@ void Corner::classify(){
             count++;
     }
 
-    double pct = count / (double) layers.size();
+    double pct = count / (double) nLayersConsulted;
     if (pct > 0.7)
         nRegions = vote;
     else
         nRegions = 0;
 
+    int k = 0;
 }
 
 void Corner::recalculateCornerpoint()

@@ -27,7 +27,6 @@ Points Square::getCornerpoints(){
     return cornerpoints;
 }
 
-
 void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4){
     cornerpoints.push_back(corner1);
     cornerpoints.push_back(corner2);
@@ -51,6 +50,44 @@ void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::P
 void Square::sortCornerpoints(){
     cornerpointsSorted = cornerpoints;
     cvutils::sortPoints(cornerpointsSorted);
+}
+
+void Square::determineType()
+{
+    if (corners.empty()){
+        std::cout << "Corners have not been added yet" << std::endl;
+        return;
+    }
+
+    std::vector<int> votes(4);
+    for (int i = 0; i < 4; i++){
+        votes.at(i) = corners[i].getNRegions();
+    }
+
+    std::vector<int> histogram(6,0); // votes can be 0 (undertermined), 1, 2, 3, 4, or 5 (more than 4)
+    for( int i=0; i< (int) votes.size(); ++i )
+        ++histogram[ votes[i] ];
+
+    //int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
+
+    // inner 4, border 3, corner 2, frame 1, outside board 0
+    if (histogram[4] >= 3){
+        squareType = 4;
+    }
+
+    else if (histogram[4] == 2 && histogram[2] == 2){
+        squareType = 3;
+    }
+
+    else if (histogram[4] == 1 && histogram[2] >= 2){
+        squareType = 2;
+    }
+
+    else {
+       squareType = 0;
+    }
+
+    int kk = 0;
 }
 
 void Square::calcBorders()
