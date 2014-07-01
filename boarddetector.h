@@ -25,8 +25,12 @@ private:
     void findVanishingPoint();
     void createCorners();
     void createPossibleSquares();
-    void calcSquareSize();
+    void filterBasedOnSquareSize();
     void determineSquareTypes();
+    void determineRowTypes();
+    void filterBasedOnRowType();
+    void determineColTypes();
+    void filterBasedOnColType();
 
     cv::Mat image;
     cv::Mat image_gray;
@@ -39,6 +43,10 @@ private:
     std::vector<int> vlinesSorted;
     Squares possibleSquares;
     std::vector<Squares > possibleSquares2;
+    std::vector<Squares> possibleSquares3;
+    std::vector<std::vector<int>> squareTypes;
+    std::vector<int> rowTypes;
+    std::vector<int> colTypes;
     Corners corners;
 
 };

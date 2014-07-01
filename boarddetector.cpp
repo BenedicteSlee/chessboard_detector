@@ -5,7 +5,6 @@
 #include "typedefs.h"
 #include <vector>
 #include <cmath>
-#include <armadillo>
 #include <stdexcept>
 
 BoardDetector::~BoardDetector()
@@ -26,9 +25,13 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     findVanishingPoint();
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
     createPossibleSquares();
-    calcSquareSize();
+    filterBasedOnSquareSize();
     createCorners();
     determineSquareTypes();
+    determineRowTypes();
+    filterBasedOnRowType();
+    determineColTypes();
+    std::cout << "hei" << std::endl;
 }
 
 Lines BoardDetector::get_hlinesSorted()
@@ -218,7 +221,7 @@ void BoardDetector::createPossibleSquares()
     }
 }
 
-void BoardDetector::calcSquareSize()
+void BoardDetector::filterBasedOnSquareSize()
 {
     int nrows = hlinesSorted.size()-1;
     int ncols = vlinesSorted.size()-1;
@@ -257,24 +260,15 @@ void BoardDetector::calcSquareSize()
         }
         possibleSquares2.push_back(row);
     }
-
 }
 
-void BoardDetector::determineSquareTypes()
-{
-    for (size_t i = 0; i < possibleSquares2.size(); i++){
-        Squares& row = possibleSquares2.at(i);
-        for (size_t j = 0; j < row.size(); j++){
-            Square& square = row.at(j);
-            square.determineType();
-        }
-    }
 
-}
 
 void BoardDetector::createCorners()
 {
     Points added;
+
+
 
     for (size_t i = 0; i < possibleSquares2.size(); i++)
     {
@@ -301,8 +295,95 @@ void BoardDetector::createCorners()
                 }
 
             }
+
         }
     }
 
 }
+
+void BoardDetector::determineSquareTypes()
+{
+    std::vector<std::vector<int>> types(possibleSquares2.size());
+    for (size_t i = 0; i < possibleSquares2.size(); i++){
+        Squares& row = possibleSquares2.at(i);
+        for (size_t j = 0; j < row.size(); j++){
+            Square& square = row.at(j);
+            square.determineType();
+            types.at(i).push_back(square.getSquareType());
+        }
+    }
+
+    squareTypes = types;
+}
+
+void BoardDetector::determineRowTypes()
+{
+    for (size_t i = 0; i < squareTypes.size(); i++){
+        std::vector<int> row = squareTypes.at(i);
+
+        std::vector<int> histogram(5,0);
+        for (size_t j = 0; j < row.size(); j++){
+            ++histogram[ row.at(j) ];
+        }
+
+        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
+        if (vote == 0 && histogram[0] < (int)row.size()-1) // if there are two or more votes for other categories
+        {
+            rowTypes.push_back(-1); // might be part of the board
+        } else {
+
+            rowTypes.push_back(vote);
+        }
+    }
+}
+
+void BoardDetector::filterBasedOnRowType()
+{
+    for (size_t i = 0; i < rowTypes.size(); i++){
+        if (rowTypes.at(i) != 0){
+            Squares row = possibleSquares2.at(i);
+            possibleSquares3.push_back(row);
+        }
+    }
+}
+
+void BoardDetector::determineColTypes()
+{
+    int nCols = squareTypes.at(0).size(); // squareTypes has the same number of cols in each vector element so can just look at the first element
+
+
+    // access per column
+
+    for (size_t i = 0; i < nCols; i++){
+        std::vector<int> col;
+        for (size_t j = 0; j < squareTypes.size(); j++){
+            col.push_back(squareTypes.at(j).at(i));
+        }
+
+        std::vector<int> histogram(5,0);
+        for (size_t j = 0; j < col.size(); j++){
+            ++histogram[ col.at(j) ];
+        }
+
+        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
+        if (vote == 0 && histogram[0] < (int)col.size()-1) // if there are two or more votes for other categories
+        {
+            colTypes.push_back(-1); // might be part of the board
+        } else {
+
+            colTypes.push_back(vote);
+        }
+    }
+
+}
+
+void BoardDetector::filterBasedOnColType()
+{
+   // TODO!
+
+}
+
+
+
+
 
