@@ -83,15 +83,7 @@ void MainWindow::on_pushButton_2_clicked()
         cv::waitKey(1);
     }
 
-    // get mean color
-    Squares possibleSquares = cbd.getPossibleSquares();
-    std::vector<int> meancols;
-    int meancol = 0;
-    for (size_t i = 0; i < possibleSquares.size(); ++i) {
-        meancols.push_back(possibleSquares[i].getMeanGray());
-        //std::cout << possibleSquares[i].get_meanGray() << std::endl;
-        meancol += possibleSquares[i].getMeanGray() / (double) possibleSquares.size();
-    }
+
 
     // create binary image
     cv::Mat binary;

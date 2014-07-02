@@ -6,6 +6,7 @@
 #include "cvutils.h"
 #include "corner.h"
 #include "typedefs.h"
+#include "board.h"
 
 class BoardDetector
 {
@@ -15,8 +16,7 @@ public:
 
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
-    Squares getPossibleSquares();
-    Square getPossibleSquare(int col,int row);
+    Board getPossibleBoard();
     std::vector<Squares> getPossibleSquares2();
     Corners getCorners();
 
@@ -37,11 +37,11 @@ private:
     std::vector<Line> lines;
     std::vector<double> slopes;
     cv::Point vanishingPoint;
-    std::vector<int> hlines;
-    std::vector<int> vlines;
-    std::vector<int> hlinesSorted;
-    std::vector<int> vlinesSorted;
-    Squares possibleSquares;
+    std::vector<int> hlinesIdx;
+    std::vector<int> vlinesIdx;
+    Lines hlinesSorted;
+    Lines vlinesSorted;
+    Board possibleBoard;
     std::vector<Squares > possibleSquares2;
     std::vector<Squares> possibleSquares3;
     std::vector<std::vector<int>> squareTypes;

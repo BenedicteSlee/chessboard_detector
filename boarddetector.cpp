@@ -22,8 +22,12 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     lines = lines_;
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
-    findVanishingPoint();
+
+    possibleBoard = Board(image, hlinesSorted, vlinesSorted);
+
+    //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
+
     createPossibleSquares();
     filterBasedOnSquareSize();
     createCorners();
@@ -36,36 +40,17 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
 
 Lines BoardDetector::get_hlinesSorted()
 {
-    Lines output(hlinesSorted.size());
-    for (size_t i = 0; i < hlinesSorted.size(); ++i) {
-        output[i] = lines[hlinesSorted[i]];
-    }
-    return output;
+   return hlinesSorted;
 }
 
 Lines BoardDetector::get_vlinesSorted()
 {
-    Lines output(vlinesSorted.size());
-    for (size_t i = 0; i < vlinesSorted.size(); ++i) {
-        output[i] = lines[vlinesSorted[i]];
-    }
-    return output;
+   return vlinesSorted;
 }
 
-Squares BoardDetector::getPossibleSquares()
+Board BoardDetector::getPossibleBoard()
 {
-    return possibleSquares;
-}
-
-Square BoardDetector::getPossibleSquare(int col, int row)
-{
-    int nCols = vlinesSorted.size() - 1;
-
-    int idx = row * nCols + col;
-    if (idx > (int)possibleSquares.size() - 1)
-        std::cout << "trying to access element > than possibleSquares.size()"<< std::endl;
-    Square square = possibleSquares.at(idx);
-    return square;
+    return possibleBoard;
 }
 
 std::vector<Squares> BoardDetector::getPossibleSquares2()
@@ -83,21 +68,21 @@ void BoardDetector::categorizeLines(){
     {
         if (lines[i].slope < 0.1 && lines[i].slope > -0.1) // TODO: make numbers dynamic based on iamge size!
         {
-            hlines.push_back((int) i);
+            hlinesIdx.push_back((int) i);
         }
         else
         {
-            vlines.push_back((int) i);
+            vlinesIdx.push_back((int) i);
         }
     }
     
     /////////// H O R I Z O N T A L   L I N E S ///////////
     // Sort horizontal lines
-    std::vector<std::pair<int,double> > yints(hlines.size());
+    std::vector<std::pair<int,double> > yints(hlinesIdx.size());
 
     std::pair<int,double> p;
-    for (size_t i = 0; i < hlines.size(); ++i) {
-        Line line = lines[hlines[i]];
+    for (size_t i = 0; i < hlinesIdx.size(); ++i) {
+        Line line = lines[hlinesIdx[i]];
         p.first = (int) i;
         p.second = (double) line.yIntercept;
         yints[i] = p;
@@ -118,18 +103,20 @@ void BoardDetector::categorizeLines(){
     }
 
     // Add sorted unique horizontal lines to field
-    for (size_t i = 0; i < hlines.size(); ++i) {
-        if (removeIdx1[i] != 1)
-            hlinesSorted.push_back(hlines[yints[i].first]);
+    for (size_t i = 0; i < hlinesIdx.size(); ++i) {
+        if (removeIdx1[i] != 1){
+            Line line = lines.at(hlinesIdx[yints[i].first]);
+            hlinesSorted.push_back(line);
+        }
     }
 
     /////////// V E R T I C A L   L I N E S ///////////
     // Sort vertical lines
-    std::vector<std::pair<int,double> > xints(vlines.size());
+    std::vector<std::pair<int,double> > xints(vlinesIdx.size());
 
     std::pair<int,double> p2;
-    for (size_t i = 0; i < vlines.size(); ++i) {
-        Line line = lines[vlines[i]];
+    for (size_t i = 0; i < vlinesIdx.size(); ++i) {
+        Line line = lines[vlinesIdx[i]];
         p2.first = (int) i;
         p2.second = (double) line.xlookup(0, 1);
         xints[i] = p2;
@@ -150,25 +137,26 @@ void BoardDetector::categorizeLines(){
     }
 
     // Add sorted unique vertical lines to field
-    for (size_t i = 0; i < vlines.size(); ++i) {
+    for (size_t i = 0; i < vlinesIdx.size(); ++i) {
         if (removeIdx2[i] != 1){
-            vlinesSorted.push_back(vlines[xints[i].first]);
+            Line line = lines.at(vlinesIdx[xints[i].first]);
+            vlinesSorted.push_back(line);
         }
     }
 }
 
 void BoardDetector::findVanishingPoint(){
-    int numlines = (int) vlines.size();
+    int numlines = (int) vlinesIdx.size();
     Points vpoints;
     vpoints.reserve(numlines*(numlines-1)/2);
 
     // Calculate intersection between each possible pair of lines
     // TODO: this should be gotten from findIntersections()
     for (int i=0;i<numlines;i++){
-        int idx1 = vlines.at(i);
+        int idx1 = vlinesIdx.at(i);
         Line line1 = lines.at(idx1);
         for (int j=i+1;j<numlines;j++){
-            int idx2 = vlines.at(j);
+            int idx2 = vlinesIdx.at(j);
             Line line2 = lines.at(idx2);
             cv::Point vpoint;
             line1.Intersection(line2, vpoint);
@@ -201,6 +189,9 @@ void BoardDetector::findVanishingPoint(){
 
 void BoardDetector::createPossibleSquares()
 {
+
+
+    /*
     for (size_t i = 0; i < hlinesSorted.size()-1; ++i) {
         Line hlineUpper = lines.at(hlinesSorted.at(i));
         Line hlineLower = lines.at(hlinesSorted.at(i+1));
@@ -219,6 +210,7 @@ void BoardDetector::createPossibleSquares()
             possibleSquares.push_back(square);
         }
     }
+    */
 }
 
 void BoardDetector::filterBasedOnSquareSize()
@@ -236,7 +228,7 @@ void BoardDetector::filterBasedOnSquareSize()
     for (int j=0; j<nrows;j++){
         for (int i=0; i < ncols; i++)
         {
-            Square square = getPossibleSquare(i,j);
+            Square square = possibleBoard.getSquare(j, i);
             hlengths[i] = square.getHLength();
             vlengths[i] = square.getVLength();
 
@@ -248,7 +240,7 @@ void BoardDetector::filterBasedOnSquareSize()
     for (int j = 0; j < nrows; j++){
         Squares row;
         for (int i = 0; i < ncols; i++){
-            Square square = getPossibleSquare(i, j);
+            Square square = possibleBoard.getSquare(j,i);
             int hlength = square.getHLength();
             int vlength = square.getVLength();
 
@@ -261,8 +253,6 @@ void BoardDetector::filterBasedOnSquareSize()
         possibleSquares2.push_back(row);
     }
 }
-
-
 
 void BoardDetector::createCorners()
 {
@@ -351,7 +341,6 @@ void BoardDetector::determineColTypes()
 {
     int nCols = squareTypes.at(0).size(); // squareTypes has the same number of cols in each vector element so can just look at the first element
 
-
     // access per column
 
     for (size_t i = 0; i < nCols; i++){
@@ -370,20 +359,16 @@ void BoardDetector::determineColTypes()
         {
             colTypes.push_back(-1); // might be part of the board
         } else {
-
             colTypes.push_back(vote);
         }
     }
-
 }
 
 void BoardDetector::filterBasedOnColType()
 {
-   // TODO!
+
+// TODO
 
 }
-
-
-
 
 
