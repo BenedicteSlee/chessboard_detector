@@ -161,13 +161,13 @@ void Square::draw(){
 
 }
 
-std::vector<cv::Point> Square::getCornerpointsSorted() const
+std::vector<cv::Point> Square::getCornerpointsSorted()
 {
     return cornerpointsSorted;
 }
 
 
-Lines Square::getBordersSorted() const
+Lines Square::getBordersSorted()
 {
     return borders;
 }

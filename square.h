@@ -1,5 +1,5 @@
-#ifndef CHESSBOARD_H
-#define CHESSBOARD_H
+#ifndef SQUARE_H
+#define SQUARE_H
 
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -14,6 +14,7 @@ class Square
 public:
     // Constructors
     ~Square(){}
+    //Square(){}
     Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4);
 
     // Init
@@ -28,8 +29,8 @@ public:
     int getHLength();
     Points getCornerpoints();
     void setCornerpoints(cv::Mat& image, cv::Point, cv::Point, cv::Point, cv::Point);
-    std::vector<cv::Point> getCornerpointsSorted() const;
-    Lines getBordersSorted() const;
+    std::vector<cv::Point> getCornerpointsSorted();
+    Lines getBordersSorted();
     int getSquareType(){return squareType;}
 
     // Add features
@@ -60,13 +61,4 @@ private:
 
 };
 
-class Chessboard : public Square
-{
-public:
-    Chessboard();
-    ~Chessboard(){}
-    Square& at(int, int);
-    std::vector<Square> squares;
-};
-
-#endif // CHESSBOARD_H
+#endif // SQUARE_H

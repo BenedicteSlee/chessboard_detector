@@ -29,6 +29,7 @@ Board::Board(cv::Mat& image, Lines hlinesSorted, Lines vlinesSorted)
     }
 }
 
+/*
 Board::Board(Board oldBoard, std::vector<int> rowsToRemove, std::vector<int> colsToRemove)
 {
 
@@ -45,6 +46,7 @@ Board::Board(Board oldBoard, std::vector<int> rowsToRemove, std::vector<int> col
         }
     }
 }
+*/
 
 int Board::getIndex(int row, int col)
 {
@@ -66,7 +68,7 @@ Square& Board::getSquareRef(int rowIdx, int colIdx){
     return square;
 }
 
-Squares Board::getRow(int rowIdx) const
+Squares Board::getRow(int rowIdx)
 {
 
     if (rowIdx > nRows){
@@ -82,7 +84,7 @@ Squares Board::getRow(int rowIdx) const
 
 
 
-Squares Board::getCol(int colIdx) const
+Squares Board::getCol(int colIdx)
 {
     if (colIdx > nCols){
         std::invalid_argument("col index > number of columns in board");
@@ -90,8 +92,11 @@ Squares Board::getCol(int colIdx) const
 
     Squares column(nRows);
     for (int i = 0; i < nRows; i++){
-        column.at(i) = squares.at(colIdx + nCols * i);
+        //Square square = squares.at(colIdx + nCols * i);
+        column.push_back(squares.at(colIdx + nCols * i));
     }
+
+    return column;
 }
 
 

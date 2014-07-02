@@ -9,14 +9,14 @@
 class Board
 {
 public:
-    Board();
+    Board(){};
     Board(cv::Mat& image, Lines sortedHorizontalLines, Lines sortedVerticalLines);
-    Board(Board oldBoard, std::vector<int> rowsToRemove, std::vector<int> colsToRemove);
+    //Board(Board oldBoard, std::vector<int> rowsToRemove, std::vector<int> colsToRemove);
 
     Square getSquare(int row, int col);
     Square& getSquareRef(int row, int col);
-    Squares getRow(int row) const;
-    Squares getCol(int col) const;
+    Squares getRow(int row);
+    Squares getCol(int col);
     //Squares& getColRef(int col);
 
     int getNumCols(){return nCols;}
