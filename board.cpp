@@ -134,12 +134,29 @@ Squares Board::getCol(int colIdx)
 
     Squares column(nRows);
     for (int i = 0; i < nRows; i++){
-        //Square square = squares.at(colIdx + nCols * i);
-        int squaresIdx = colIdx + nCols * i + 1;
-        column.push_back(squares.at(squaresIdx));
+
+        int squaresIdx = colIdx + nCols * i;
+        Square square = squares.at(squaresIdx);
+        column.at(i) = square;
     }
 
     return column;
+}
+
+std::vector<int> Board::getRowTypes()
+{
+    if (rowTypes.empty()){
+        determineRowTypes();
+    }
+    return rowTypes;
+}
+
+std::vector<int> Board::getColTypes()
+{
+    if (colTypes.empty()){
+        determineColTypes();
+    }
+    return colTypes;
 }
 
 void Board::draw(cv::Mat &image)
@@ -156,5 +173,47 @@ void Board::draw(cv::Mat &image)
     cv::waitKey();
 }
 
+void Board::determineRowTypes()
+{
+    rowTypes.clear();
 
+    for (int i = 0; i < nRows; i++){
+        std::vector<int> histogram(5,0);
+        for (size_t j = 0; j < nCols; j++){
+            Square& square = getSquareRef(i, j);
+            int type = square.getSquareType();
+            ++histogram[ type ];
+        }
+
+        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
+        if (vote == 0 && histogram[0] < nCols-1) // if there are two or more votes for other categories
+        {
+            rowTypes.push_back(-1); // might be part of the board
+        } else {
+            rowTypes.push_back(vote);
+        }
+    }
+}
+
+void Board::determineColTypes()
+{
+    colTypes.clear();
+
+    for (int i = 0; i < nCols; i++){
+        std::vector<int> histogram(5,0);
+        for (size_t j = 0; j < nRows; j++){
+            Square& square = getSquareRef(j, i);
+            int type = square.getSquareType();
+            ++histogram[ type ];
+        }
+
+        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
+        if (vote == 0 && histogram[0] < nCols-1) // if there are two or more votes for other categories
+        {
+            colTypes.push_back(-1); // might be part of the board
+        } else {
+            colTypes.push_back(vote);
+        }
+    }
+}
 

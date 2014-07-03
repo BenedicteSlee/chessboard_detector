@@ -24,6 +24,9 @@ public:
     int getNumCols(){return nCols;}
     int getNumRows(){return nRows;}
 
+    std::vector<int> getRowTypes();
+    std::vector<int> getColTypes();
+
     void draw(cv::Mat& image);
 
 private:
@@ -31,8 +34,12 @@ private:
     int nCols;
     std::vector<Square> squares;
     std::vector<int> squareTypes;
+    std::vector<int> rowTypes;
+    std::vector<int> colTypes;
 
     int getIndex(int row, int col);
+    void determineRowTypes();
+    void determineColTypes();
 };
 
 #endif // BOARD_H

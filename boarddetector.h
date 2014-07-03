@@ -20,6 +20,7 @@ public:
     //std::vector<Squares> getPossibleSquares2();
     Corners getCorners();
 
+
 private:
     void categorizeLines();
     void findVanishingPoint();
@@ -27,9 +28,7 @@ private:
     void createPossibleSquares();
     Board filterBasedOnSquareSize(Board& board);
     //void determineSquareTypes(Board& board); // should be moved to board
-    void determineRowTypes(Board& board);
     Board filterBasedOnRowType(Board& board, std::vector<int> rowTypes);
-    void determineColTypes(Board& board);
     Board filterBasedOnColType(Board& board, std::vector<int> colTypes);
 
     cv::Mat image;
@@ -45,8 +44,7 @@ private:
     //std::vector<Squares > possibleSquares2;
     //std::vector<Squares> possibleSquares3;
     std::vector<std::vector<int>> squareTypes;
-    std::vector<int> rowTypes;
-    std::vector<int> colTypes;
+
     Corners corners;
 
 };

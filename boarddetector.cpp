@@ -35,10 +35,11 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     createCorners(possibleBoard);
 
     //determineSquareTypes(possibleBoard2);
-    determineRowTypes(possibleBoard);
+    std::vector<int> rowTypes = possibleBoard.getRowTypes();
     Board possibleBoard2 = filterBasedOnRowType(possibleBoard, rowTypes);
     possibleBoard2.draw(image);
-    determineColTypes(possibleBoard2);
+
+    std::vector<int> colTypes = possibleBoard2.getColTypes();
     Board possibleBoard3 = filterBasedOnColType(possibleBoard2, colTypes);
     possibleBoard3.draw(image);
 
@@ -60,6 +61,7 @@ Corners BoardDetector::getCorners()
 {   
     return corners;
 }
+
 
 void BoardDetector::categorizeLines(){    
     for (size_t i=0; i<lines.size();i++)
@@ -211,7 +213,6 @@ void BoardDetector::createPossibleSquares()
     */
 }
 
-
 Board BoardDetector::filterBasedOnSquareSize(Board &board)
 { // TODO REDO!! remove whole rows/columns at a time not indivudal squares
     std::vector<int> hlengths(board.getNumCols());
@@ -247,48 +248,7 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
 
     return newBoard;
 }
-/*
-void BoardDetector::filterBasedOnSquareSizeOld()
-{
-    int nrows = hlinesSorted.size()-1;
-    int ncols = vlinesSorted.size()-1;
 
-    // get mean size per row (not for whole board because need to account for viewpoint effect
-
-    std::vector<int> hlengths(ncols);
-    std::vector<int> vlengths(ncols);
-    std::vector<int> meanHLengths(nrows);
-    std::vector<int> meanVLengths(nrows);
-
-    for (int j=0; j<nrows;j++){
-        for (int i=0; i < ncols; i++)
-        {
-            Square square = possibleBoard.getSquare(j, i);
-            hlengths[i] = square.getHLength();
-            vlengths[i] = square.getVLength();
-
-        }
-        meanHLengths[j] = cvutils::meanNoOutliers(hlengths);
-        meanVLengths[j] = cvutils::meanNoOutliers(vlengths);
-    }
-
-    for (int j = 0; j < nrows; j++){
-        Squares row;
-        for (int i = 0; i < ncols; i++){
-            Square square = possibleBoard.getSquare(j,i);
-            int hlength = square.getHLength();
-            int vlength = square.getVLength();
-
-            bool vlengthOk = std::abs(vlength - meanVLengths[j]) < 10; // TODO make dynamic
-            bool hlengthOk = std::abs(hlength - meanHLengths[j]) < 10; // TODO make dynamic
-            if ( vlengthOk && hlengthOk){
-                row.push_back(square);
-            }
-        }
-        possibleSquares2.push_back(row);
-    }
-}
-*/
 void BoardDetector::createCorners(Board& board)
 {
     //Points added;
@@ -327,33 +287,6 @@ void BoardDetector::createCorners(Board& board)
 
 }
 
-void BoardDetector::determineRowTypes(Board& board)
-{
-    int nrows = board.getNumRows();
-    std::vector<int> types(nrows);
-
-    for (int i = 0; i < nrows; i++){
-        Squares row = board.getRow(i);
-
-        std::vector<int> histogram(5,0);
-        for (size_t j = 0; j < row.size(); j++){
-            int type = row.at(j).getSquareType();
-            ++histogram[ type ];
-        }
-
-        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
-        if (vote == 0 && histogram[0] < (int)row.size()-1) // if there are two or more votes for other categories
-        {
-            types.at(i) = -1; // might be part of the board
-        } else {
-
-            types.at(i) = vote;
-        }
-    }
-
-    rowTypes = types;
-}
-
 Board BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowTypes)
 {
     Board newBoard;
@@ -367,78 +300,16 @@ Board BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowType
     return newBoard;
 }
 
-void BoardDetector::determineColTypes(Board& board)
-{
-    std::vector<int> types(board.getNumCols());
-
-    for (size_t i = 0; i < board.getNumCols(); i++){
-        Squares col = board.getCol(i);
-
-        std::vector<int> histogram(5,0);
-        for (size_t j = 0; j < col.size(); j++){
-            int type = col.at(j).getSquareType();
-            if (type < 5 && type >= 0){
-                ++histogram[ type ];
-            } else {
-                throw std::invalid_argument("invalid type!");
-            }
-
-        }
-
-        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
-        if (vote == 0 && histogram[0] < (int)col.size()-1) // if there are two or more votes for other categories
-        {
-            types.push_back(-1); // might be part of the board
-        } else {
-
-            types.push_back(vote);
-        }
-    }
-    colTypes = types;
-}
-
-
-/*
-void BoardDetector::determineColTypesOld()
-{
-    int nCols = squareTypes.at(0).size(); // squareTypes has the same number of cols in each vector element so can just look at the first element
-
-    // access per column
-
-    for (size_t i = 0; i < nCols; i++){
-        std::vector<int> col;
-        for (size_t j = 0; j < squareTypes.size(); j++){
-            col.push_back(squareTypes.at(j).at(i));
-        }
-
-        std::vector<int> histogram(5,0);
-        for (size_t j = 0; j < col.size(); j++){
-            ++histogram[ col.at(j) ];
-        }
-
-        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
-        if (vote == 0 && histogram[0] < (int)col.size()-1) // if there are two or more votes for other categories
-        {
-            colTypes.push_back(-1); // might be part of the board
-        } else {
-            colTypes.push_back(vote);
-        }
-    }
-}
-*/
-
-
 Board BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colTypes)
 {
     Board newBoard;
     for (size_t i = 0; i < colTypes.size(); i++){
-        if (rowTypes.at(i) != 0){
+        if (colTypes.at(i) != 0){
             Squares col = board.getCol(i);
-            newBoard.addRow(col);
+            newBoard.addCol(col);
         }
     }
     return newBoard;
-
 }
 
 
