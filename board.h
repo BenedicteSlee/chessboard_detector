@@ -1,6 +1,8 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+cv::Mat globalimg = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
+
 #include "square.h"
 #include "typedefs.h"
 #include <vector>
@@ -40,6 +42,7 @@ private:
     int getIndex(int row, int col);
     void determineRowTypes();
     void determineColTypes();
+    //void createCorners();
 };
 
 #endif // BOARD_H

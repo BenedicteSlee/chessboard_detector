@@ -5,14 +5,29 @@
 
 // S Q U A R E
 
-Square::Square(cv::Mat image_, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
-{
-    image = image_;
-    cornerpoints.reserve(4);
-    vanishingPoints.reserve(2);
-    borders.reserve(4);
+Square::Square(){
+    std::cout << "Square default constructor" << std::endl;
+    squareTypeDetermined = false;
+}
 
-    init(corner1, corner2, corner3, corner4);
+Square::Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
+{
+    squareTypeDetermined = false;
+    std::vector<cv::Point> cp{corner1, corner2, corner3, corner4};
+    cornerpoints = cp;
+    sortCornerpoints();
+    upperLeft = cornerpointsSorted[0];
+    upperRight = cornerpointsSorted[1];
+    lowerLeft = cornerpointsSorted[2];
+    lowerRight = cornerpointsSorted[3];
+
+
+    hlength = cv::norm(upperRight-upperLeft);
+    vlength = cv::norm(upperLeft - lowerLeft);
+
+    calcBorders();
+    calcVanishingPoints();
+    createCorners(image);
 }
 
 int Square::getVLength(){return vlength;}
@@ -23,29 +38,8 @@ int Square::getMeanGray()
     return meanGray;
 }
 
-
 Points Square::getCornerpoints(){
     return cornerpoints;
-}
-
-void Square::init(cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4){
-    cornerpoints.push_back(corner1);
-    cornerpoints.push_back(corner2);
-    cornerpoints.push_back(corner3);
-    cornerpoints.push_back(corner4);
-
-    sortCornerpoints();
-    upperLeft = cornerpointsSorted[0];
-    upperRight = cornerpointsSorted[1];
-    lowerLeft = cornerpointsSorted[2];
-    lowerRight = cornerpointsSorted[3];
-
-    hlength = cv::norm(upperRight-upperLeft);
-    vlength = cv::norm(upperLeft - lowerLeft);
-
-    calcBorders();
-    calcVanishingPoints();
-    calcMeanGray();
 }
 
 void Square::sortCornerpoints(){
@@ -88,6 +82,7 @@ void Square::determineType()
        squareType = 0;
     }
 
+    squareTypeDetermined = true;
 }
 
 void Square::calcBorders()
@@ -96,10 +91,9 @@ void Square::calcBorders()
     borders.push_back(Line(cornerpoints.at(0),cornerpoints.at(1)));
     borders.push_back(Line(cornerpoints.at(1),cornerpoints.at(2)));
     borders.push_back(Line(cornerpoints.at(2),cornerpoints.at(3)));
-
 }
 
-void Square::calcMeanGray()
+int Square::calcMeanGray(cv::Mat& image)
 {
     cv::Mat gray;
 
@@ -170,6 +164,7 @@ Lines Square::getBordersSorted()
 {
     return borders;
 }
+/*
 void Square::addCorner(Corner corner)
 {
     if (corners.size() >= 4){
@@ -181,6 +176,16 @@ void Square::addCorner(Corner corner)
     if (corners.size() == 4){ // Once four corners have been added, can determine type
         determineType();
     }
+}
+*/
+void Square::createCorners(cv::Mat& image){
+    int radius = 10; // TODO make dynamic
+    for (size_t i = 0; i < 4; i++){
+        Corner newcorner(image, cornerpointsSorted.at(i), radius);
+        corners.push_back(newcorner);
+    }
+    determineType();
+
 }
 
 

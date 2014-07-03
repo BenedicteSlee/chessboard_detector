@@ -14,11 +14,8 @@ class Square
 public:
     // Constructors
     ~Square(){}
-    Square(){}
-    Square(cv::Mat image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4);
-
-    // Init
-    void init(cv::Point, cv::Point, cv::Point, cv::Point);
+    Square();
+    Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4);
 
     // Methods
     void draw();
@@ -34,13 +31,12 @@ public:
     int getSquareType(){return squareType;}
 
     // Add features
-    void addCorner(Corner corner);
+    //void addCorner(Corner corner);
     void determineType();
 
 private:
     // Variables
     int meanGray;
-    cv::Mat image;
     std::vector<cv::Point> cornerpoints;
     std::vector<cv::Point> cornerpointsSorted;
     std::vector<Corner> corners;
@@ -52,13 +48,14 @@ private:
     int vlength;
     int hlength;
     int squareType;
+    bool squareTypeDetermined;
 
     // Methods
     void calcVanishingPoints();
     void calcBorders();
-    void calcMeanGray();
-    void sortCornerpoints();
-
+    int calcMeanGray(cv::Mat &image);
+    void sortCornerpoints(); 
+    void createCorners(cv::Mat& image);
 };
 
 #endif // SQUARE_H

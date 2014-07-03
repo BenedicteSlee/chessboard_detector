@@ -24,7 +24,6 @@ public:
 private:
     void categorizeLines();
     void findVanishingPoint();
-    void createCorners(Board& board);
     void createPossibleSquares();
     Board filterBasedOnSquareSize(Board& board);
     //void determineSquareTypes(Board& board); // should be moved to board

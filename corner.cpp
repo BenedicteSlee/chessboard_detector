@@ -5,6 +5,7 @@
 
 Corner::Corner(const cv::Mat& image, cv::Point cornerpoint, int radius)
 {
+    classified = false;
     this->initialCornerpoint = cornerpoint;
     this->cornerpoint = cornerpoint;
     this->radius = radius;
@@ -139,7 +140,7 @@ void Corner::classify(){
     else
         nRegions = 0;
 
-    int k = 0;
+    classified = true;
 }
 
 void Corner::recalculateCornerpoint()

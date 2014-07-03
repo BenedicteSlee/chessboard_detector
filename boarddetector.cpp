@@ -3,6 +3,7 @@
 #include "cvutils.h"
 #include "square.h"
 #include "typedefs.h"
+#include "board.h"
 #include <vector>
 #include <cmath>
 #include <stdexcept>
@@ -14,6 +15,12 @@ BoardDetector::~BoardDetector()
 BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
 {
     image = image_;
+    cv::Mat im1, im2, im3;
+    image.copyTo(im1);
+    image.copyTo(im2);
+    image.copyTo(im3);
+
+
     if (image.channels() != 1){
         cv::cvtColor(image, image_gray, CV_RGB2GRAY);
         cv::normalize(image_gray, image_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
@@ -23,26 +30,26 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
 
-    Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
-    //possibleBoard.draw(image);
+    Board possibleBoard = Board(image_gray, hlinesSorted, vlinesSorted);
 
+    //
+    possibleBoard.draw(im1);
+    cv::destroyAllWindows();
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
-    //createPossibleSquares();
     //Board possibleBoard2 = filterBasedOnSquareSize(possibleBoard);
 
-    createCorners(possibleBoard);
-
-    //determineSquareTypes(possibleBoard2);
     std::vector<int> rowTypes = possibleBoard.getRowTypes();
     Board possibleBoard2 = filterBasedOnRowType(possibleBoard, rowTypes);
-    possibleBoard2.draw(image);
 
+    possibleBoard2.draw(im2);
+    cv::destroyAllWindows();
     std::vector<int> colTypes = possibleBoard2.getColTypes();
     Board possibleBoard3 = filterBasedOnColType(possibleBoard2, colTypes);
-    possibleBoard3.draw(image);
 
+    possibleBoard3.draw(im3);
+    cv::destroyAllWindows();
     std::cout << "hei" << std::endl;
 }
 
@@ -249,64 +256,41 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
     return newBoard;
 }
 
-void BoardDetector::createCorners(Board& board)
-{
-    //Points added;
-
-    for (int i = 0; i < board.getNumRows(); i++)
-    {
-
-        for (int j = 0; j < board.getNumCols(); j++){
-            Square& square = board.getSquareRef(i,j);
-            Points cpoints = square.getCornerpointsSorted();
-
-            int radius = 10; // TODO make dynamic
-
-            for (size_t k = 0; k < cpoints.size(); k++){
-                cv::Point p = cpoints.at(k);
-                Corner newcorner(image_gray, p, radius);
-                square.addCorner(newcorner);
-
-                /* // look at corners without duplicates
-                if (!cvutils::containsPoint(added, p)){
-                    corners.push_back(newcorner);
-                    added.push_back(p);
-
-                    std::cout << newcorner.getNRegions() << std::endl;
-
-                    cv::imshow("CORNER", newcorner.getArea());
-                    cv::waitKey(2);
-
-                }
-                */
-
-            }
-
-        }
-    }
-
-}
-
 Board BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowTypes)
 {
+
+    if (cv::sum(rowTypes)[0] == 0){
+        std::cout << "None of the rows seem to be part of a chessboard" << std::endl;
+        return board;
+    }
+
     Board newBoard;
-    int n = rowTypes.size();
     for (size_t i = 0; i < rowTypes.size(); i++){
         if (rowTypes.at(i) != 0){
             Squares row = board.getRow(i);
             newBoard.addRow(row);
+
         }
     }
+
     return newBoard;
 }
 
 Board BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colTypes)
 {
+    if (cv::sum(colTypes)[0] == 0){
+        std::cout << "None of the columns seem to be part of a chessboard" << std::endl;
+        return board;
+    }
+
     Board newBoard;
     for (size_t i = 0; i < colTypes.size(); i++){
         if (colTypes.at(i) != 0){
             Squares col = board.getCol(i);
             newBoard.addCol(col);
+            cv::Mat tmp;
+            globalimg.copyTo(tmp);
+            newBoard.draw(tmp);
         }
     }
     return newBoard;

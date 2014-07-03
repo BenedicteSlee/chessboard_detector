@@ -55,19 +55,42 @@ void Board::addCol(Squares col)
     if (col.empty())
         return;
 
-    if (nRows == 0){
-        nRows = col.size();
-    }
-    nCols++;
 
     if ((int)col.size() != nRows){
         std::invalid_argument("This column has the wrong length for this board");
     }
 
-    for (int i = 0; i < nRows; i++){
-        std::vector<Square>::iterator it = squares.begin() + i*nCols + 1;
-        it = squares.insert(it, col.at(i));
+    if (squares.empty()){
+        squares = col;
+        nCols = 1;
+        return;
     }
+
+    Squares squaresOld = squares;
+    squares.clear();
+
+    int j = 0;
+    for (size_t i = 0; i < squaresOld.size(); i++){
+        std::cout << squaresOld.size() << std::endl;
+        squares.push_back(squaresOld.at(i));
+        bool doInsert = i % nCols == 0;
+        if (doInsert){
+            squares.push_back(col.at(j));
+            j++;
+        }
+    }
+
+    if (nRows == 0){
+        nRows = col.size();
+    }
+    nCols++;
+
+    // More efficient method does not work correctly:
+    //for (int i = 0; i < nRows; i++){
+    //    std::vector<Square>::iterator it = squares.begin() + i*nCols + 1;
+    //    Square square = col.at(i);
+    //    it = squares.insert(it, square);
+    //}
 }
 
 /*
@@ -161,14 +184,18 @@ std::vector<int> Board::getColTypes()
 
 void Board::draw(cv::Mat &image)
 {
+    if (squares.empty()){
+        std::cout << "This board is empty" << std::endl;
+        return;
+    }
+
     cv::RNG rng = cv::RNG(1234);
     for (size_t i = 0; i < squares.size(); i++) {
 
         cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
         cv::fillConvexPoly(image, squares.at(i).getCornerpoints(), col);
         cv::imshow("poly", image);
-        cv::waitKey(2);
-
+        cv::waitKey(100);
     }
     cv::waitKey();
 }
@@ -217,3 +244,38 @@ void Board::determineColTypes()
     }
 }
 
+/*
+void Board::createCorners()
+{
+    for (int i = 0; i < nRows; i++)
+    {
+        for (int j = 0; j < nCols; j++){
+            Square& square = getSquareRef(i,j);
+            Points cpoints = square.getCornerpointsSorted();
+
+            int radius = 10; // TODO make dynamic
+
+            for (size_t k = 0; k < cpoints.size(); k++){
+                cv::Point p = cpoints.at(k);
+                Corner newcorner(image_gray, p, radius);
+                square.addCorner(newcorner);
+
+                 // look at corners without duplicates
+                if (!cvutils::containsPoint(added, p)){
+                    corners.push_back(newcorner);
+                    added.push_back(p);
+
+                    std::cout << newcorner.getNRegions() << std::endl;
+
+                    cv::imshow("CORNER", newcorner.getArea());
+                    cv::waitKey(2);
+
+                }
+
+
+            }
+
+        }
+    }
+}
+*/
