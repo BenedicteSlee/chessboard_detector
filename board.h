@@ -9,24 +9,28 @@
 class Board
 {
 public:
-    Board(){};
+    Board(){nRows = 0; nCols = 0;}
     Board(cv::Mat& image, Lines sortedHorizontalLines, Lines sortedVerticalLines);
     //Board(Board oldBoard, std::vector<int> rowsToRemove, std::vector<int> colsToRemove);
+
+    void addRow(Squares row);
+    void addCol(Squares col);
 
     Square getSquare(int row, int col);
     Square& getSquareRef(int row, int col);
     Squares getRow(int row);
     Squares getCol(int col);
-    //Squares& getColRef(int col);
 
     int getNumCols(){return nCols;}
     int getNumRows(){return nRows;}
+
+    void draw(cv::Mat& image);
 
 private:
     int nRows;
     int nCols;
     std::vector<Square> squares;
-    std::vector<bool> include;
+    std::vector<int> squareTypes;
 
     int getIndex(int row, int col);
 };

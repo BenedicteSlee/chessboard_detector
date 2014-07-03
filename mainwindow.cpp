@@ -103,6 +103,7 @@ void MainWindow::on_pushButton_2_clicked()
     cv::waitKey();
     */
 
+    /*
     //PLOT POSSIBLE SQUARES
    cv::RNG rng = cv::RNG(1234);
    std::vector<Squares> possibleSquares2 = cbd.getPossibleSquares2();
@@ -116,6 +117,7 @@ void MainWindow::on_pushButton_2_clicked()
        }
    }
    cv::waitKey();
+   */
 
 
     // look at intersections

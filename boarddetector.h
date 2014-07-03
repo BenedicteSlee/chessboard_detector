@@ -16,21 +16,21 @@ public:
 
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
-    Board getPossibleBoard();
-    std::vector<Squares> getPossibleSquares2();
+    //Board getPossibleBoard();
+    //std::vector<Squares> getPossibleSquares2();
     Corners getCorners();
 
 private:
     void categorizeLines();
     void findVanishingPoint();
-    void createCorners();
+    void createCorners(Board& board);
     void createPossibleSquares();
-    void filterBasedOnSquareSize();
-    void determineSquareTypes();
-    void determineRowTypes();
-    void filterBasedOnRowType();
-    void determineColTypes();
-    void filterBasedOnColType();
+    Board filterBasedOnSquareSize(Board& board);
+    //void determineSquareTypes(Board& board); // should be moved to board
+    void determineRowTypes(Board& board);
+    Board filterBasedOnRowType(Board& board, std::vector<int> rowTypes);
+    void determineColTypes(Board& board);
+    Board filterBasedOnColType(Board& board, std::vector<int> colTypes);
 
     cv::Mat image;
     cv::Mat image_gray;
@@ -41,9 +41,9 @@ private:
     std::vector<int> vlinesIdx;
     Lines hlinesSorted;
     Lines vlinesSorted;
-    Board possibleBoard;
-    std::vector<Squares > possibleSquares2;
-    std::vector<Squares> possibleSquares3;
+    //Board possibleBoard;
+    //std::vector<Squares > possibleSquares2;
+    //std::vector<Squares> possibleSquares3;
     std::vector<std::vector<int>> squareTypes;
     std::vector<int> rowTypes;
     std::vector<int> colTypes;

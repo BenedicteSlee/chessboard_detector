@@ -23,18 +23,25 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
 
-    possibleBoard = Board(image, hlinesSorted, vlinesSorted);
+    Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
+    //possibleBoard.draw(image);
 
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
-    createPossibleSquares();
-    filterBasedOnSquareSize();
-    createCorners();
-    determineSquareTypes();
-    determineRowTypes();
-    filterBasedOnRowType();
-    determineColTypes();
+    //createPossibleSquares();
+    //Board possibleBoard2 = filterBasedOnSquareSize(possibleBoard);
+
+    createCorners(possibleBoard);
+
+    //determineSquareTypes(possibleBoard2);
+    determineRowTypes(possibleBoard);
+    Board possibleBoard2 = filterBasedOnRowType(possibleBoard, rowTypes);
+    possibleBoard2.draw(image);
+    determineColTypes(possibleBoard2);
+    Board possibleBoard3 = filterBasedOnColType(possibleBoard2, colTypes);
+    possibleBoard3.draw(image);
+
     std::cout << "hei" << std::endl;
 }
 
@@ -48,15 +55,6 @@ Lines BoardDetector::get_vlinesSorted()
    return vlinesSorted;
 }
 
-Board BoardDetector::getPossibleBoard()
-{
-    return possibleBoard;
-}
-
-std::vector<Squares> BoardDetector::getPossibleSquares2()
-{
-    return possibleSquares2;
-}
 
 Corners BoardDetector::getCorners()
 {   
@@ -213,7 +211,44 @@ void BoardDetector::createPossibleSquares()
     */
 }
 
-void BoardDetector::filterBasedOnSquareSize()
+
+Board BoardDetector::filterBasedOnSquareSize(Board &board)
+{ // TODO REDO!! remove whole rows/columns at a time not indivudal squares
+    std::vector<int> hlengths(board.getNumCols());
+    std::vector<int> vlengths(board.getNumCols());
+    std::vector<int> meanHLengths(board.getNumRows());
+    std::vector<int> meanVLengths(board.getNumRows());
+
+    Board newBoard;
+
+    // get mean size per row
+    for (int i = 0; i < board.getNumRows(); i++){
+        Squares row = board.getRow(i);
+        for (size_t j = 0; j < row.size(); j++){
+            hlengths.at(j) = row.at(j).getHLength();
+            vlengths.at(j) = row.at(j).getVLength();
+        }
+        meanHLengths.at(i) = cvutils::meanNoOutliers(hlengths);
+        meanVLengths.at(i) = cvutils::meanNoOutliers(vlengths);
+
+        Squares newRow;
+        for (int j = 0; j < board.getNumCols(); j++){
+            Square square = row.at(j);
+            bool vlengthOk = std::abs(hlengths.at(j) - meanVLengths.at(i)) < 10; // TODO make dynamic
+            bool hlengthOk = std::abs(hlengths.at(j) - meanHLengths.at(i)) < 10; // TODO make dynamic
+
+            if (vlengthOk && hlengthOk){
+                newRow.push_back(square);
+            }
+        }
+        newBoard.addRow(newRow);
+        std::cout << newBoard.getNumRows() << ";" << newBoard.getNumCols() << std::endl;
+    }
+
+    return newBoard;
+}
+/*
+void BoardDetector::filterBasedOnSquareSizeOld()
 {
     int nrows = hlinesSorted.size()-1;
     int ncols = vlinesSorted.size()-1;
@@ -253,18 +288,16 @@ void BoardDetector::filterBasedOnSquareSize()
         possibleSquares2.push_back(row);
     }
 }
-
-void BoardDetector::createCorners()
+*/
+void BoardDetector::createCorners(Board& board)
 {
-    Points added;
+    //Points added;
 
-
-
-    for (size_t i = 0; i < possibleSquares2.size(); i++)
+    for (int i = 0; i < board.getNumRows(); i++)
     {
-        Squares& row = possibleSquares2.at(i);
-        for (size_t j = 0; j < row.size(); j++){
-            Square& square = row.at(j);
+
+        for (int j = 0; j < board.getNumCols(); j++){
+            Square& square = board.getSquareRef(i,j);
             Points cpoints = square.getCornerpointsSorted();
 
             int radius = 10; // TODO make dynamic
@@ -273,6 +306,8 @@ void BoardDetector::createCorners()
                 cv::Point p = cpoints.at(k);
                 Corner newcorner(image_gray, p, radius);
                 square.addCorner(newcorner);
+
+                /* // look at corners without duplicates
                 if (!cvutils::containsPoint(added, p)){
                     corners.push_back(newcorner);
                     added.push_back(p);
@@ -283,6 +318,7 @@ void BoardDetector::createCorners()
                     cv::waitKey(2);
 
                 }
+                */
 
             }
 
@@ -291,53 +327,79 @@ void BoardDetector::createCorners()
 
 }
 
-void BoardDetector::determineSquareTypes()
+void BoardDetector::determineRowTypes(Board& board)
 {
-    std::vector<std::vector<int>> types(possibleSquares2.size());
-    for (size_t i = 0; i < possibleSquares2.size(); i++){
-        Squares& row = possibleSquares2.at(i);
-        for (size_t j = 0; j < row.size(); j++){
-            Square& square = row.at(j);
-            square.determineType();
-            types.at(i).push_back(square.getSquareType());
-        }
-    }
+    int nrows = board.getNumRows();
+    std::vector<int> types(nrows);
 
-    squareTypes = types;
-}
-
-void BoardDetector::determineRowTypes()
-{
-    for (size_t i = 0; i < squareTypes.size(); i++){
-        std::vector<int> row = squareTypes.at(i);
+    for (int i = 0; i < nrows; i++){
+        Squares row = board.getRow(i);
 
         std::vector<int> histogram(5,0);
         for (size_t j = 0; j < row.size(); j++){
-            ++histogram[ row.at(j) ];
+            int type = row.at(j).getSquareType();
+            ++histogram[ type ];
         }
 
         int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
         if (vote == 0 && histogram[0] < (int)row.size()-1) // if there are two or more votes for other categories
         {
-            rowTypes.push_back(-1); // might be part of the board
+            types.at(i) = -1; // might be part of the board
         } else {
 
-            rowTypes.push_back(vote);
+            types.at(i) = vote;
         }
     }
+
+    rowTypes = types;
 }
 
-void BoardDetector::filterBasedOnRowType()
+Board BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowTypes)
 {
+    Board newBoard;
+    int n = rowTypes.size();
     for (size_t i = 0; i < rowTypes.size(); i++){
         if (rowTypes.at(i) != 0){
-            Squares row = possibleSquares2.at(i);
-            possibleSquares3.push_back(row);
+            Squares row = board.getRow(i);
+            newBoard.addRow(row);
         }
     }
+    return newBoard;
 }
 
-void BoardDetector::determineColTypes()
+void BoardDetector::determineColTypes(Board& board)
+{
+    std::vector<int> types(board.getNumCols());
+
+    for (size_t i = 0; i < board.getNumCols(); i++){
+        Squares col = board.getCol(i);
+
+        std::vector<int> histogram(5,0);
+        for (size_t j = 0; j < col.size(); j++){
+            int type = col.at(j).getSquareType();
+            if (type < 5 && type >= 0){
+                ++histogram[ type ];
+            } else {
+                throw std::invalid_argument("invalid type!");
+            }
+
+        }
+
+        int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
+        if (vote == 0 && histogram[0] < (int)col.size()-1) // if there are two or more votes for other categories
+        {
+            types.push_back(-1); // might be part of the board
+        } else {
+
+            types.push_back(vote);
+        }
+    }
+    colTypes = types;
+}
+
+
+/*
+void BoardDetector::determineColTypesOld()
 {
     int nCols = squareTypes.at(0).size(); // squareTypes has the same number of cols in each vector element so can just look at the first element
 
@@ -363,11 +425,19 @@ void BoardDetector::determineColTypes()
         }
     }
 }
+*/
 
-void BoardDetector::filterBasedOnColType()
+
+Board BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colTypes)
 {
-
-// TODO
+    Board newBoard;
+    for (size_t i = 0; i < colTypes.size(); i++){
+        if (rowTypes.at(i) != 0){
+            Squares col = board.getCol(i);
+            newBoard.addRow(col);
+        }
+    }
+    return newBoard;
 
 }
 

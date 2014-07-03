@@ -5,8 +5,9 @@
 
 // S Q U A R E
 
-Square::Square(cv::Mat &image_, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4) :image(image_)
+Square::Square(cv::Mat image_, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
 {
+    image = image_;
     cornerpoints.reserve(4);
     vanishingPoints.reserve(2);
     borders.reserve(4);
@@ -87,7 +88,6 @@ void Square::determineType()
        squareType = 0;
     }
 
-    int kk = 0;
 }
 
 void Square::calcBorders()
@@ -166,14 +166,21 @@ std::vector<cv::Point> Square::getCornerpointsSorted()
     return cornerpointsSorted;
 }
 
-
 Lines Square::getBordersSorted()
 {
     return borders;
 }
 void Square::addCorner(Corner corner)
 {
+    if (corners.size() >= 4){
+        std::invalid_argument("This square already has 4 corners");
+    }
+
     corners.push_back(corner); // TODO insert in sorted order
+
+    if (corners.size() == 4){ // Once four corners have been added, can determine type
+        determineType();
+    }
 }
 
 
