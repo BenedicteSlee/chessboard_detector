@@ -1,9 +1,16 @@
 #include "board.h"
+#include "Line.h"
+#include "square.h"
 #include "typedefs.h"
-#include <vector>
-#include <stdexcept>
+#include "matrix.h"
 
-Board::Board(cv::Mat& image, Lines hlinesSorted, Lines vlinesSorted)
+Board::Board()
+{
+    nCols = 0;
+    nRows = 0;
+}
+
+Board::Board(cv::Mat &image, Lines hlinesSorted, Lines vlinesSorted)
 {
     nCols = vlinesSorted.size() - 1;
     nRows = hlinesSorted.size() - 1;
@@ -23,167 +30,9 @@ Board::Board(cv::Mat& image, Lines hlinesSorted, Lines vlinesSorted)
 
             Square square(image, upperLeft, upperRight, lowerRight, lowerLeft);
 
-            squares.push_back(square);
+            elements.push_back(square);
         }
     }
-}
-
-void Board::addRow(Squares row)
-{
-    if (row.empty())
-        return;
-
-    if ((int)row.size() != nCols){
-        std::invalid_argument("This row has the wrong length for this board");
-    }
-
-    for (size_t i = 0; i < row.size(); i++){
-        squares.push_back(row.at(i));
-    }
-
-    if (nCols == 0){ // then this is the first row added, and it will determine number of columns
-        nCols = row.size();
-    }
-    nRows++;
-}
-
-void Board::addCol(Squares col)
-{
-    if (col.empty())
-        return;
-
-
-    if ((int)col.size() != nRows){
-        std::invalid_argument("This column has the wrong length for this board");
-    }
-
-    if (squares.empty()){
-        squares = col;
-        nCols = 1;
-        return;
-    }
-
-
-
-
-    Squares squaresOld = squares;
-    squares.clear();
-
-    //cv::Mat img = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
-    int j = 0;
-    for (size_t i = 0; i < squaresOld.size(); i++){
-
-        squares.push_back(squaresOld.at(i));
-        //squaresOld.at(i).drawOnImg(img);
-        bool doInsert = (i+1) % nCols == 0;
-        if (doInsert){
-            squares.push_back(col.at(j));
-            //col.at(j).drawOnImg(img);
-            j++;
-
-        }
-    }
-
-    if (nRows == 0){
-        nRows = col.size();
-    }
-    nCols++;
-
-    // More efficient method does not work correctly:
-    //for (int i = 0; i < nRows; i++){
-    //    std::vector<Square>::iterator it = squares.begin() + i*nCols + 1;
-    //    Square square = col.at(i);
-    //    it = squares.insert(it, square);
-    //}
-}
-
-
-int Board::getIndex(int row, int col)
-{
-    return row * nCols + col; // assumes squares are concatenated row after row
-}
-
-Square Board::getSquare(int row, int col)
-{
-    int idx = getIndex(row, col);
-
-    Square square = squares.at(idx);
-    return square;
-}
-
-Square& Board::getSquareRef(int rowIdx, int colIdx){
-    int idx = getIndex(rowIdx, colIdx);
-
-    if (idx > (int)squares.size()-1){
-        std::invalid_argument("Trying to access squares beyond number of elements");
-    }
-    Square& square = squares.at(idx);
-    return square;
-}
-
-Squares Board::getRow(int rowIdx)
-{
-
-    if (rowIdx > nRows){
-        throw std::invalid_argument("row index > number of rows in board");
-    }
-
-    int idx1 = rowIdx * nCols;
-    int idx2 = idx1 + nCols - 1;
-
-    Squares row(&squares[idx1], &squares[idx2]);
-    return row;
-}
-
-Squares Board::getCol(int colIdx)
-{
-    if (colIdx > nCols){
-        throw std::invalid_argument("col index > number of columns in board");
-    }
-
-    Squares column(nRows);
-    for (int i = 0; i < nRows; i++){
-
-        int squaresIdx = colIdx + nCols * i;
-        Square square = squares.at(squaresIdx);
-        column.at(i) = square;
-    }
-
-    return column;
-}
-
-std::vector<int> Board::getRowTypes()
-{
-    if (rowTypes.empty()){
-        determineRowTypes();
-    }
-    return rowTypes;
-}
-
-std::vector<int> Board::getColTypes()
-{
-    if (colTypes.empty()){
-        determineColTypes();
-    }
-    return colTypes;
-}
-
-void Board::draw(cv::Mat &image)
-{
-    if (squares.empty()){
-        std::cout << "This board is empty" << std::endl;
-        return;
-    }
-
-    cv::RNG rng = cv::RNG(1234);
-    for (size_t i = 0; i < squares.size(); i++) {
-
-        cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-        cv::fillConvexPoly(image, squares.at(i).getCornerpoints(), col);
-        cv::imshow("poly", image);
-        cv::waitKey(10);
-    }
-    cv::waitKey();
 }
 
 void Board::determineRowTypes()
@@ -192,8 +41,8 @@ void Board::determineRowTypes()
 
     for (int i = 0; i < nRows; i++){
         std::vector<int> histogram(5,0);
-        for (size_t j = 0; j < nCols; j++){
-            Square& square = getSquareRef(i, j);
+        for (int j = 0; j < nCols; j++){
+            Square& square = getRef(i, j);
             int type = square.getSquareType();
             ++histogram[ type ];
         }
@@ -214,8 +63,8 @@ void Board::determineColTypes()
 
     for (int i = 0; i < nCols; i++){
         std::vector<int> histogram(5,0);
-        for (size_t j = 0; j < nRows; j++){
-            Square& square = getSquareRef(j, i);
+        for (int j = 0; j < nRows; j++){
+            Square& square =  getRef(j, i);
             int type = square.getSquareType();
             ++histogram[ type ];
         }
@@ -229,3 +78,39 @@ void Board::determineColTypes()
         }
     }
 }
+
+std::vector<int> Board::getRowTypes()
+{
+    if (rowTypes.empty()){
+        determineRowTypes();
+    }
+    return rowTypes;
+}
+
+std::vector<int> Board::getColTypes()
+{
+    if (colTypes.empty()){
+        determineColTypes();
+    }
+    return colTypes;
+}
+
+void Board::draw(cv::Mat &image)
+{
+    if (elements.empty()){
+        std::cout << "This board is empty" << std::endl;
+        return;
+    }
+
+    cv::RNG rng = cv::RNG(1234);
+    for (size_t i = 0; i < elements.size(); i++) {
+
+        cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
+        cv::fillConvexPoly(image, elements.at(i).getCornerpoints(), col);
+        cv::imshow("poly", image);
+        cv::waitKey(10);
+    }
+    cv::waitKey();
+}
+
+

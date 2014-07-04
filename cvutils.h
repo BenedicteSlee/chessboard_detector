@@ -69,7 +69,29 @@ T meanNoOutliers(std::vector<T> vec){
     return (T) newmean;
 }
 
+template<typename T>
+std::vector<int> outliers(std::vector<T> vec){
+    T mean = cv::mean(vec)[0];
 
+    std::vector<double> dists(vec.size());
+
+    //distance to mean
+    for (size_t i = 0; i < vec.size(); i++){
+        dists[i] = std::abs(vec[i] - mean);
+    }
+
+    int meandists = cv::mean(dists)[0];
+
+    std::vector<int> indices;
+    for (size_t i = 0; i < vec.size(); i++){
+        if (dists[i] > meandists){
+            indices.push_back(i);
+        }
+    }
+
+    return indices;
+
+}
 
 }
 // end namespace

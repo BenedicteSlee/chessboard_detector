@@ -8,6 +8,7 @@
 #include "typedefs.h"
 #include "board.h"
 
+
 class BoardDetector
 {
 public:
@@ -16,8 +17,6 @@ public:
 
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
-    //Board getPossibleBoard();
-    //std::vector<Squares> getPossibleSquares2();
     Corners getCorners();
 
 
@@ -25,10 +24,9 @@ private:
     void categorizeLines();
     void findVanishingPoint();
     void createPossibleSquares();
-    Board filterBasedOnSquareSize(Board& board);
-    //void determineSquareTypes(Board& board); // should be moved to board
-    Board filterBasedOnRowType(Board& board, std::vector<int> rowTypes);
-    Board filterBasedOnColType(Board& board, std::vector<int> colTypes);
+    Board filterBasedOnSquareSize(Board& Board);
+    Board filterBasedOnRowType(Board& Board, std::vector<int> rowTypes);
+    Board filterBasedOnColType(Board& Board, std::vector<int> colTypes);
 
     cv::Mat image;
     cv::Mat image_gray;
@@ -39,9 +37,6 @@ private:
     std::vector<int> vlinesIdx;
     Lines hlinesSorted;
     Lines vlinesSorted;
-    //Board possibleBoard;
-    //std::vector<Squares > possibleSquares2;
-    //std::vector<Squares> possibleSquares3;
     std::vector<std::vector<int>> squareTypes;
 
     Corners corners;

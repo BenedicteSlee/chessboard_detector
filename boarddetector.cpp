@@ -1,12 +1,13 @@
+#include <vector>
+#include <cmath>
+#include <stdexcept>
+
 #include "boarddetector.h"
 #include "Line.h"
 #include "cvutils.h"
 #include "square.h"
 #include "typedefs.h"
 #include "board.h"
-#include <vector>
-#include <cmath>
-#include <stdexcept>
 
 BoardDetector::~BoardDetector()
 {
@@ -55,12 +56,12 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
 
 Lines BoardDetector::get_hlinesSorted()
 {
-   return hlinesSorted;
+    return hlinesSorted;
 }
 
 Lines BoardDetector::get_vlinesSorted()
 {
-   return vlinesSorted;
+    return vlinesSorted;
 }
 
 
@@ -224,36 +225,58 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
 { // TODO REDO!! remove whole rows/columns at a time not indivudal squares
     std::vector<int> hlengths(board.getNumCols());
     std::vector<int> vlengths(board.getNumCols());
-    std::vector<int> meanHLengths(board.getNumRows());
-    std::vector<int> meanVLengths(board.getNumRows());
 
     Board newBoard;
 
-    // Filter out rows
+
+    // Filter out rows: compare horizontal lengths
     for (int i = 0; i < board.getNumRows(); i++){
         Squares row = board.getRow(i);
         for (size_t j = 0; j < row.size(); j++){
             hlengths.at(j) = row.at(j).getHLength();
-            vlengths.at(j) = row.at(j).getVLength();
         }
-        meanHLengths.at(i) = cvutils::meanNoOutliers(hlengths);
-        meanVLengths.at(i) = cvutils::meanNoOutliers(vlengths);
-
-
-
-        Squares newRow;
-        for (int j = 0; j < board.getNumCols(); j++){
-            Square square = row.at(j);
-            bool vlengthOk = std::abs(hlengths.at(j) - meanVLengths.at(i)) < 10; // TODO make dynamic
-            bool hlengthOk = std::abs(hlengths.at(j) - meanHLengths.at(i)) < 10; // TODO make dynamic
-
-            if (vlengthOk && hlengthOk){
-                newRow.push_back(square);
-            }
-        }
-        newBoard.addRow(newRow);
-        std::cout << newBoard.getNumRows() << ";" << newBoard.getNumCols() << std::endl;
     }
+
+    std::vector<int> houtliers = cvutils::outliers(hlengths);
+
+    if (!houtliers.empty()){
+        std::vector<int> remove;
+        bool doContinue = true;
+        int leftmost = 0;
+        while (doContinue){
+            int idx = houtliers.at(leftmost);
+            if (idx == leftmost){
+                remove.push_back(idx);
+                leftmost++;
+            } else {
+                doContinue = false;
+            }
+            if (leftmost = houtliers.size()-1)
+                doContinue = false;
+        }
+
+        doContinue = true;
+        int rightmost = hlengths.size()-1;
+        while (doContinue){
+            int idx = houtliers.at(rightmost);
+            if (idx == rightmost){
+                remove.push_back(idx);
+                idx--;
+            } else {
+                doContinue = false;
+            }
+            if (rightmost == 0 || rightmost == leftmost+1)
+                doContinue = false;
+        }
+        std::sort(remove.begin(), remove.end());
+    }
+
+
+
+
+
+    // NEXTSTEP remove columns, then build new board
+
 
     return newBoard;
 }
@@ -271,7 +294,6 @@ Board BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowType
         if (rowTypes.at(i) != 0){
             Squares row = board.getRow(i);
             newBoard.addRow(row);
-
         }
     }
 
