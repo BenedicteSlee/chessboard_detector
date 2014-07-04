@@ -19,6 +19,7 @@ public:
 
     // Methods
     void draw();
+    void drawOnImg(cv::Mat& image);
 
     // Get and set methods
     int getMeanGray();

@@ -1,12 +1,12 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-cv::Mat globalimg = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
 
 #include "square.h"
 #include "typedefs.h"
 #include <vector>
 #include <opencv2/opencv.hpp>
+
 
 class Board
 {

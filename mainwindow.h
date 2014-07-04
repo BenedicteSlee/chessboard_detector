@@ -7,7 +7,6 @@
 #include "Line.h"
 #include "square.h"
 
-
 namespace Ui {
 class MainWindow;
 }

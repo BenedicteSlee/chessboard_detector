@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     boarddetector.cpp \
     corner.cpp \
     square.cpp \
-    board.cpp
+    board.cpp \
+    matrix.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -33,7 +34,8 @@ HEADERS  += mainwindow.h \
     typedefs.h \
     corner.h \
     square.h \
-    board.h
+    board.h \
+    matrix.h
 
 FORMS    += mainwindow.ui
 

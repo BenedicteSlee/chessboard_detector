@@ -21,7 +21,6 @@ Square::Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point c
     lowerLeft = cornerpointsSorted[2];
     lowerRight = cornerpointsSorted[3];
 
-
     hlength = cv::norm(upperRight-upperLeft);
     vlength = cv::norm(upperLeft - lowerLeft);
 
@@ -153,6 +152,15 @@ void Square::draw(){
     cv::waitKey( 0 );
 
 
+}
+
+void Square::drawOnImg(cv::Mat& image)
+{
+    cv::RNG rng = cv::RNG(123);
+    cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
+    cv::fillConvexPoly(image, cornerpointsSorted, col);
+    cv::imshow("Square", image);
+    cv::waitKey();
 }
 
 std::vector<cv::Point> Square::getCornerpointsSorted()

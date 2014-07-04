@@ -3,7 +3,6 @@
 #include <vector>
 #include <stdexcept>
 
-
 Board::Board(cv::Mat& image, Lines hlinesSorted, Lines vlinesSorted)
 {
     nCols = vlinesSorted.size() - 1;
@@ -34,11 +33,6 @@ void Board::addRow(Squares row)
     if (row.empty())
         return;
 
-    if (nCols == 0){ // then this is the first row added, and it will determine number of columns
-        nCols = row.size();
-    }
-    nRows++;
-
     if ((int)row.size() != nCols){
         std::invalid_argument("This row has the wrong length for this board");
     }
@@ -47,7 +41,10 @@ void Board::addRow(Squares row)
         squares.push_back(row.at(i));
     }
 
-
+    if (nCols == 0){ // then this is the first row added, and it will determine number of columns
+        nCols = row.size();
+    }
+    nRows++;
 }
 
 void Board::addCol(Squares col)
@@ -66,17 +63,24 @@ void Board::addCol(Squares col)
         return;
     }
 
+
+
+
     Squares squaresOld = squares;
     squares.clear();
 
+    //cv::Mat img = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
     int j = 0;
     for (size_t i = 0; i < squaresOld.size(); i++){
-        std::cout << squaresOld.size() << std::endl;
+
         squares.push_back(squaresOld.at(i));
-        bool doInsert = i % nCols == 0;
+        //squaresOld.at(i).drawOnImg(img);
+        bool doInsert = (i+1) % nCols == 0;
         if (doInsert){
             squares.push_back(col.at(j));
+            //col.at(j).drawOnImg(img);
             j++;
+
         }
     }
 
@@ -93,24 +97,6 @@ void Board::addCol(Squares col)
     //}
 }
 
-/*
-Board::Board(Board oldBoard, std::vector<int> rowsToRemove, std::vector<int> colsToRemove)
-{
-
-    nCols = oldBoard.getNumCols() - colsToRemove.size();
-    nRows = oldBoard.getNumRows() - rowsToRemove.size();
-
-    for (int i = 0; i < oldBoard.getNumCols(); i++){
-        if (std::count(colsToRemove.begin(), colsToRemove.end(), i) == 0){
-            for (int j = 0; j < oldBoard.getNumRows(); j++){
-                if (std::count(rowsToRemove.begin(), rowsToRemove.end(), j) == 0){
-                    squares.push_back(oldBoard.getSquare(j,i));
-                }
-            }
-        }
-    }
-}
-*/
 
 int Board::getIndex(int row, int col)
 {
@@ -195,7 +181,7 @@ void Board::draw(cv::Mat &image)
         cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
         cv::fillConvexPoly(image, squares.at(i).getCornerpoints(), col);
         cv::imshow("poly", image);
-        cv::waitKey(100);
+        cv::waitKey(10);
     }
     cv::waitKey();
 }
@@ -243,39 +229,3 @@ void Board::determineColTypes()
         }
     }
 }
-
-/*
-void Board::createCorners()
-{
-    for (int i = 0; i < nRows; i++)
-    {
-        for (int j = 0; j < nCols; j++){
-            Square& square = getSquareRef(i,j);
-            Points cpoints = square.getCornerpointsSorted();
-
-            int radius = 10; // TODO make dynamic
-
-            for (size_t k = 0; k < cpoints.size(); k++){
-                cv::Point p = cpoints.at(k);
-                Corner newcorner(image_gray, p, radius);
-                square.addCorner(newcorner);
-
-                 // look at corners without duplicates
-                if (!cvutils::containsPoint(added, p)){
-                    corners.push_back(newcorner);
-                    added.push_back(p);
-
-                    std::cout << newcorner.getNRegions() << std::endl;
-
-                    cv::imshow("CORNER", newcorner.getArea());
-                    cv::waitKey(2);
-
-                }
-
-
-            }
-
-        }
-    }
-}
-*/

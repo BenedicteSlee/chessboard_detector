@@ -20,7 +20,6 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     image.copyTo(im2);
     image.copyTo(im3);
 
-
     if (image.channels() != 1){
         cv::cvtColor(image, image_gray, CV_RGB2GRAY);
         cv::normalize(image_gray, image_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
@@ -32,13 +31,10 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
 
     Board possibleBoard = Board(image_gray, hlinesSorted, vlinesSorted);
 
-    //
     possibleBoard.draw(im1);
     cv::destroyAllWindows();
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
-
-    //Board possibleBoard2 = filterBasedOnSquareSize(possibleBoard);
 
     std::vector<int> rowTypes = possibleBoard.getRowTypes();
     Board possibleBoard2 = filterBasedOnRowType(possibleBoard, rowTypes);
@@ -49,6 +45,10 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     Board possibleBoard3 = filterBasedOnColType(possibleBoard2, colTypes);
 
     possibleBoard3.draw(im3);
+
+
+    Board possibleBoard4 = filterBasedOnSquareSize(possibleBoard3);
+
     cv::destroyAllWindows();
     std::cout << "hei" << std::endl;
 }
@@ -229,7 +229,7 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
 
     Board newBoard;
 
-    // get mean size per row
+    // Filter out rows
     for (int i = 0; i < board.getNumRows(); i++){
         Squares row = board.getRow(i);
         for (size_t j = 0; j < row.size(); j++){
@@ -238,6 +238,8 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
         }
         meanHLengths.at(i) = cvutils::meanNoOutliers(hlengths);
         meanVLengths.at(i) = cvutils::meanNoOutliers(vlengths);
+
+
 
         Squares newRow;
         for (int j = 0; j < board.getNumCols(); j++){
@@ -288,9 +290,9 @@ Board BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colType
         if (colTypes.at(i) != 0){
             Squares col = board.getCol(i);
             newBoard.addCol(col);
-            cv::Mat tmp;
-            globalimg.copyTo(tmp);
-            newBoard.draw(tmp);
+            //cv::Mat tmp;
+            //globalim.copyTo(tmp);
+            //newBoard.draw(tmp);
         }
     }
     return newBoard;
