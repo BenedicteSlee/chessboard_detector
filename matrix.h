@@ -3,6 +3,7 @@
 
 #include <vector>
 
+
 // Class stores element in a std::vector
 template <class T>
 class matrix
@@ -18,9 +19,13 @@ public:
         elements = tmp;
     }
 
+    matrix<T> operator+(const matrix<T> m);
+
     T getElement(int row, int col);
 
     T& getRef(int rowIdx, int colIdx);
+
+    void setElement(T element, int row, int col);
 
     int getNumCols(){return nCols;}
     int getNumRows(){return nRows;}
@@ -39,19 +44,32 @@ protected:
     int nRows;
     int nCols;
 
+private:
     int getIndex(int row, int col);
-
-
-
 };
-
-#include "matrix.h"
 
 template <typename T>
 matrix<T>::matrix()
 {
     nCols = 0;
     nRows = 0;
+}
+
+template <typename T>
+matrix<T> matrix<T>::operator+(const matrix<T> m){
+    if (m.nRows != this->nRows || m.nCols != this->nCols){
+        throw std::invalid_argument("Matrices must be of same size");
+    }
+
+    matrix<T> m2;
+    m2.elements.reserve(nCols * nRows);
+    m2.nCols = this->nCols;
+    m2.nRows = this->nRows;
+
+    for (size_t i = 0; i < this->elements.size(); i++){
+        m2.elements.push_back(this->elements.at(i) + m.elements.at(i));
+    }
+    return m2;
 }
 
 template <typename T>
@@ -68,10 +86,20 @@ T &matrix<T>::getRef(int rowIdx, int colIdx){
     int idx = getIndex(rowIdx, colIdx);
 
     if (idx > (int)elements.size()-1){
-        std::invalid_argument("Trying to access squares beyond number of elements");
+         throw std::out_of_range("Out of range!");
     }
     T& element = elements.at(idx);
     return element;
+}
+
+template <typename T>
+void matrix<T>::setElement(T element, int row, int col){
+    if (row > nRows || col > nCols){
+        throw std::out_of_range("Out of range!");
+    }
+
+    int idx = getIndex(row, col);
+    elements.at(idx) = element;
 }
 
 template <typename T>
@@ -83,7 +111,7 @@ std::vector<T> matrix<T>::getRow(int rowIdx)
     }
 
     int idx1 = rowIdx * nCols;
-    int idx2 = idx1 + nCols - 1;
+    int idx2 = idx1 + nCols;
 
     std::vector<T> row(&elements[idx1], &elements[idx2]);
     return row;

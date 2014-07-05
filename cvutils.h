@@ -71,7 +71,13 @@ T meanNoOutliers(std::vector<T> vec){
 
 template<typename T>
 std::vector<int> outliers(std::vector<T> vec){
-    T mean = cv::mean(vec)[0];
+    if (vec.empty()){
+        throw std::invalid_argument("This vector is empty!");
+    }
+
+    double mean = meanNoOutliers(vec);
+
+    double tolerance = mean * 0.1;
 
     std::vector<double> dists(vec.size());
 
@@ -80,16 +86,17 @@ std::vector<int> outliers(std::vector<T> vec){
         dists[i] = std::abs(vec[i] - mean);
     }
 
-    int meandists = cv::mean(dists)[0];
-
-    std::vector<int> indices;
+    std::vector<int> flags(vec.size());
     for (size_t i = 0; i < vec.size(); i++){
-        if (dists[i] > meandists){
-            indices.push_back(i);
+        if (dists[i] > tolerance){
+            flags.at(i) = 1;
+        } else {
+            flags.at(i) = 0;
         }
+
     }
 
-    return indices;
+    return flags;
 
 }
 

@@ -7,6 +7,7 @@
 #include "boarddetector.h"
 #include "cvutils.h"
 #include "typedefs.h"
+#include "matrix.h"
 #include <vector>
 #include <numeric>
 #include <math.h>
@@ -151,12 +152,18 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::on_pushButton_3_clicked()
 {
 
-    if (ui->UseDefaultImage->isChecked()){
-        image = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
-        cv::cvtColor(image, img_gray, CV_RGB2GRAY);
-        cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    }
+    matrix<int> m1, m2, m3;
 
+    std::vector<int> row{1, 1, 1};
+    m1.addRow(row);
+    m2.addRow(row);
+
+    m3 = m1 + m2;
+    std::vector<int> v{0,1,2,3,4};
+    std::vector<int> vv(&v[1], &v[5]);
+    for (size_t i = 0; i < vv.size(); i++){
+        std::cout << vv[i] << std::endl;
+    }
 
 
 }

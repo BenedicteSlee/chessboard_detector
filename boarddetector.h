@@ -23,7 +23,6 @@ public:
 private:
     void categorizeLines();
     void findVanishingPoint();
-    void createPossibleSquares();
     Board filterBasedOnSquareSize(Board& Board);
     Board filterBasedOnRowType(Board& Board, std::vector<int> rowTypes);
     Board filterBasedOnColType(Board& Board, std::vector<int> colTypes);

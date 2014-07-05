@@ -50,7 +50,8 @@ void Board::determineRowTypes()
         int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
         if (vote == 0 && histogram[0] < nCols-1) // if there are two or more votes for other categories
         {
-            rowTypes.push_back(-1); // might be part of the board
+            rowTypes.push_back(vote);
+            //rowTypes.push_back(-1); // might be part of the board
         } else {
             rowTypes.push_back(vote);
         }
@@ -72,7 +73,8 @@ void Board::determineColTypes()
         int vote = std::max_element( histogram.begin(), histogram.end() ) - histogram.begin();
         if (vote == 0 && histogram[0] < nCols-1) // if there are two or more votes for other categories
         {
-            colTypes.push_back(-1); // might be part of the board
+            colTypes.push_back(vote);
+            //colTypes.push_back(-1); // might be part of the board
         } else {
             colTypes.push_back(vote);
         }
