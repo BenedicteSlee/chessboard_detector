@@ -6,16 +6,19 @@
 // S Q U A R E
 
 Square::Square(){
-    std::cout << "Square default constructor" << std::endl;
     squareTypeDetermined = false;
 }
 
 Square::Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
 {
     squareTypeDetermined = false;
-    std::vector<cv::Point> cp{corner1, corner2, corner3, corner4};
-    cornerpoints = cp;
-    sortCornerpoints();
+    cornerpoints.push_back(corner1);
+    cornerpoints.push_back(corner2);
+    cornerpoints.push_back(corner3);
+    cornerpoints.push_back(corner4);
+
+    cornerpointsSorted = cvutils::sortSquareCorners(cornerpoints);
+
     upperLeft = cornerpointsSorted[0];
     upperRight = cornerpointsSorted[1];
     lowerLeft = cornerpointsSorted[2];
@@ -26,7 +29,13 @@ Square::Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point c
 
     calcBorders();
     calcVanishingPoints();
-    createCorners(image);
+
+    if (!image.data){
+        throw std::invalid_argument("Image is empty, cannot create corners.");
+    } else {
+
+        createCorners(image);
+    }
 }
 
 int Square::getVLength(){return vlength;}
@@ -78,7 +87,7 @@ void Square::determineType()
     }
 
     else {
-       squareType = 0;
+        squareType = 0;
     }
 
     squareTypeDetermined = true;
@@ -86,10 +95,10 @@ void Square::determineType()
 
 void Square::calcBorders()
 {
-    borders.push_back(Line(cornerpoints.at(3),cornerpoints.at(0)));
-    borders.push_back(Line(cornerpoints.at(0),cornerpoints.at(1)));
-    borders.push_back(Line(cornerpoints.at(1),cornerpoints.at(2)));
-    borders.push_back(Line(cornerpoints.at(2),cornerpoints.at(3)));
+    borders.push_back(Line(cornerpointsSorted.at(3),cornerpointsSorted.at(0)));
+    borders.push_back(Line(cornerpointsSorted.at(0),cornerpointsSorted.at(1)));
+    borders.push_back(Line(cornerpointsSorted.at(1),cornerpointsSorted.at(2)));
+    borders.push_back(Line(cornerpointsSorted.at(2),cornerpointsSorted.at(3)));
 }
 
 int Square::calcMeanGray(cv::Mat& image)
@@ -172,6 +181,19 @@ Lines Square::getBordersSorted()
 {
     return borders;
 }
+
+std::vector<int> Square::getSquareTypes(Squares squares)
+{
+    if (squares.empty()){
+        throw std::invalid_argument("vector is empty");
+    }
+
+    std::vector<int> result(squares.size());
+    for (size_t i = 0; i < squares.size(); i++){
+        result[i] = squares[i].getSquareType();
+    }
+    return result;
+}
 /*
 void Square::addCorner(Corner corner)
 {
@@ -187,6 +209,9 @@ void Square::addCorner(Corner corner)
 }
 */
 void Square::createCorners(cv::Mat& image){
+    if (!image.data){
+        throw std::invalid_argument("Image is empty, won't create new corner");
+    }
     int radius = 10; // TODO make dynamic
     for (size_t i = 0; i < 4; i++){
         Corner newcorner(image, cornerpointsSorted.at(i), radius);

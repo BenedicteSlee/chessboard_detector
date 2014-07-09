@@ -34,9 +34,11 @@ public:
 
     std::vector<T> getCol(int colIdx);
 
-    void addRow(std::vector<T> row);
+    void appendRow(std::vector<T> row);
+    void prependRow(std::vector<T> row);
 
-    void addCol(std::vector<T> col);
+    void appendCol(std::vector<T> col);
+    void prependCol(std::vector<T> col);
 
 protected:
     std::vector<T> elements;
@@ -106,7 +108,7 @@ template <typename T>
 std::vector<T> matrix<T>::getRow(int rowIdx)
 {
 
-    if (rowIdx > nRows){
+    if (rowIdx >= nRows){
         throw std::invalid_argument("row index > number of rows in matrix");
     }
 
@@ -120,7 +122,7 @@ std::vector<T> matrix<T>::getRow(int rowIdx)
 template <typename T>
 std::vector<T> matrix<T>::getCol(int colIdx)
 {
-    if (colIdx > nCols){
+    if (colIdx >= nCols){
         throw std::invalid_argument("col index > number of columns in matrix");
     }
 
@@ -136,7 +138,7 @@ std::vector<T> matrix<T>::getCol(int colIdx)
 }
 
 template <typename T>
-void matrix<T>::addRow(std::vector<T> row)
+void matrix<T>::appendRow(std::vector<T> row)
 {
     if (row.empty())
         return;
@@ -156,7 +158,7 @@ void matrix<T>::addRow(std::vector<T> row)
 }
 
 template <typename T>
-void matrix<T>::addCol(std::vector<T> col)
+void matrix<T>::appendCol(std::vector<T> col)
 {
     if (col.empty())
         return;

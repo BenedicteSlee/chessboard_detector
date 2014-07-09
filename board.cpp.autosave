@@ -169,11 +169,11 @@ void Board::expand(Direction dir)
     switch(dir){  // TODO: use function pointers instead and define them in the previous switch
     case UP:
     case DOWN:
-        this->addRow(newsquares);
+        this->appendRow(newsquares);
         break;
     case LEFT:
     case RIGHT:
-        this->addCol(newsquares);
+        this->appendCol(newsquares);
         break;
     }
 }

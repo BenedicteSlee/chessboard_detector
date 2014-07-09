@@ -7,20 +7,27 @@
 class Board : public matrix<Square>
 {
 public:
-    Board();
-    Board(cv::Mat& image, Lines sortedHorizontalLines, Lines sortedVerticalLines);
+    Board(cv::Mat &image_);
+    Board(cv::Mat& image_, Lines sortedHorizontalLines, Lines sortedVerticalLines);
 
     std::vector<int> getRowTypes();
     std::vector<int> getColTypes();
 
-    void draw(cv::Mat& image);
+    void draw();
+
+    std::pair<int,int> getStatus();
+
+    void expand(Direction dir);
 
 private:
+    cv::Mat& image;
     std::vector<int> rowTypes;
     std::vector<int> colTypes;
 
     void determineRowTypes();
     void determineColTypes();
+
+
 };
 
 

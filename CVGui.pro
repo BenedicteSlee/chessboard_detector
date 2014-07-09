@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     corner.cpp \
     square.cpp \
     oldboard.cpp \
-    board.cpp
+    board.cpp \
+    squareExpander.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -36,7 +37,8 @@ HEADERS  += mainwindow.h \
     square.h \
     matrix.h \
     oldboard.h \
-    board.h
+    board.h \
+    squareExpander.h
 
 FORMS    += mainwindow.ui
 

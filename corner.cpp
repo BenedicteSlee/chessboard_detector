@@ -5,6 +5,9 @@
 
 Corner::Corner(const cv::Mat& image, cv::Point cornerpoint, int radius)
 {
+    if (!image.data){
+        throw std::invalid_argument("Image is empty, cannot create corner");
+    }
     classified = false;
     this->initialCornerpoint = cornerpoint;
     this->cornerpoint = cornerpoint;

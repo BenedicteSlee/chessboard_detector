@@ -9,6 +9,8 @@
 #include "board.h"
 
 
+
+
 class BoardDetector
 {
 public:
@@ -26,6 +28,9 @@ private:
     Board filterBasedOnSquareSize(Board& Board);
     Board filterBasedOnRowType(Board& Board, std::vector<int> rowTypes);
     Board filterBasedOnColType(Board& Board, std::vector<int> colTypes);
+    void requestColumnExpansion(Board &board);
+    void requestRowExpansion(Board& board);
+
 
     cv::Mat image;
     cv::Mat image_gray;
@@ -37,7 +42,6 @@ private:
     Lines hlinesSorted;
     Lines vlinesSorted;
     std::vector<std::vector<int>> squareTypes;
-
     Corners corners;
 
 };

@@ -16,11 +16,15 @@ public:
     int minLineLength;
     int maxLineGap;
 
+    void showCanny();
+    void showHoughlines();
+
 private:
     Lines lines;
-    cv::Mat image;
-    void edgeDetection(cv::Mat&, bool doBlur = true);
-    void lineDetection(cv::Mat&);
+    std::vector<cv::Vec4i> houghlines;
+    cv::Mat image, canny;
+    void edgeDetection(bool doBlur = true);
+    void lineDetection();
 };
 
 #endif // PREPROCESS_H

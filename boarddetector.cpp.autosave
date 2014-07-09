@@ -234,7 +234,7 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
             hlengths.at(j) = row.at(j).getHLength();
         }
         houtliers = cvutils::outliers(hlengths);
-        remove1.addRow(houtliers);
+        remove1.appendRow(houtliers);
     }
 
     Board colsRemoved(image);
@@ -243,7 +243,7 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
         std::vector<int> flags = remove1.getCol(i);
         int nkeep = std::count(flags.begin(), flags.end(), 0);
         if (nkeep / (double) nRows > 0.4){ // less than 60% flagged for removal
-            colsRemoved.addCol(board.getCol(i));
+            colsRemoved.appendCol(board.getCol(i));
         } else {
             removeIdx.push_back(i);
         }
@@ -280,7 +280,7 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
             }
 
         }
-        remove2.addCol(voutliers);
+        remove2.appendCol(voutliers);
     }
 
     std::vector<int> removeIdx2;
@@ -289,7 +289,7 @@ Board BoardDetector::filterBasedOnSquareSize(Board &board)
         std::vector<int> flags = remove2.getRow(i);
         int nkeep = std::count(flags.begin(), flags.end(), 0);
         if (nkeep / (double) colsRemoved.getNumRows() > 0.4){ // less than 60% flagged for removal
-            rowsRemoved.addRow(colsRemoved.getRow(i));
+            rowsRemoved.appendRow(colsRemoved.getRow(i));
         } else {
             removeIdx2.push_back(i);
         }
@@ -320,7 +320,7 @@ Board BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowType
     for (size_t i = 0; i < rowTypes.size(); i++){
         if (rowTypes.at(i) != 0){
             Squares row = board.getRow(i);
-            newBoard.addRow(row);
+            newBoard.appendRow(row);
         } else {
             removeIdx.push_back(i);
         }
@@ -352,7 +352,7 @@ Board BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colType
     for (size_t i = 0; i < colTypes.size(); i++){
         if (colTypes.at(i) != 0){
             Squares col = board.getCol(i);
-            newBoard.addCol(col);
+            newBoard.appendCol(col);
             //cv::Mat tmp;
             //globalim.copyTo(tmp);
             //newBoard.draw(tmp);

@@ -98,7 +98,6 @@ bool cvutils::pointIsLess(Point a, Point b) // for sorting corners in square sta
 
 }
 
-
 cv::Point2d cvutils::centerpoint(Points points){
     double xsum = 0;
     double ysum = 0;
@@ -110,6 +109,12 @@ cv::Point2d cvutils::centerpoint(Points points){
 
     return cv::Point2d(xsum/(double) points.size(), ysum/ (double) points.size());
 
+}
+
+cv::Point2d cvutils::centerpoint(Point point1, Point point2)
+{
+    Points points{point1, point2};
+    return cvutils::centerpoint(points);
 }
 
 bool cvutils::pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b)
@@ -129,6 +134,36 @@ bool cvutils::containsPoint(const Points& points, const cv::Point& point)
     }
 
     return false;
+
+}
+
+Points cvutils::sortSquareCorners(Points &points){
+    if (points.size() != 4){
+        throw std::invalid_argument("Give me four points");
+    }
+
+    Points sortedPoints(4);
+
+    Points pointsSortedByY = points;
+    std::sort(pointsSortedByY.begin(), pointsSortedByY.end(), [] (cv::Point a, cv::Point b){return a.y < b.y;});
+
+    if (pointsSortedByY[0].x < pointsSortedByY[1].x){
+        sortedPoints[0] = pointsSortedByY[0];
+        sortedPoints[1] = pointsSortedByY[1];
+    } else {
+        sortedPoints[0] = pointsSortedByY[1];
+        sortedPoints[1] = pointsSortedByY[0];
+    }
+
+    if (pointsSortedByY[2].x > pointsSortedByY[3].x){
+        sortedPoints[2] = pointsSortedByY[2];
+        sortedPoints[3] = pointsSortedByY[3];
+    } else {
+        sortedPoints[2] = pointsSortedByY[3];
+        sortedPoints[3] = pointsSortedByY[2];
+    }
+
+    return sortedPoints;
 
 }
 
@@ -189,4 +224,3 @@ void cvutils::dilate(std::vector<int> & binaryPixels)
 
     }
 }
-

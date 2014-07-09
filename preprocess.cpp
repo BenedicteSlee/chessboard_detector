@@ -11,16 +11,36 @@ Preprocess::Preprocess(cv::Mat & image_)
     houghThreshold = 96;
     minLineLength = 105;
     maxLineGap = 139;
-    cv::Mat dst;
-    edgeDetection(dst);
-    lineDetection(dst);
+
+    edgeDetection();
+    lineDetection();
 }
 
 void Preprocess::getLines(Lines& lines_){
     lines_ = lines;
 }
 
-void Preprocess::edgeDetection(cv::Mat& dst, bool doBlur){
+void Preprocess::showCanny()
+{
+    cv::imshow("Canny", canny);
+    cv::waitKey();
+}
+
+void Preprocess::showHoughlines()
+{
+    cv::Mat imgHough;
+    image.copyTo(imgHough);
+    for( size_t i = 0; i < houghlines.size(); i++ )
+    {
+        cv::Vec4i l = houghlines[i];
+        cv::line(imgHough, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 3, CV_AA);
+    }
+
+    cv::imshow("Probabilistic Hough", imgHough);
+    cv::waitKey(0);
+}
+
+void Preprocess::edgeDetection(bool doBlur){
     cv::Mat gray;
     if (image.channels() == 3){
         cv::cvtColor(image,gray,cv::COLOR_RGB2GRAY);
@@ -29,17 +49,16 @@ void Preprocess::edgeDetection(cv::Mat& dst, bool doBlur){
     }
 
     if (doBlur){
-        cv::GaussianBlur(gray, gray, cv::Size(0,0), 2);
+        cv::GaussianBlur(gray, gray, cv::Size(5,5), 2);
     }
-    cv::Canny(gray, dst, 30, 200, 3);
+    cv::Canny(gray, canny, 30, 200, 3);
 }
 
-void Preprocess::lineDetection(cv::Mat& src)
+void Preprocess::lineDetection()
 {
     /// Use Probabilistic Hough Transform
-
-    std::vector<cv::Vec4i> houghlines;
-    cv::HoughLinesP(src, houghlines, 1, CV_PI/180, houghThreshold, minLineLength, maxLineGap);
+    cv::imshow("canny1", canny); cv::waitKey();
+    cv::HoughLinesP(canny, houghlines, 1, CV_PI/180, houghThreshold, minLineLength, maxLineGap);
 
     for (size_t i = 0; i < houghlines.size(); i++)
     {
@@ -47,20 +66,5 @@ void Preprocess::lineDetection(cv::Mat& src)
         lines.push_back(l);
     }
 
-    int i = 1;
-
-
-
-    /// Show the result
-    /*
-    for( size_t i = 0; i < houghlines.size(); i++ )
-    {
-        cv::Vec4i l = houghlines[i];
-        cv::line(src, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 3, CV_AA);
-    }
-
-    cv::imshow("Probabilistic Hough", src);
-    cv::waitKey(0);
-    */
 }
 

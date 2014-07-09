@@ -30,10 +30,12 @@ public:
     std::vector<cv::Point> getCornerpointsSorted();
     Lines getBordersSorted();
     int getSquareType(){return squareType;}
-
+    static std::vector<int> getSquareTypes(Squares);
+    cv::Point getCenter(){return center;}
     // Add features
     //void addCorner(Corner corner);
     void determineType();
+    Points getVanishingPoints(){return vanishingPoints;}
 
 private:
     // Variables

@@ -26,7 +26,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    cv::Mat image; // image variable
+    cv::Mat img_rgb; // image variable
     cv::Mat img_gray;
 };
 

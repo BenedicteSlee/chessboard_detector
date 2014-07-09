@@ -4,6 +4,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "typedefs.h"
+#include <vector>
 
 namespace cvutils {
 
@@ -11,11 +12,13 @@ void PrintMatToConsole(cv::Mat&, int, int);
 void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point a, cv::Point b);
+Points sortSquareCorners(Points&);
 void sortPoints(Points &);
 void dilate(std::vector<int>&);
 int sumderiv(std::vector<int>);
 
 cv::Point2d centerpoint(Points);
+cv::Point2d centerpoint(cv::Point point1, cv::Point point2);
 
 bool pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b);
 
@@ -44,8 +47,8 @@ std::vector<double> Stats(std::vector<T> input){
 }
 
 template<typename T>
-T meanNoOutliers(std::vector<T> vec){
-    T mean = cv::mean(vec)[0];
+double meanNoOutliers(std::vector<T> vec){
+    double mean = cv::mean(vec)[0];
 
     std::vector<double> dists(vec.size());
 
@@ -54,7 +57,7 @@ T meanNoOutliers(std::vector<T> vec){
         dists[i] = std::abs(vec[i] - mean);
     }
 
-    int meandists = cv::mean(dists)[0];
+    double meandists = cv::mean(dists)[0];
 
     int count = 0;
     double sum = 0;
@@ -66,18 +69,18 @@ T meanNoOutliers(std::vector<T> vec){
     }
 
     double newmean = sum / count ;
-    return (T) newmean;
+    return newmean;
 }
 
 template<typename T>
-std::vector<int> outliers(std::vector<T> vec){
-    if (vec.empty()){
+std::vector<int> outliers(std::vector<T> vec, double tolerancePct = 0.1){
+    if (vec.empty() || vec.size() == 0){
         throw std::invalid_argument("This vector is empty!");
     }
 
     double mean = meanNoOutliers(vec);
 
-    double tolerance = mean * 0.1;
+    double tolerance = mean * tolerancePct;
 
     std::vector<double> dists(vec.size());
 
@@ -85,6 +88,7 @@ std::vector<int> outliers(std::vector<T> vec){
     for (size_t i = 0; i < vec.size(); i++){
         dists[i] = std::abs(vec[i] - mean);
     }
+
 
     std::vector<int> flags(vec.size());
     for (size_t i = 0; i < vec.size(); i++){
@@ -95,6 +99,8 @@ std::vector<int> outliers(std::vector<T> vec){
         }
 
     }
+
+
 
     return flags;
 
