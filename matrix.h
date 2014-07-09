@@ -88,7 +88,7 @@ T &matrix<T>::getRef(int rowIdx, int colIdx){
     int idx = getIndex(rowIdx, colIdx);
 
     if (idx > (int)elements.size()-1){
-         throw std::out_of_range("Out of range!");
+        throw std::out_of_range("Out of range!");
     }
     T& element = elements.at(idx);
     return element;
@@ -147,14 +147,36 @@ void matrix<T>::appendRow(std::vector<T> row)
         std::invalid_argument("This row has the wrong length for this matrix");
     }
 
+    if (elements.empty()){ // then this is the first row added, and it will determine number of columns
+        nCols = row.size();
+    }
+
     for (size_t i = 0; i < row.size(); i++){
         elements.push_back(row.at(i));
     }
 
-    if (nCols == 0){ // then this is the first row added, and it will determine number of columns
-        nCols = row.size();
-    }
+
     nRows++;
+}
+
+template <typename T>
+void matrix<T>::prependRow(std::vector<T> row){
+    if (row.empty())
+        return;
+    if ((int)row.size() != nCols){
+        std::invalid_argument("This row has the wrong length for this matrix");
+    }
+    
+    if (elements.empty()){
+        elements = row;
+        nCols = row.size();
+
+    } else {
+        elements.insert(elements.begin(), row.begin(), row.end());
+    }
+
+    nRows++;
+
 }
 
 template <typename T>
@@ -171,6 +193,7 @@ void matrix<T>::appendCol(std::vector<T> col)
     if (elements.empty()){
         elements = col;
         nCols = 1;
+        nRows = col.size();
         return;
     }
 
@@ -185,15 +208,43 @@ void matrix<T>::appendCol(std::vector<T> col)
         bool doInsert = (i+1) % nCols == 0;
         if (doInsert){
             elements.push_back(col.at(j));
-
             j++;
-
         }
     }
 
-    if (nRows == 0){
-        nRows = col.size();
+    nCols++;
+}
+
+template <typename T>
+void matrix<T>::prependCol(std::vector<T> col){
+    if (col.empty())
+        return;
+
+
+    if ((int)col.size() != nRows){
+        std::invalid_argument("This column has the wrong length for this matrix");
     }
+
+    if (elements.empty()){
+        elements = col;
+        nCols = 1;
+        nRows = col.size();
+        return;
+    }
+
+    std::vector<T> elementsOld = elements; //std::vector = gives a copy
+    elements.clear();
+
+    int j = 0;
+    for (size_t i = 0; i < elementsOld.size(); i++){
+        bool doInsert = i % nCols == 0;
+        if (doInsert){
+            elements.push_back(col.at(j));
+            j++;
+        }
+        elements.push_back(elementsOld.at(i));
+    }
+
     nCols++;
 }
 

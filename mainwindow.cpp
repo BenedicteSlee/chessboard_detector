@@ -164,11 +164,12 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::on_pushButton_3_clicked()
 {
 
-    matrix<int> m1, m2, m3;
+
+    matrix<int> m1, m2, m3, m4, m5;
 
     std::vector<int> row{1, 1, 1};
-    m1.addRow(row);
-    m2.addRow(row);
+    m1.appendRow(row);
+    m2.appendRow(row);
 
     m3 = m1 + m2;
     std::vector<int> v{0,1,2,3,4};
@@ -177,5 +178,14 @@ void MainWindow::on_pushButton_3_clicked()
         std::cout << vv[i] << std::endl;
     }
 
+    std::vector<int> col{2, 2, 2};
+    m4.appendCol(col);
+    m4.appendCol(col);
+    m4.prependCol(row);
 
+    m5.appendRow(row);
+    m5.appendRow(row);
+    m5.prependRow(col);
+
+    int k = 1;
 }
