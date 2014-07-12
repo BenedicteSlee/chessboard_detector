@@ -2,6 +2,8 @@
 #define MATRIX_H
 
 #include <vector>
+#include <iostream>
+#include <string>
 
 
 // Class stores element in a std::vector
@@ -40,14 +42,19 @@ public:
     void appendCol(std::vector<T> col);
     void prependCol(std::vector<T> col);
 
+    bool removeCol(int idx);
+    std::vector<int> removeCols(std::vector<int> cols);
+    bool removeRow(int idx);
+    std::vector<int> removeRows(std::vector<int> rows);
+
 protected:
     std::vector<T> elements;
 
     int nRows;
     int nCols;
 
-private:
     int getIndex(int row, int col);
+    std::pair<int,int> getRowCol(int index);
 };
 
 template <typename T>
@@ -249,10 +256,137 @@ void matrix<T>::prependCol(std::vector<T> col){
 }
 
 template <typename T>
+bool matrix<T>::removeRow(int row){
+    if (row != 0 && row != nRows-1){
+        std::cout << "Can only remove first and last row" << std::endl;
+        return false;
+    }
+
+    if (row > nRows-1){
+        std::cout << "You want to remove row " << row << "but this matrix has only " << nRows << " rows." << std::endl;
+        return false;
+    }
+
+    if (row == 0){
+        elements.erase(elements.begin(), elements.begin() + nCols);
+    }
+    else if (row == nRows - 1){
+        elements.erase(elements.end() - nCols, elements.end());
+    }
+
+    nRows--;
+    std::cout << "Removed row: " << row << std::endl;
+    return true;
+}
+
+template <typename T>
+std::vector<int> matrix<T>::removeRows(std::vector<int> rows){
+    if (rows.empty()){
+        throw std::invalid_argument("Input vector is empty");
+    }
+
+    std::vector<int> isRemoved;
+    //remove from top
+    if (rows[0] == 0){
+        int idx = 0;
+        while (rows[idx] == idx){
+            bool check = removeRow(idx);
+            if (check)
+                isRemoved.push_back(idx);
+            idx++;
+        }
+    }
+
+    //remove from bottom
+    int rowsIdx = rows.size()-1;
+    int idxRequested = rows[rowsIdx];
+    int idxAllowed = nRows-1;
+    while (idxRequested == idxAllowed){
+        bool check = removeRow(idxRequested);
+        if (check)
+            isRemoved.push_back(idxRequested);
+        idxRequested = rows[rowsIdx--];
+
+        idxAllowed--;
+    }
+
+    return isRemoved;
+}
+
+template <typename T>
+bool matrix<T>::removeCol(int col){
+    if (col == 0 || col == nCols-1){
+        std::cout << "Can only remove first and last row" << std::endl;
+        return false;
+    }
+
+    if (col > nCols-1){
+        std::cout << "You want to remove column " << col << "but this matrix has only " << nCols << " columns." <<std::endl;
+        return false;
+    }
+
+    std::vector<T> newElements(elements.size() - nRows);
+
+    int count = 0;
+    for (size_t i = 0; i < elements.size(); i++){
+        int thiscol = (int) i % nCols;
+        if (thiscol != col){
+            newElements[count++] = elements[i];
+        }
+    }
+    elements.clear();
+    elements = newElements;
+    nCols--;
+    std::cout << "Removed column: " << col << std::endl;
+    return true;
+}
+
+template <typename T>
+std::vector<int> matrix<T>::removeCols(std::vector<int> cols){
+    if (cols.empty()){
+        throw std::invalid_argument("Input vector is empty");
+    }
+    std::vector<int> isRemoved;
+    //remove from left
+    if (cols[0] == 0){
+        int idx = 0;
+        while (cols[idx] == idx){
+            bool check = removeCol(idx);
+            if (check)
+                isRemoved.push_back(idx);
+            idx++;
+        }
+    }
+
+    //remove from right
+    int colsIdx = cols.size()-1;
+    int idxRequested = cols[colsIdx];
+    int idxAllowed = nCols-1;
+    while (idxRequested == idxAllowed){
+        bool check = removeCol(idxRequested);
+        if (check)
+            isRemoved.push_back(idxRequested);
+        idxRequested = cols[colsIdx--];
+        idxAllowed--;
+    }
+    return isRemoved;
+}
+
+
+
+
+template <typename T>
 int matrix<T>::getIndex(int row, int col)
 {
     return row * nCols + col;
 }
 
+template <typename T>
+std::pair<int,int> matrix<T>::getRowCol(int index){
+    std::pair<int,int> result;
+    result.first = (int) index / nCols;
+    result.second = index % nCols - 1;
+    return result;
+}
 
 #endif // MATRIX_H

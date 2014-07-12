@@ -11,7 +11,8 @@ Preprocess::Preprocess(cv::Mat & image_)
     houghThreshold = 96;
     minLineLength = 105;
     maxLineGap = 139;
-
+    gaussianBlurSize = cv::Size(3,3); // must be odd
+    gaussianBlurSigma = 2;
     edgeDetection();
     lineDetection();
 }
@@ -33,7 +34,7 @@ void Preprocess::showHoughlines()
     for( size_t i = 0; i < houghlines.size(); i++ )
     {
         cv::Vec4i l = houghlines[i];
-        cv::line(imgHough, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 3, CV_AA);
+        cv::line(imgHough, cv::Point2d(l[0], l[1]), cv::Point2d(l[2], l[3]), cv::Scalar(255,0,0), 1, CV_AA);
     }
 
     cv::imshow("Probabilistic Hough", imgHough);
@@ -47,9 +48,8 @@ void Preprocess::edgeDetection(bool doBlur){
     } else {
         gray = image;
     }
-
     if (doBlur){
-        cv::GaussianBlur(gray, gray, cv::Size(5,5), 2);
+        cv::GaussianBlur(gray, gray, gaussianBlurSize, gaussianBlurSigma);
     }
     cv::Canny(gray, canny, 30, 200, 3);
 }
@@ -57,14 +57,16 @@ void Preprocess::edgeDetection(bool doBlur){
 void Preprocess::lineDetection()
 {
     /// Use Probabilistic Hough Transform
-    cv::imshow("canny1", canny); cv::waitKey();
     cv::HoughLinesP(canny, houghlines, 1, CV_PI/180, houghThreshold, minLineLength, maxLineGap);
 
     for (size_t i = 0; i < houghlines.size(); i++)
     {
-        Line l = Line(cv::Point(houghlines[i][0], houghlines[i][1]), cv::Point(houghlines[i][2], houghlines[i][3]));
+        cv::Point2d p1(houghlines[i][0], houghlines[i][1]);
+        cv::Point2d p2(houghlines[i][2], houghlines[i][3]);
+        if (cvutils::outOfBounds(image,p1) || cvutils::outOfBounds(image,p2))
+            throw std::invalid_argument("A point created by Houghlines is out of bounds");
+        Line l = Line(p1, p2);
         lines.push_back(l);
     }
-
 }
 

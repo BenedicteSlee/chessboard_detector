@@ -67,10 +67,10 @@ void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName
 
 }
 
-bool cvutils::pointIsLess(Point a, Point b) // for sorting corners in square starting at upper left corner
+bool cvutils::pointIsLess(cv::Point2d a, cv::Point2d b) // for sorting corners in square starting at upper left corner
 {   // Ref: http://stackoverflow.com/questions/6989100/sort-points-in-clockwise-order
 
-    cv::Point2d center = cv::Point((a.x + b.x)*0.5, (a.y + b.y) * 0.5);
+    cv::Point2d center = cv::Point2d((a.x + b.x)*0.5, (a.y + b.y) * 0.5);
 
     if (a.x >= center.x && b.x < center.x ){
         return true;
@@ -98,22 +98,9 @@ bool cvutils::pointIsLess(Point a, Point b) // for sorting corners in square sta
 
 }
 
-cv::Point2d cvutils::centerpoint(Points points){
-    double xsum = 0;
-    double ysum = 0;
-
-    for (size_t i = 0; i < points.size(); ++i) {
-        xsum += points[i].x;
-        ysum += points[i].y;
-    }
-
-    return cv::Point2d(xsum/(double) points.size(), ysum/ (double) points.size());
-
-}
-
-cv::Point2d cvutils::centerpoint(Point point1, Point point2)
+cv::Point2d cvutils::centerpoint(cv::Point2d point1, cv::Point2d point2)
 {
-    Points points{point1, point2};
+    Points2d points{cv::Point2d(point1.x,point1.y), cv::Point2d(point2.x, point2.y)};
     return cvutils::centerpoint(points);
 }
 
@@ -122,7 +109,7 @@ bool cvutils::pairIsLess(const std::pair<int, double> a, const std::pair<int, do
     return a.second < b.second;
 }
 
-bool cvutils::containsPoint(const Points& points, const cv::Point& point)
+bool cvutils::containsPoint(const Points2d& points, const cv::Point2d& point)
 {
     if (points.empty()){
         return false;
@@ -137,15 +124,15 @@ bool cvutils::containsPoint(const Points& points, const cv::Point& point)
 
 }
 
-Points cvutils::sortSquareCorners(Points &points){
+Points2d cvutils::sortSquareCorners(Points2d &points){
     if (points.size() != 4){
         throw std::invalid_argument("Give me four points");
     }
 
-    Points sortedPoints(4);
+    Points2d sortedPoints(4);
 
-    Points pointsSortedByY = points;
-    std::sort(pointsSortedByY.begin(), pointsSortedByY.end(), [] (cv::Point a, cv::Point b){return a.y < b.y;});
+    Points2d pointsSortedByY = points;
+    std::sort(pointsSortedByY.begin(), pointsSortedByY.end(), [] (cv::Point2d a, cv::Point2d b){return a.y < b.y;});
 
     if (pointsSortedByY[0].x < pointsSortedByY[1].x){
         sortedPoints[0] = pointsSortedByY[0];
@@ -164,32 +151,6 @@ Points cvutils::sortSquareCorners(Points &points){
     }
 
     return sortedPoints;
-
-}
-
-void cvutils::sortPoints(Points& points)
-{ // Ref: http://www.cplusplus.com/forum/general/116020/
-    cv::Point2d center = centerpoint(points);
-
-    std::vector<std::pair<int, double> > atans(points.size());
-
-    for (size_t i = 0; i < points.size(); ++i)
-    {
-        atans[i].first = i;
-        atans[i].second = atan2(points[i].y - center.y, points[i].x - center.x);
-
-    }
-
-    std::sort(atans.begin(), atans.end(),
-              [] (const std::pair<int, double>& left, const std::pair<int, double>& right) -> bool
-                    {return left.second > right.second;});
-
-
-    Points originalPoints = points;
-
-    for (size_t i = 0; i < points.size(); ++i) {
-        points[i] = originalPoints[atans[i].first];
-    }
 
 }
 
@@ -223,4 +184,62 @@ void cvutils::dilate(std::vector<int> & binaryPixels)
         }
 
     }
+}
+
+
+Point cvutils::doubleToInt(Point2d point2d){
+    cv::Point point;
+    int x = (int) point2d.x;
+    int y = (int) point2d.y;
+    return cv::Point(x,y);
+}
+
+
+Points cvutils::doubleToInt(Points2d points2d)
+{
+    Points points(points2d.size());
+    for (size_t i = 0; i < points2d.size(); i++){
+        points[i] = doubleToInt(points2d[i]);
+    }
+    return points;
+}
+
+
+bool cvutils::negCoordinate(Point2d point2d)
+{
+    bool check;
+    (point2d.x < 0 || point2d.y < 0) ? check = true : check = false;
+    return check;
+}
+
+
+std::vector<bool> cvutils::negCoordinate(Points2d points2d)
+{
+    std::vector<bool> checks(points2d.size());
+    for (size_t i = 0; i < points2d.size(); i++){
+        checks[i] = negCoordinate(points2d[i]);
+    }
+    return checks;
+}
+
+
+bool cvutils::anyNegCoordinate(Points2d points2d)
+{
+    std::vector<bool> checks = negCoordinate(points2d);
+    return std::any_of(checks.begin(), checks.end(), [] (bool b){return b;});
+}
+
+
+bool cvutils::outOfBounds(Mat &image, Point2d point2d){
+    bool isOutOfBounds = (point2d.x > image.cols || point2d.x < 0 || point2d.y > image.rows || point2d.y < 0);
+    return isOutOfBounds;
+}
+
+
+std::vector<bool> cvutils::outOfBounds(Mat &image, Points2d points){
+    std::vector<bool> result(points.size());
+    for (size_t i = 0; i < points.size(); i++){
+        result[i] = outOfBounds(image, points[i]);
+    }
+    return result;
 }

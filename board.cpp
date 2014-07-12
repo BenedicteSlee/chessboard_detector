@@ -16,24 +16,27 @@ Board::Board(cv::Mat &image_, Lines hlinesSorted, Lines vlinesSorted) : image(im
     nCols = vlinesSorted.size() - 1;
     nRows = hlinesSorted.size() - 1;
 
-    for (size_t i = 0; i < hlinesSorted.size()-1; ++i) {
+    for (int i = 0; i < nRows; ++i) {
         Line hlineUpper = hlinesSorted.at(i);
         Line hlineLower = hlinesSorted.at(i+1);
-        for (size_t j = 0; j < vlinesSorted.size()-1; ++j) {
+        for (int j = 0; j < nCols; ++j) {
             Line vlineLeft = vlinesSorted.at(j);
             Line vlineRight = vlinesSorted.at(j+1);
 
-            cv::Point upperLeft, upperRight, lowerLeft, lowerRight;
-            hlineUpper.Intersection(vlineLeft, upperLeft);
-            hlineUpper.Intersection(vlineRight, upperRight);
-            hlineLower.Intersection(vlineLeft, lowerLeft);
-            hlineLower.Intersection(vlineRight, lowerRight);
+            cv::Point2d upperLeft, upperRight, lowerLeft, lowerRight;
+            int check = hlineUpper.Intersection(vlineLeft, upperLeft);
+            check = hlineUpper.Intersection(vlineRight, upperRight);
+            check = hlineLower.Intersection(vlineLeft, lowerLeft);
+            check = hlineLower.Intersection(vlineRight, lowerRight);
 
             Square square(image, upperLeft, upperRight, lowerRight, lowerLeft);
 
             elements.push_back(square);
         }
     }
+
+    removeOutOfBounds();
+
 }
 
 void Board::determineRowTypes()
@@ -82,6 +85,42 @@ void Board::determineColTypes()
     }
 }
 
+void Board::removeOutOfBounds(){
+    std::vector<int> delRow;
+    std::vector<int> delCol;
+    for (size_t i = 0; i < elements.size(); i++){
+        std::pair<int,int> rowcol = getRowCol(i);
+        int row = rowcol.first;
+        int col = rowcol.second;
+        if (elements[i].isOutOfBounds()){
+            delRow.push_back(row);
+            delCol.push_back(col);
+        }
+    }
+
+    std::vector<int> checkColsRemoved, checkRowsRemoved;
+    if (delCol.size() > 0)
+        checkColsRemoved = removeCols(delCol);
+    if (delRow.size() > 0)
+        checkRowsRemoved = removeRows(delRow);
+
+    // if rows or cols out of bounds that are not at top/bottom or left/right then give up and ask for new image
+    if (checkColsRemoved.size() != delCol.size() || checkRowsRemoved.size() != delRow.size()){
+        throw std::invalid_argument("Make sure whole board is within image frame");
+    }
+    std::cout << "Cols removed because contained an out of bounds square: ";
+    for (size_t i = 0; i < checkColsRemoved.size(); i++){
+        std::cout << checkColsRemoved[i] << ",";
+    }
+    std::cout << std::endl;
+    std::cout << "Rows removed because contained an out of bounds square: ";
+    for (size_t i = 0; i < checkRowsRemoved.size(); i++){
+        std::cout << checkRowsRemoved[i] << ",";
+    }
+    std::cout << std::endl;
+
+}
+
 std::vector<int> Board::getRowTypes()
 {
     if (rowTypes.empty()){
@@ -105,19 +144,27 @@ void Board::draw()
         return;
     }
 
+
     if (!image.data){
         throw std::invalid_argument("draw() has no image to draw on");
     }
     cv::Mat img_draw;
     image.copyTo(img_draw);
-
+    cv::cvtColor(img_draw, img_draw, cv::COLOR_GRAY2BGR);
     cv::RNG rng = cv::RNG(1234);
     for (size_t i = 0; i < elements.size(); i++) {
 
         cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-        cv::fillConvexPoly(img_draw, elements.at(i).getCornerpointsSorted(), col);
-        cv::imshow("poly", img_draw);
-        cv::waitKey(1);
+        Points2d cps = elements.at(i).getCornerpointsSorted();
+        if (cvutils::anyNegCoordinate(cps)){
+            std::cout << "At least one point has a negative index, cannot draw" << std::endl;
+            return;
+        } else {
+            Points cornerpoints = cvutils::doubleToInt(cps);
+            cv::fillConvexPoly(img_draw, cornerpoints, col);
+            cv::imshow("poly", img_draw);
+            cv::waitKey(1);
+        }
     }
     cv::waitKey();
 }
@@ -163,6 +210,8 @@ void Board::expand(Direction dir)
     Squares newsquares(size);
     for (size_t i = 0; i < size; i++){
         SquareExpander se(image, baseSquares[i], dir);
+        //if (!success)
+        //  break;
         newsquares[i] = se.getSquare();
     }
 

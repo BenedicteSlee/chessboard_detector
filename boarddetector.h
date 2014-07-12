@@ -25,9 +25,9 @@ public:
 private:
     void categorizeLines();
     void findVanishingPoint();
-    Board filterBasedOnSquareSize(Board& Board);
-    Board filterBasedOnRowType(Board& Board, std::vector<int> rowTypes);
-    Board filterBasedOnColType(Board& Board, std::vector<int> colTypes);
+    void filterBasedOnSquareSize(Board& Board);
+    void filterBasedOnRowType(Board& Board, std::vector<int> rowTypes);
+    void filterBasedOnColType(Board& Board, std::vector<int> colTypes);
     void requestColumnExpansion(Board &board);
     void requestRowExpansion(Board& board);
 
@@ -36,7 +36,7 @@ private:
     cv::Mat image_gray;
     std::vector<Line> lines;
     std::vector<double> slopes;
-    cv::Point vanishingPoint;
+    cv::Point2d vanishingPoint;
     std::vector<int> hlinesIdx;
     std::vector<int> vlinesIdx;
     Lines hlinesSorted;

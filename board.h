@@ -27,6 +27,9 @@ private:
     void determineRowTypes();
     void determineColTypes();
 
+    void removeOutOfBounds();
+
+
 
 };
 

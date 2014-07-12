@@ -12,14 +12,20 @@ public:
     Preprocess(cv::Mat&);
     void getLines(Lines&);
 
-    int houghThreshold;
-    int minLineLength;
-    int maxLineGap;
+
 
     void showCanny();
     void showHoughlines();
 
+    cv::Mat getCanny(){return canny;}
+
 private:
+    int houghThreshold;
+    int minLineLength;
+    int maxLineGap;
+    cv::Size gaussianBlurSize;
+    int gaussianBlurSigma;
+
     Lines lines;
     std::vector<cv::Vec4i> houghlines;
     cv::Mat image, canny;

@@ -7,7 +7,7 @@ Line::Line(){
 
 }
 
-Line::Line(std::vector<cv::Point> points_)
+Line::Line(std::vector<cv::Point2d> points_)
 {
     points = points_;
     calcSlope();
@@ -19,8 +19,14 @@ Line::Line(std::vector<cv::Point> points_)
     y2 = points.at(1).y;
 }
 
-Line::Line(cv::Point point1, cv::Point point2)
+Line::Line(cv::Point2d point1, cv::Point2d point2)
 {
+
+    bool check1 = cvutils::negCoordinate(point1);
+    bool check2 = cvutils::negCoordinate(point2);
+    if (check1 || check2){
+        throw std::invalid_argument("One of the points has a negative coordinate");
+    }
     points.push_back(point1);
     points.push_back(point2);
     x1 = point1.x;
@@ -68,8 +74,9 @@ void Line::calcIntercept(){
     yIntercept = y1 - slope*x1;
 }
 
-int Line::Intersection(Line& otherline, cv::Point& result){
+int Line::Intersection(Line& otherline, cv::Point2d& result){
     // y = ax + b; y = cx + d; solve for intersection
+
     double a = slope;
     double b = yIntercept;
 
@@ -88,7 +95,9 @@ int Line::Intersection(Line& otherline, cv::Point& result){
 
     if (otherline.slope == INFINITY){
         result.x = otherline.points.at(0).x;
-        result.y = this->ylookup(result.x);
+        result.y = ylookup(result.x);
+
+
         return 0;
     }
 
@@ -102,10 +111,10 @@ int Line::Intersection(Line& otherline, cv::Point& result){
 }
 
 // Static methods
-void Line::Intersections(std::vector<Line>& lines, std::vector<cv::Point>& intersections, cv::Point limits, std::vector<double>& distances)
+void Line::Intersections(std::vector<Line>& lines, std::vector<cv::Point2d>& intersections, cv::Point2d limits, std::vector<double>& distances)
 {
-    Points unsortedIntersections;
-    cv::Point p;
+    std::vector<cv::Point2d> unsortedIntersections;
+    cv::Point2d p;
     for (size_t i=0; i < lines.size(); i++){
         Line line1 = lines.at(i);
         for (size_t j=i+1; j < lines.size(); j++){
@@ -122,13 +131,13 @@ void Line::Intersections(std::vector<Line>& lines, std::vector<cv::Point>& inter
     std::sort(intersections.begin(), intersections.end(), cvutils::pointIsLess); // TODO !!! This sorting does not work
 }
 
-void Line::RemoveDuplicateIntersections(std::vector<cv::Point> & src, std::vector<cv::Point> & dst, std::vector<double>& distances)
+void Line::RemoveDuplicateIntersections(std::vector<cv::Point2d> & src, std::vector<cv::Point2d> & dst, std::vector<double>& distances)
 {
 
     double tol = 5; // distance tolerance in pixels
-    std::vector<cv::Point> vec;
+    std::vector<cv::Point2d> vec;
     vec = src;
-    cv::Point p1,p2;
+    cv::Point2d p1,p2;
     double enorm;
     size_t i = 0;
     size_t j = 0;

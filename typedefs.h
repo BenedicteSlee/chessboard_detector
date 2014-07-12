@@ -9,6 +9,7 @@ class Corner;
 class Layer;
 
 typedef std::vector<cv::Point> Points;
+typedef std::vector<cv::Point2d> Points2d;
 typedef std::vector<Line> Lines;
 typedef std::vector<Square> Squares;
 typedef std::vector<Corner> Corners;

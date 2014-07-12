@@ -3,7 +3,7 @@
 #include "typedefs.h"
 #include <opencv2/opencv.hpp>
 
-Corner::Corner(const cv::Mat& image, cv::Point cornerpoint, int radius)
+Corner::Corner(const cv::Mat& image, cv::Point2d cornerpoint, int radius)
 {
     if (!image.data){
         throw std::invalid_argument("Image is empty, cannot create corner");
@@ -14,8 +14,19 @@ Corner::Corner(const cv::Mat& image, cv::Point cornerpoint, int radius)
     this->radius = radius;
 
     // Create area around cornerpoint
-    area = image(cv::Rect(cornerpoint.x - radius,cornerpoint.y - radius, radius*2 , radius*2));
+    int x = (int) cornerpoint.x - radius;
+    int y = (int) cornerpoint.y - radius;
 
+    (x < 0 || x > image.cols-1 || y < 0 || y > image.rows-1) ? outOfBounds = true : outOfBounds = false;
+    if (outOfBounds)
+        return;
+
+    try{
+    area = image(cv::Rect(x,y, radius*2 , radius*2));
+    }
+    catch (std::exception& e){
+        std::cout << "error" << std::endl;
+    }
     //recalculateCornerpoint(); //TODO
 
     classify(); // set nRegions;
@@ -32,21 +43,23 @@ int Corner::getNRegions()
 }
 
 void Corner::classify(){
+    if (outOfBounds)
+        return;
     int nc = area.cols;
     int nr = area.rows;
 
     int nLayers = std::min(nc, nr) / 2 - 1;
-    std::vector<Points> layercorners(nLayers);
+    std::vector<Points2d> layercorners(nLayers);
 
     // Determine coordinates of corners in each layer
     for (int i = 0; i < nLayers; i++) {
-        cv::Point upperleft = cv::Point(i, i);
-        cv::Point upperright = cv::Point(nc-1-i, i);
-        cv::Point lowerright = cv::Point(nc-1-i, nr-1-i);
-        cv::Point lowerleft = cv::Point(i, nr-1-i);
+        cv::Point2d upperleft = cv::Point2d(i, i);
+        cv::Point2d upperright = cv::Point2d(nc-1-i, i);
+        cv::Point2d lowerright = cv::Point2d(nc-1-i, nr-1-i);
+        cv::Point2d lowerleft = cv::Point2d(i, nr-1-i);
 
 
-        Points points{upperleft, upperright, lowerright, lowerleft};
+        Points2d points{upperleft, upperright, lowerright, lowerleft};
 
         layercorners[i] = points;
     }
@@ -57,7 +70,7 @@ void Corner::classify(){
         int n = 2 * (nc-1-i*2) + 2 * (nr-1-i*2); // number of pixels in layer
         std::vector<int> layer(n);
 
-        Points corners = layercorners[i];
+        Points2d corners = layercorners[i];
 
         // upper left corner to upper right corner
         int row = corners[0].y;
@@ -158,10 +171,10 @@ void Corner::recalculateCornerpoint()
 
     for( size_t i = 0; i < houghlines.size(); i++ )
         {
-            cv::line(binArea, cv::Point(houghlines[i][0], houghlines[i][1]),
+            cv::line(binArea, cv::Point2d(houghlines[i][0], houghlines[i][1]),
 
 
-                cv::Point(houghlines[i][2], houghlines[i][3]), cv::Scalar(0,255,0), 10, 8 );
+                cv::Point2d(houghlines[i][2], houghlines[i][3]), cv::Scalar(0,255,0), 10, 8 );
         }
 
 }

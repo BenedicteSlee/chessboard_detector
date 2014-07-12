@@ -11,19 +11,83 @@ namespace cvutils {
 void PrintMatToConsole(cv::Mat&, int, int);
 void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
-bool pointIsLess(cv::Point a, cv::Point b);
-Points sortSquareCorners(Points&);
-void sortPoints(Points &);
+bool pointIsLess(cv::Point2d a, cv::Point2d b);
+Points2d sortSquareCorners(Points2d&);
+
+cv::Point doubleToInt(cv::Point2d point2d);
+Points doubleToInt(Points2d points2d);
+bool negCoordinate(cv::Point2d);
+std::vector<bool> negCoordinate(Points2d);
+bool anyNegCoordinate(Points2d);
+
+bool outOfBounds(cv::Mat& image, cv::Point2d point2d);
+
+std::vector<bool> outOfBounds(cv::Mat& image, Points2d points);
+
+template <typename T>
+void sortPoints(T &);
+
 void dilate(std::vector<int>&);
 int sumderiv(std::vector<int>);
 
-cv::Point2d centerpoint(Points);
-cv::Point2d centerpoint(cv::Point point1, cv::Point point2);
+template <typename T>
+cv::Point2d centerpoint(std::vector<T>);
+
+cv::Point2d centerpoint(cv::Point2d point1, cv::Point2d point2);
 
 bool pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b);
 
+bool containsPoint(const Points2d& points, const cv::Point2d& point);
 
-bool containsPoint(const Points& points, const cv::Point& point);
+template <typename T>
+cv::Point_<T> posPoint(cv::Point_<T>& point){
+    cv::Point_<T> newpoint;
+    point.x < 0 ? newpoint.x = 0 : newpoint.x = point.x;
+    point.y < 0 ? newpoint.y = 0 : newpoint.y = point.y;
+    return newpoint;
+}
+
+template <typename T>
+cv::Point2d centerpoint(std::vector<T> points){
+    double xsum = 0;
+    double ysum = 0;
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        xsum += points[i].x;
+        ysum += points[i].y;
+    }
+
+    return cv::Point2d(xsum/(double) points.size(), ysum/ (double) points.size());
+
+}
+
+
+template <typename T>
+void sortPoints(T& points)
+{ // Ref: http://www.cplusplus.com/forum/general/116020/
+    cv::Point2d center = centerpoint(points);
+
+    std::vector<std::pair<int, double> > atans(points.size());
+
+    for (size_t i = 0; i < points.size(); ++i)
+    {
+        atans[i].first = i;
+        atans[i].second = atan2(points[i].y - center.y, points[i].x - center.x);
+
+    }
+
+    std::sort(atans.begin(), atans.end(),
+              [] (const std::pair<int, double>& left, const std::pair<int, double>& right) -> bool
+                    {return left.second > right.second;});
+
+
+    Points2d originalPoints = points;
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        points[i] = originalPoints[atans[i].first];
+    }
+
+}
 
 template<typename T>
 std::vector<double> Stats(std::vector<T> input){

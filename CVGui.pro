@@ -23,9 +23,9 @@ SOURCES += main.cpp\
     boarddetector.cpp \
     corner.cpp \
     square.cpp \
-    oldboard.cpp \
     board.cpp \
-    squareExpander.cpp
+    squareExpander.cpp \
+    minimax.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -36,7 +36,6 @@ HEADERS  += mainwindow.h \
     corner.h \
     square.h \
     matrix.h \
-    oldboard.h \
     board.h \
     squareExpander.h
 

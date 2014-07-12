@@ -46,17 +46,51 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
     if (ui->UseDefaultImage->isChecked()){
-        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers1.jpg");
+        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
         cv::cvtColor(img_rgb, img_gray, CV_RGB2GRAY);
         cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     }
 
-
     cv::Mat img;
 
     cv::resize(img_gray, img, cv::Size(1000, img_gray.rows * 1000/img_gray.cols));
-    cv::imshow("downsized", img);
-    cv::waitKey();
+    ///// CIRCLES
+    ///
+    ///
+    cv::Mat src;
+
+    Preprocess prepcircles = Preprocess(img);
+    //src = prepcircles.getCanny();
+    img.copyTo(src);
+    std::vector<cv::Vec3f> circles;
+
+    /// Apply the Hough Transform to find the circles
+    //cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 200, 100, 0, 0 );
+
+    cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 90, 50, 0, 0 );
+
+
+
+    if (circles.size() > 0){
+    /// Draw the circles detected
+    for( size_t i = 0; i < circles.size(); i++ )
+    {
+        cv::Point2d center((circles[i][0]), (circles[i][1]));
+        int radius = cvRound(circles[i][2]);
+        // circle center
+        circle( src, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+        // circle outline
+        circle( src, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+     }
+
+    /// Show your results
+    //cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
+    //cv::imshow( "Hough Circle Transform Demo", src );
+    //cv::waitKey(0);
+
+    } else {
+        std::cout << "No circles found" << std::endl;
+    }
 
     // Find houghlines
     std::vector<Line> houghlines;
@@ -72,31 +106,7 @@ void MainWindow::on_pushButton_2_clicked()
 
 
 
-    // add lines to image
-    //cv::Mat img_rgb(image.size(), CV_8UC3);
-    //cv::cvtColor(image, img_rgb, CV_GRAY2RGB);
 
-    /*
-    Lines hlinesSorted = cbd.get_hlinesSorted();
-    Lines vlinesSorted = cbd.get_vlinesSorted();
-
-     for( size_t i = 0; i < hlinesSorted.size(); i++ )
-    {
-        std::vector<cv::Point> l = hlinesSorted.at(i).points;
-        cv::line(img_rgb, l[0], l[1], cv::Scalar(255,0,0), 1, CV_AA);
-        cv::imshow("lines", img_rgb);
-        cv::waitKey(1);
-    }
-
-    for( size_t i = 0; i < vlinesSorted.size(); i++ )
-    {
-        std::vector<cv::Point> l = vlinesSorted.at(i).points;
-        cv::line(img_rgb, l[0], l[1], cv::Scalar(255,0,0), 1, CV_AA);
-        cv::imshow("lines", img_rgb);
-        cv::waitKey(1);
-    }
-
-    */
     /*
     // create binary image
     cv::Mat binary;
@@ -104,61 +114,8 @@ void MainWindow::on_pushButton_2_clicked()
     cv::imshow("binary", binary);
     cv::waitKey(0);
     */
-    /*
-     //PLOT POSSIBLE SQUARES
-    cv::RNG rng = cv::RNG(1234);
-    for (size_t i = 0; i < possibleSquares.size(); ++i) {
-        cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-        cv::fillConvexPoly(image, possibleSquares.at(i).getCornerpoints(), col);
-        cv::imshow("poly", image);
-        cv::waitKey(1);
-    }
-    cv::waitKey();
-    */
-
-    /*
-    //PLOT POSSIBLE SQUARES
-   cv::RNG rng = cv::RNG(1234);
-   std::vector<Squares> possibleSquares2 = cbd.getPossibleSquares2();
-   for (size_t i = 0; i < possibleSquares2.size(); i++) {
-       Squares row = possibleSquares2.at(i);
-       for (size_t j = 0; j < row.size(); j++){
-       cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-       cv::fillConvexPoly(image, row.at(j).getCornerpoints(), col);
-       cv::imshow("poly", image);
-       cv::waitKey(2);
-       }
-   }
-   cv::waitKey();
-   */
 
 
-    // look at intersections
-
-    //Corners corners = cbd.getCorners();
-
-    /*
-    for (size_t i = 0; i < corners.size(); ++i) {
-        cv::imshow("corner", corners.at(i).getArea());
-        cv::waitKey();
-    }
-    cv::waitKey();
-*/
-
- /*
-    // add circles to image
-    //cv::RNG rng = cv::RNG(1234);
-    cv::Scalar col = cv::Scalar(0,255,0);
-    for (size_t i=0; i<points.size();i++){
-        //cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-        cv::circle(img_rgb, points.at(i),5, col,1);
-        cv::imshow("Intersections", img_rgb);
-        //std::cout << newpoints.at(i) << std::endl;
-        //cv::waitKey(2);
-    }
-    cv::imshow("Intersections", img_rgb);
-   */
-    //cv::destroyAllWindows();
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -187,5 +144,7 @@ void MainWindow::on_pushButton_3_clicked()
     m5.appendRow(row);
     m5.prependRow(col);
 
-    int k = 1;
 }
+
+
+

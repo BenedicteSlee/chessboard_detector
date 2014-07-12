@@ -10,23 +10,26 @@ class SquareExpander
 public:
     SquareExpander(cv::Mat& image_, Square square_, Direction dir_);
     Square getSquare(){return newSquare;}
+    bool hasExpanded(){return canExpand;}
 
 private:
     cv::Mat& image;
-    Square square;
+    Square baseSquare;
     Square newSquare;
-    Points cpoints;
+    Points2d cpoints;
     Direction dir;
+    bool canExpand;
     Line b1, b2; // left border, rigth border relative to having base square behind you and looking in direction of expansion
-    cv::Point c1, c2; // left corner, right corner
-    cv::Point A, B, C, D, E, F, G, H, I, J, K, L;
-    cv::Point topMid, rightMid, bottomMid, leftMid;
+    cv::Point2d c1, c2; // left corner, right corner
+    cv::Point2d A, B, C, D, E, F, G, H, I, J, K, L;
+    cv::Point2d topMid, rightMid, bottomMid, leftMid;
 
     void calculatePoints();
     void namePoints();
     void nameBorders();
-    void calculateExtrapolatedPoints();
+    bool calculateExtrapolatedPoints();
     void createSquare();
+    void draw(cv::Mat image);
 
 
 

@@ -7,15 +7,21 @@
 
 Square::Square(){
     squareTypeDetermined = false;
+    outOfBounds = false;
 }
 
-Square::Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point corner3, cv::Point corner4)
+Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4)
 {
     squareTypeDetermined = false;
-    cornerpoints.push_back(corner1);
-    cornerpoints.push_back(corner2);
-    cornerpoints.push_back(corner3);
-    cornerpoints.push_back(corner4);
+    outOfBounds = false;
+
+    Points2d cp{corner1, corner2, corner3, corner4};
+    bool negCoord = cvutils::anyNegCoordinate(cp);
+    if (negCoord){
+        throw std::invalid_argument("One of the points has a negative coordinate");
+    }
+
+    cornerpoints = cp;
 
     cornerpointsSorted = cvutils::sortSquareCorners(cornerpoints);
 
@@ -28,7 +34,7 @@ Square::Square(cv::Mat& image, cv::Point corner1, cv::Point corner2, cv::Point c
     vlength = cv::norm(upperLeft - lowerLeft);
 
     calcBorders();
-    calcVanishingPoints();
+    //calcVanishingPoints();
 
     if (!image.data){
         throw std::invalid_argument("Image is empty, cannot create corners.");
@@ -46,7 +52,7 @@ int Square::getMeanGray()
     return meanGray;
 }
 
-Points Square::getCornerpoints(){
+Points2d Square::getCornerpoints(){
     return cornerpoints;
 }
 
@@ -135,7 +141,7 @@ void Square::calcVanishingPoints()
     Line border3 = borders.at(2);
     Line border4 = borders.at(3);
 
-    cv::Point p1, p2;
+    cv::Point2d p1, p2;
     border1.Intersection(border3, p1);
     border2.Intersection(border4, p2);
 
@@ -144,6 +150,7 @@ void Square::calcVanishingPoints()
 }
 
 void Square::draw(){
+
 
     // TODO make dynamic
     int xmax =  500;
@@ -165,14 +172,26 @@ void Square::draw(){
 
 void Square::drawOnImg(cv::Mat& image)
 {
+
+    if (cvutils::anyNegCoordinate(cornerpointsSorted)){
+        std::cout << "At least one point has a negative index, cannot draw" << std::endl;
+        return;
+    }
+
+    if (outOfBounds){
+        std::cout << "Square is fully or partially outside of the image, cannot draw" << std::endl;
+        return;
+    }
+
     cv::RNG rng = cv::RNG(123);
     cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
-    cv::fillConvexPoly(image, cornerpointsSorted, col);
+    Points cps = cvutils::doubleToInt(cornerpointsSorted);
+    cv::fillConvexPoly(image, cps, col);
     cv::imshow("Square", image);
     cv::waitKey();
 }
 
-std::vector<cv::Point> Square::getCornerpointsSorted()
+std::vector<cv::Point2d> Square::getCornerpointsSorted()
 {
     return cornerpointsSorted;
 }
@@ -194,20 +213,7 @@ std::vector<int> Square::getSquareTypes(Squares squares)
     }
     return result;
 }
-/*
-void Square::addCorner(Corner corner)
-{
-    if (corners.size() >= 4){
-        std::invalid_argument("This square already has 4 corners");
-    }
 
-    corners.push_back(corner); // TODO insert in sorted order
-
-    if (corners.size() == 4){ // Once four corners have been added, can determine type
-        determineType();
-    }
-}
-*/
 void Square::createCorners(cv::Mat& image){
     if (!image.data){
         throw std::invalid_argument("Image is empty, won't create new corner");
@@ -215,10 +221,13 @@ void Square::createCorners(cv::Mat& image){
     int radius = 10; // TODO make dynamic
     for (size_t i = 0; i < 4; i++){
         Corner newcorner(image, cornerpointsSorted.at(i), radius);
+        if (newcorner.isOutOfBounds())
+            outOfBounds = true;
         corners.push_back(newcorner);
     }
-    determineType();
-
+    if (!outOfBounds){
+        determineType();
+    }
 }
 
 
