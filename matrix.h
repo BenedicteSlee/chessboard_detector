@@ -42,10 +42,10 @@ public:
     void appendCol(std::vector<T> col);
     void prependCol(std::vector<T> col);
 
-    bool removeCol(int idx);
-    std::vector<int> removeCols(std::vector<int> cols);
-    bool removeRow(int idx);
-    std::vector<int> removeRows(std::vector<int> rows);
+    bool removeColRequest(int idx);
+    std::vector<int> removeColsRequest(std::vector<int> cols);
+    bool removeRowRequest(int idx);
+    std::vector<int> removeRowsRequest(std::vector<int> rows);
 
 protected:
     std::vector<T> elements;
@@ -256,7 +256,7 @@ void matrix<T>::prependCol(std::vector<T> col){
 }
 
 template <typename T>
-bool matrix<T>::removeRow(int row){
+bool matrix<T>::removeRowRequest(int row){
     if (row != 0 && row != nRows-1){
         std::cout << "Can only remove first and last row" << std::endl;
         return false;
@@ -280,7 +280,7 @@ bool matrix<T>::removeRow(int row){
 }
 
 template <typename T>
-std::vector<int> matrix<T>::removeRows(std::vector<int> rows){
+std::vector<int> matrix<T>::removeRowsRequest(std::vector<int> rows){
     if (rows.empty()){
         throw std::invalid_argument("Input vector is empty");
     }
@@ -290,7 +290,7 @@ std::vector<int> matrix<T>::removeRows(std::vector<int> rows){
     if (rows[0] == 0){
         int idx = 0;
         while (rows[idx] == idx){
-            bool check = removeRow(idx);
+            bool check = removeRowRequest(idx);
             if (check)
                 isRemoved.push_back(idx);
             idx++;
@@ -302,7 +302,7 @@ std::vector<int> matrix<T>::removeRows(std::vector<int> rows){
     int idxRequested = rows[rowsIdx];
     int idxAllowed = nRows-1;
     while (idxRequested == idxAllowed){
-        bool check = removeRow(idxRequested);
+        bool check = removeRowRequest(idxRequested);
         if (check)
             isRemoved.push_back(idxRequested);
         idxRequested = rows[rowsIdx--];
@@ -314,7 +314,7 @@ std::vector<int> matrix<T>::removeRows(std::vector<int> rows){
 }
 
 template <typename T>
-bool matrix<T>::removeCol(int col){
+bool matrix<T>::removeColRequest(int col){
     if (col == 0 || col == nCols-1){
         std::cout << "Can only remove first and last row" << std::endl;
         return false;
@@ -342,7 +342,7 @@ bool matrix<T>::removeCol(int col){
 }
 
 template <typename T>
-std::vector<int> matrix<T>::removeCols(std::vector<int> cols){
+std::vector<int> matrix<T>::removeColsRequest(std::vector<int> cols){
     if (cols.empty()){
         throw std::invalid_argument("Input vector is empty");
     }
@@ -351,7 +351,7 @@ std::vector<int> matrix<T>::removeCols(std::vector<int> cols){
     if (cols[0] == 0){
         int idx = 0;
         while (cols[idx] == idx){
-            bool check = removeCol(idx);
+            bool check = removeColRequest(idx);
             if (check)
                 isRemoved.push_back(idx);
             idx++;
@@ -363,7 +363,7 @@ std::vector<int> matrix<T>::removeCols(std::vector<int> cols){
     int idxRequested = cols[colsIdx];
     int idxAllowed = nCols-1;
     while (idxRequested == idxAllowed){
-        bool check = removeCol(idxRequested);
+        bool check = removeColRequest(idxRequested);
         if (check)
             isRemoved.push_back(idxRequested);
         idxRequested = cols[colsIdx--];

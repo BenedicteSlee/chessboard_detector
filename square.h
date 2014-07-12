@@ -54,12 +54,12 @@ private:
     int squareType;
     bool squareTypeDetermined;
     bool outOfBounds;
+    int imsize;
 
     // Methods
     void calcVanishingPoints();
     void calcBorders();
     int calcMeanGray(cv::Mat &image);
-    void sortCornerpoints(); 
     void createCorners(cv::Mat& image);
 };
 

@@ -33,6 +33,8 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
+    filterBasedOnSquareSize(possibleBoard);
+    possibleBoard.draw();
     std::vector<int> rowTypes = possibleBoard.getRowTypes();
     filterBasedOnRowType(possibleBoard, rowTypes);
 
@@ -42,7 +44,7 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
 
     possibleBoard.draw();
 
-    filterBasedOnSquareSize(possibleBoard);
+    //filterBasedOnSquareSize(possibleBoard);
     possibleBoard.draw();
 
     std::pair<int,int> status = possibleBoard.getStatus();
@@ -222,7 +224,7 @@ void BoardDetector::filterBasedOnSquareSize(Board &board)
 
     matrix<int> remove, remove1, remove2;
 
-    std::vector<int> houtliers(nCols), voutliers(nRows);
+    std::vector<int> houtliers(nCols,0), voutliers(nRows,0);
 
     // Flag outliers based on horizontal lengths
     for (int i = 0; i < nRows; i++){
@@ -234,13 +236,12 @@ void BoardDetector::filterBasedOnSquareSize(Board &board)
         remove1.appendRow(houtliers);
     }
 
-    Board colsRemoved(image);
     std::vector<int> removeIdx;
     for (int i = 0; i < board.getNumCols(); i++){
         std::vector<int> flags = remove1.getCol(i);
         int nkeep = std::count(flags.begin(), flags.end(), 0);
         if (nkeep / (double) nRows < 0.6){ // less than 60% flagged for removal
-            board.removeCol(i);
+            board.removeColRequest(i);
             removeIdx.push_back(i);
         }
     }
@@ -255,7 +256,7 @@ void BoardDetector::filterBasedOnSquareSize(Board &board)
         std::cout << "Filter by square size did not remove any columns" << std::endl;
     }
 
-    // TODO CORRECT FOR VIEWPOINT EFFECT
+    // TODO BETTER METHOD FOR CORRECTING FOR VIEWPOINT EFFECT
     // Flag outliers based on vertical lengths
     for (int i = 0; i < board.getNumCols(); i++){
         Squares col = board.getCol(i);
@@ -263,18 +264,11 @@ void BoardDetector::filterBasedOnSquareSize(Board &board)
             vlengths.at(j) = col.at(j).getVLength();
         }
 
-        //voutliers = cvutils::outliers(vlengths, 0.8);
-        for (size_t j = 0; j < vlengths.size(); j++){
+        double midmean = cvutils::meanNoOutliers(vlengths);
 
-            if (j < vlengths.size()-1 && vlengths.at(j) > vlengths.at(j+1))
+        for (size_t j = 1; j < vlengths.size(); j++){
+            if (vlengths.at(j) < 0.5*midmean)
                 voutliers.at(j) = 1;
-            else if (j > 1 && vlengths.at(j) > 1.6 * vlengths.at(j-1))
-            { // TODO make this more robust
-                voutliers.at(j) = 1;
-            } else {
-                voutliers.at(j) = 0;
-            }
-
         }
         remove2.appendCol(voutliers);
     }
@@ -283,8 +277,8 @@ void BoardDetector::filterBasedOnSquareSize(Board &board)
     for (int i = 0; i < board.getNumRows(); i++){
         std::vector<int> flags = remove2.getRow(i);
         int nkeep = std::count(flags.begin(), flags.end(), 0);
-        if (nkeep / (double) colsRemoved.getNumRows() < 0.6){ // less than 60% flagged for removal
-            board.removeRow(i);
+        if (nkeep / (double) board.getNumRows() < 0.6){ // less than 60% flagged for removal
+            board.removeRowRequest(i);
             removeIdx2.push_back(i);
         }
     }
@@ -315,20 +309,21 @@ void BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowTypes
         if (rowTypes.at(i) != 0){
             removeIdx.push_back(i);
         }
-        if (!removeIdx.empty()){
-            actuallyRemoved = board.removeRows(removeIdx);
-        }
-
-        if (!actuallyRemoved.empty())
-        {
-            std::cout << "Filter by row type removed rows: ";
-            for (size_t i = 0; i < actuallyRemoved.size(); i++){
-                std::cout << actuallyRemoved.at(i) << ",";
-            }
-        } else {
-            std::cout << "Filter by row type did not remove any rows" << std::endl;
-        }
     }
+    if (!removeIdx.empty()){
+        actuallyRemoved = board.removeRowsRequest(removeIdx);
+    }
+
+    if (!actuallyRemoved.empty())
+    {
+        std::cout << "Filter by row type removed rows: ";
+        for (size_t i = 0; i < actuallyRemoved.size(); i++){
+            std::cout << actuallyRemoved.at(i) << ",";
+        }
+    } else {
+        std::cout << "Filter by row type did not remove any rows" << std::endl;
+    }
+
 }
 
 void BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colTypes)
@@ -344,23 +339,20 @@ void BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colTypes
         if (colTypes.at(i) != 0){
             removeIdx.push_back(i);
         }
-        if (!removeIdx.empty()){
-            actuallyRemoved = board.removeCols(removeIdx);
-        }
-
-        if (!actuallyRemoved.empty())
-        {
-            std::cout << "Filter by col type removed cols: ";
-            for (size_t i = 0; i < actuallyRemoved.size(); i++){
-                std::cout << actuallyRemoved.at(i) << ",";
-            }
-        } else {
-            std::cout << "Filter by col type did not remove any rows" << std::endl;
-        }
+    }
+    if (!removeIdx.empty()){
+        actuallyRemoved = board.removeColsRequest(removeIdx);
     }
 
-
-
+    if (!actuallyRemoved.empty())
+    {
+        std::cout << "Filter by col type removed cols: ";
+        for (size_t i = 0; i < actuallyRemoved.size(); i++){
+            std::cout << actuallyRemoved.at(i) << ",";
+        }
+    } else {
+        std::cout << "Filter by col type did not remove any rows" << std::endl;
+    }
 }
 
 void BoardDetector::requestColumnExpansion(Board& board)

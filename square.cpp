@@ -12,6 +12,8 @@ Square::Square(){
 
 Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4)
 {
+    cv::Size imsize = image.size();
+
     squareTypeDetermined = false;
     outOfBounds = false;
 
@@ -27,8 +29,8 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
 
     upperLeft = cornerpointsSorted[0];
     upperRight = cornerpointsSorted[1];
-    lowerLeft = cornerpointsSorted[2];
-    lowerRight = cornerpointsSorted[3];
+    lowerRight = cornerpointsSorted[2];
+    lowerLeft = cornerpointsSorted[3];
 
     hlength = cv::norm(upperRight-upperLeft);
     vlength = cv::norm(upperLeft - lowerLeft);
@@ -54,11 +56,6 @@ int Square::getMeanGray()
 
 Points2d Square::getCornerpoints(){
     return cornerpoints;
-}
-
-void Square::sortCornerpoints(){
-    cornerpointsSorted = cornerpoints;
-    cvutils::sortPoints(cornerpointsSorted);
 }
 
 void Square::determineType()
@@ -153,17 +150,14 @@ void Square::draw(){
 
 
     // TODO make dynamic
-    int xmax =  500;
-    int ymax = 500;
-
-    cv::Mat image = cv::Mat::zeros(xmax*1.5,ymax*1.5,CV_8UC3);
-    cv::line( image, borders[0].points[0], borders[0].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
-    cv::line( image, borders[1].points[0], borders[1].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
-    cv::line( image, borders[2].points[0], borders[2].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
-    cv::line( image, borders[3].points[0], borders[3].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
+    cv::Mat im = cv::Mat::zeros(2,imsize,CV_8UC3);
+    cv::line( im, borders[0].points[0], borders[0].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
+    cv::line( im, borders[1].points[0], borders[1].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
+    cv::line( im, borders[2].points[0], borders[2].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
+    cv::line( im, borders[3].points[0], borders[3].points[1],cv::Scalar( 110, 220, 0 ),  2, 8 );
 
     cv::namedWindow("Square");
-    cv::imshow("Square",image);
+    cv::imshow("Square",im);
 
     cv::waitKey( 0 );
 

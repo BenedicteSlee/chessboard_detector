@@ -100,9 +100,9 @@ void Board::removeOutOfBounds(){
 
     std::vector<int> checkColsRemoved, checkRowsRemoved;
     if (delCol.size() > 0)
-        checkColsRemoved = removeCols(delCol);
+        checkColsRemoved = removeColsRequest(delCol);
     if (delRow.size() > 0)
-        checkRowsRemoved = removeRows(delRow);
+        checkRowsRemoved = removeRowsRequest(delRow);
 
     // if rows or cols out of bounds that are not at top/bottom or left/right then give up and ask for new image
     if (checkColsRemoved.size() != delCol.size() || checkRowsRemoved.size() != delRow.size()){
@@ -163,6 +163,7 @@ void Board::draw()
             Points cornerpoints = cvutils::doubleToInt(cps);
             cv::fillConvexPoly(img_draw, cornerpoints, col);
             cv::imshow("poly", img_draw);
+
             cv::waitKey(1);
         }
     }
