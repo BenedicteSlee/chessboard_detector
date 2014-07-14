@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     square.cpp \
     board.cpp \
     squareExpander.cpp \
-    minimax.cpp
+    minimax.cpp \
+    remover.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -37,7 +38,8 @@ HEADERS  += mainwindow.h \
     square.h \
     matrix.h \
     board.h \
-    squareExpander.h
+    squareExpander.h \
+    remover.h
 
 FORMS    += mainwindow.ui
 

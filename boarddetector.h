@@ -7,6 +7,7 @@
 #include "corner.h"
 #include "typedefs.h"
 #include "board.h"
+#include "remover.h"
 
 
 
@@ -25,7 +26,7 @@ public:
 private:
     void categorizeLines();
     void findVanishingPoint();
-    void filterBasedOnSquareSize(Board& Board);
+    void filterBasedOnSquareSize(Board& Board, Remover& remover);
     void filterBasedOnRowType(Board& Board, std::vector<int> rowTypes);
     void filterBasedOnColType(Board& Board, std::vector<int> colTypes);
     void requestColumnExpansion(Board &board);

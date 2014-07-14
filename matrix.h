@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 
-
 // Class stores element in a std::vector
 template <class T>
 class matrix
@@ -19,6 +18,7 @@ public:
 
         std::vector<T> tmp(nRows * nCols);
         elements = tmp;
+
     }
 
     matrix<T> operator+(const matrix<T> m);
@@ -42,6 +42,10 @@ public:
     void appendCol(std::vector<T> col);
     void prependCol(std::vector<T> col);
 
+    void addToElement(T, int row, int col);
+    void addToColumn(std::vector<T> increments, int col);
+    void addToRow(std::vector<T> increments, int row);
+
     bool removeColRequest(int idx);
     std::vector<int> removeColsRequest(std::vector<int> cols);
     bool removeRowRequest(int idx);
@@ -55,6 +59,7 @@ protected:
 
     int getIndex(int row, int col);
     std::pair<int,int> getRowCol(int index);
+
 };
 
 template <typename T>
@@ -112,6 +117,40 @@ void matrix<T>::setElement(T element, int row, int col){
 }
 
 template <typename T>
+void matrix<T>::addToElement(T increment, int row, int col){
+    if (row > nRows || col > nCols){
+        throw std::out_of_range("Out of range!");
+    }
+
+    int idx = getIndex(row, col);
+    elements.at(idx) += element;
+}
+
+template <typename T>
+void matrix<T>::addToRow(std::vector<T> increments, int row){
+    if (increment.size() != nCols){
+        throw std::out_of_range("Row must be of length"+nCols);
+    }
+
+    for (size_t col = 0; col < incremens.size(); col++){
+        int idx = getIndex(row, col);
+        elements.at(idx) += inrements.at(col);
+    }
+}
+
+template <typename T>
+void matrix<T>::addToCol(std::vector<T> increments, int col){
+    if (increment.size() != nRows){
+        throw std::out_of_range("Row must be of length"+nRows);
+    }
+
+    for (size_t row = 0; row < incremens.size(); row++){
+        int idx = getIndex(row, col);
+        elements.at(idx) += increments.at(row);
+    }
+}
+
+template <typename T>
 std::vector<T> matrix<T>::getRow(int rowIdx)
 {
 
@@ -162,8 +201,8 @@ void matrix<T>::appendRow(std::vector<T> row)
         elements.push_back(row.at(i));
     }
 
-
     nRows++;
+
 }
 
 template <typename T>
@@ -258,12 +297,12 @@ void matrix<T>::prependCol(std::vector<T> col){
 template <typename T>
 bool matrix<T>::removeRowRequest(int row){
     if (row != 0 && row != nRows-1){
-        std::cout << "Can only remove first and last row" << std::endl;
+        std::cout << "Request to remove row " << row << " denied, can only remove first and last row" << std::endl;
         return false;
     }
 
     if (row > nRows-1){
-        std::cout << "You want to remove row " << row << "but this matrix has only " << nRows << " rows." << std::endl;
+        std::cout << "Request to remove row " << row << " denied, this matrix has only " << nRows << " rows." << std::endl;
         return false;
     }
 
@@ -284,6 +323,8 @@ std::vector<int> matrix<T>::removeRowsRequest(std::vector<int> rows){
     if (rows.empty()){
         throw std::invalid_argument("Input vector is empty");
     }
+
+    std::sort(rows.begin(), rows.end());
 
     std::vector<int> isRemoved;
     //remove from top
@@ -315,13 +356,13 @@ std::vector<int> matrix<T>::removeRowsRequest(std::vector<int> rows){
 
 template <typename T>
 bool matrix<T>::removeColRequest(int col){
-    if (col == 0 || col == nCols-1){
-        std::cout << "Can only remove first and last row" << std::endl;
+    if (col != 0 && col != nCols-1){
+        std::cout << "Request to remove col " << col << " denied, can only remove first and last col" << std::endl;
         return false;
     }
 
     if (col > nCols-1){
-        std::cout << "You want to remove column " << col << "but this matrix has only " << nCols << " columns." <<std::endl;
+        std::cout << "Request to remove col " << col << " denied, this matrix has only " << nCols << " columns."  <<std::endl;
         return false;
     }
 
@@ -347,6 +388,9 @@ std::vector<int> matrix<T>::removeColsRequest(std::vector<int> cols){
         throw std::invalid_argument("Input vector is empty");
     }
     std::vector<int> isRemoved;
+
+    std::sort(cols.begin(), cols.end());
+
     //remove from left
     if (cols[0] == 0){
         int idx = 0;

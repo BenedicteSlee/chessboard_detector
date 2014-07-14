@@ -137,7 +137,7 @@ double meanNoOutliers(std::vector<T> vec){
 }
 
 template<typename T>
-std::vector<int> outliers(std::vector<T> vec, double tolerancePct = 0.1){
+std::vector<int> flagOutliers(std::vector<T> vec, double tolerancePct = 0.1){
     if (vec.empty() || vec.size() == 0){
         throw std::invalid_argument("This vector is empty!");
     }
