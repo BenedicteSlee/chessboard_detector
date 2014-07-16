@@ -26,7 +26,9 @@ SOURCES += main.cpp\
     board.cpp \
     squareExpander.cpp \
     minimax.cpp \
-    remover.cpp
+    remover.cpp \
+    regression.cpp \
+    circledetector.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -39,7 +41,9 @@ HEADERS  += mainwindow.h \
     matrix.h \
     board.h \
     squareExpander.h \
-    remover.h
+    remover.h \
+    regression.h \
+    circledetector.h
 
 FORMS    += mainwindow.ui
 
@@ -56,7 +60,8 @@ LIBS += -L/usr/local/lib \
      -lboost_math_c99 \
      -larmadillo \
      -llapack \
-     -lblas
+     -lblas \
+
 
 
 SUBDIRS += \

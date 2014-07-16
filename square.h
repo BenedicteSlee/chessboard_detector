@@ -18,18 +18,18 @@ public:
     Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4);
 
     // Methods
-    void draw();
-    void drawOnImg(cv::Mat& image);
+    void draw() const;
+    void drawOnImg(cv::Mat& image) const;
 
     // Get and set methods
     int getMeanGray();
-    int getVLength();
-    int getHLength();
+    size_t getVLength();
+    size_t getHLength();
     Points2d getCornerpoints();
     void setCornerpoints(cv::Mat image, cv::Point2d, cv::Point2d, cv::Point2d, cv::Point2d);
-    std::vector<cv::Point2d> getCornerpointsSorted();
+    std::vector<cv::Point2d> getCornerpointsSorted() const;
     Lines getBordersSorted();
-    int getSquareType(){return squareType;}
+    int getSquareType() const {return squareType;}
     static std::vector<int> getSquareTypes(Squares);
     cv::Point2d getCenter(){return center;}
     // Add features
@@ -37,10 +37,12 @@ public:
     void determineType();
     Points2d getVanishingPoints(){return vanishingPoints;}
     bool isOutOfBounds(){return outOfBounds;}
+    bool containsPoint(cv::Point2d point) const;
 
 private:
     // Variables
     int meanGray;
+    cv::Mat area;
     std::vector<cv::Point2d> cornerpoints;
     std::vector<cv::Point2d> cornerpointsSorted;
     std::vector<Corner> corners;

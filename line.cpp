@@ -29,10 +29,20 @@ Line::Line(cv::Point2d point1, cv::Point2d point2)
     }
     points.push_back(point1);
     points.push_back(point2);
-    x1 = point1.x;
-    y1 = point1.y;
-    x2 = point2.x;
-    y2 = point2.y;
+
+    if (point1.x < point2.x){
+        x1 = point1.x;
+        x2 = point2.x;
+        y1 = point1.y;
+        y2 = point2.y;
+    } else {
+        x1 = point2.x;
+        x2 = point1.x;
+        y1 = point2.y;
+        y2 = point1.y;
+
+    }
+
 
     calcSlope();
     calcIntercept();
@@ -40,25 +50,41 @@ Line::Line(cv::Point2d point1, cv::Point2d point2)
 
 }
 
-int Line::ylookup(int x, int type)
+Line::Line(double slope_, double yIntercept_)
+{
+    x1 = -INFINITY;
+    x2 = INFINITY;
+    y1 = -INFINITY;
+    y2 = INFINITY;
+
+    slope = slope_;
+    yIntercept = yIntercept_;
+
+}
+
+double Line::ylookup(double x, int type) const
 {
     if (type == 0){
         if (x < std::min(x1,x2) || x > std::max(x1,x2))
             return -1;
     }
-    return slope*x + yIntercept;
+    double y = slope*x + yIntercept;
+    return y;
 }
 
-int Line::xlookup(int y, int type)
+double Line::xlookup(double y, int type) const
 {
     if (type == 0){
         if (y < std::min(y1,y2) || y > std::max(y1,y2))
             return -1;
     }
+    if (slope == INFINITY){
+        return x1;
+    }
     if (slope != 0){
         return - yIntercept / slope;
     }
-    return -1;
+    throw std::invalid_argument("Horizontal Line");
 }
 
 
@@ -74,7 +100,7 @@ void Line::calcIntercept(){
     yIntercept = y1 - slope*x1;
 }
 
-int Line::Intersection(Line& otherline, cv::Point2d& result){
+int Line::Intersection(Line& otherline, cv::Point2d& result) const {
     // y = ax + b; y = cx + d; solve for intersection
 
     double a = slope;

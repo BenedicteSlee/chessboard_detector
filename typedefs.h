@@ -8,6 +8,7 @@ class Square;
 class Corner;
 class Layer;
 
+typedef std::vector<size_t> indices;
 typedef std::vector<cv::Point> Points;
 typedef std::vector<cv::Point2d> Points2d;
 typedef std::vector<Line> Lines;

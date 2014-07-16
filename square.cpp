@@ -32,6 +32,40 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
     lowerRight = cornerpointsSorted[2];
     lowerLeft = cornerpointsSorted[3];
 
+    double firstx, firsty, lastx, lasty;
+    upperLeft.x < lowerLeft.x ? firstx = upperLeft.x : firstx = lowerLeft.x;
+    upperLeft.y < lowerLeft.y ? firsty = upperLeft.y : firsty = lowerLeft.y;
+    upperRight.x > lowerRight.x ? lastx = upperRight.x : lastx = lowerRight.x;
+    upperRight.y > lowerRight.y ? lasty = upperRight.y : lasty = lowerRight.y;
+
+    area = image(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
+    meanGray = calcMeanGray(area);
+    cv::Mat binArea;
+    cv::threshold(area, binArea, meanGray, 255, 0); // TODO threshold hardcoded to 90. Base on mean color of squares?
+    cv::imshow("binary", binArea);
+    cv::waitKey(1);
+    //cv::imshow("area", area);
+    //cv::waitKey(1);
+    std::vector<cv::Vec3f> circles;
+    cv::HoughCircles(binArea, circles, CV_HOUGH_GRADIENT, 1, binArea.rows/8, 30, 15, binArea.rows*0.3, binArea.rows*2);
+
+    if (!circles.empty()){
+    for( size_t i = 0; i < circles.size(); i++ )
+    {
+        cv::Point2d center((circles[i][0]), (circles[i][1]));
+        int radius = cvRound(circles[i][2]);
+        // circle center
+        circle( area, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+        // circle outline
+        circle( area, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+     }
+
+    /// Show your results
+    cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
+    cv::imshow( "Hough Circle Transform Demo", area );
+    cv::waitKey(100);
+    }
+    //////////
     hlength = cv::norm(upperRight-upperLeft);
     vlength = cv::norm(upperLeft - lowerLeft);
 
@@ -46,8 +80,8 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
     }
 }
 
-int Square::getVLength(){return vlength;}
-int Square::getHLength(){return hlength;}
+size_t Square::getVLength(){return vlength;}
+size_t Square::getHLength(){return hlength;}
 
 int Square::getMeanGray()
 {
@@ -96,12 +130,29 @@ void Square::determineType()
     squareTypeDetermined = true;
 }
 
+bool Square::containsPoint(cv::Point2d point) const {
+    /*
+        double test1 = upperBorder.ylookup(point.x);
+        double test2 = lowerBorder.ylookup(point.x);
+        double test3 = leftBorder.xlookup(point.y);
+        double test4 = rightBorder.xlookup(point.y);
+        */
+    bool belowTop = point.y > upperBorder.ylookup(point.x);
+    bool aboveBottom = point.y < lowerBorder.ylookup(point.x);
+    bool rightofLeft = point.x > leftBorder.xlookup(point.y);
+    bool leftofRight = point.x < rightBorder.xlookup(point.y);
+
+    return (belowTop && aboveBottom && rightofLeft && leftofRight);
+}
+
 void Square::calcBorders()
 {
-    borders.push_back(Line(cornerpointsSorted.at(3),cornerpointsSorted.at(0)));
-    borders.push_back(Line(cornerpointsSorted.at(0),cornerpointsSorted.at(1)));
-    borders.push_back(Line(cornerpointsSorted.at(1),cornerpointsSorted.at(2)));
-    borders.push_back(Line(cornerpointsSorted.at(2),cornerpointsSorted.at(3)));
+    leftBorder = Line(cornerpointsSorted.at(3),cornerpointsSorted.at(0));
+    upperBorder = Line(cornerpointsSorted.at(0),cornerpointsSorted.at(1));
+    rightBorder = Line(cornerpointsSorted.at(1),cornerpointsSorted.at(2));
+    lowerBorder = Line(cornerpointsSorted.at(2),cornerpointsSorted.at(3));
+    Lines bds{leftBorder, upperBorder, rightBorder, lowerBorder};
+    borders = bds;
 }
 
 int Square::calcMeanGray(cv::Mat& image)
@@ -117,9 +168,9 @@ int Square::calcMeanGray(cv::Mat& image)
 
     int n = 0;
     int val = 0;
-    for (int y = upperLeft.y; y < lowerLeft.y; ++y)
+    for (int y = 0; y < area.rows; ++y)
     {
-        for (int x = upperLeft.x; x < upperRight.x; ++x)
+        for (int x = 0; x < area.cols; ++x)
         {
             val += (int) gray.at<uchar>(y,x);
             n += 1;
@@ -129,6 +180,7 @@ int Square::calcMeanGray(cv::Mat& image)
     if (n > 0){
         meanGray = val / n;
     }
+    return meanGray;
 }
 
 void Square::calcVanishingPoints()
@@ -146,7 +198,7 @@ void Square::calcVanishingPoints()
     vanishingPoints.push_back(p2);
 }
 
-void Square::draw(){
+void Square::draw() const{
 
 
     // TODO make dynamic
@@ -164,7 +216,7 @@ void Square::draw(){
 
 }
 
-void Square::drawOnImg(cv::Mat& image)
+void Square::drawOnImg(cv::Mat& image) const
 {
 
     if (cvutils::anyNegCoordinate(cornerpointsSorted)){
@@ -185,7 +237,7 @@ void Square::drawOnImg(cv::Mat& image)
     cv::waitKey();
 }
 
-std::vector<cv::Point2d> Square::getCornerpointsSorted()
+std::vector<cv::Point2d> Square::getCornerpointsSorted() const
 {
     return cornerpointsSorted;
 }

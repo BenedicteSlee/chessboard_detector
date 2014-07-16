@@ -16,37 +16,55 @@ Board::Board(cv::Mat &image_, Lines hlinesSorted, Lines vlinesSorted) : image(im
     nCols = vlinesSorted.size() - 1;
     nRows = hlinesSorted.size() - 1;
 
-    for (int i = 0; i < nRows; ++i) {
+    for (size_t i = 0; i < nRows; ++i) {
         Line hlineUpper = hlinesSorted.at(i);
         Line hlineLower = hlinesSorted.at(i+1);
-        for (int j = 0; j < nCols; ++j) {
+        bool addRow = true;
+        Squares row;
+        for (size_t j = 0; j < nCols; ++j) {
             Line vlineLeft = vlinesSorted.at(j);
             Line vlineRight = vlinesSorted.at(j+1);
 
             cv::Point2d upperLeft, upperRight, lowerLeft, lowerRight;
+
+
             int check = hlineUpper.Intersection(vlineLeft, upperLeft);
             check = hlineUpper.Intersection(vlineRight, upperRight);
             check = hlineLower.Intersection(vlineLeft, lowerLeft);
             check = hlineLower.Intersection(vlineRight, lowerRight);
 
-            Square square(image, upperLeft, upperRight, lowerRight, lowerLeft);
-
-            elements.push_back(square);
+            Square sq;
+            try{
+                Square square(image, upperLeft, upperRight, lowerRight, lowerLeft);
+                sq = square;
+            }
+            catch(std::exception& e){
+                addRow = false;
+            }
+            row.push_back(sq);
         }
+        if (addRow)
+            elements.insert(elements.end(), row.begin(), row.end());
+
     }
-
     removeOutOfBounds();
-
 }
+
+int Board::squareId(cv::Point2d point){ // TODO TEST!
+    Squares::iterator it = std::find_if(elements.begin(), elements.end(), [&](Square square){return square.containsPoint(point);});
+    int squareId = std::distance(elements.begin(), it);
+    return squareId;
+}
+
 
 void Board::determineRowTypes()
 {
     rowTypes.clear();
 
-    for (int i = 0; i < nRows; i++){
+    for (size_t i = 0; i < nRows; i++){
         std::vector<int> histogram(5,0);
-        for (int j = 0; j < nCols; j++){
-            Square& square = getRef(i, j);
+        for (size_t j = 0; j < nCols; j++){
+            const Square& square = getRef(i, j);
             int type = square.getSquareType();
             ++histogram[ type ];
         }
@@ -66,10 +84,10 @@ void Board::determineColTypes()
 {
     colTypes.clear();
 
-    for (int i = 0; i < nCols; i++){
-        std::vector<int> histogram(5,0);
-        for (int j = 0; j < nRows; j++){
-            Square& square =  getRef(j, i);
+    for (size_t i = 0; i < nCols; i++){
+        std::vector<size_t> histogram(5,0);
+        for (size_t j = 0; j < nRows; j++){
+            const Square& square = getRef(j, i);
             int type = square.getSquareType();
             ++histogram[ type ];
         }
@@ -86,10 +104,10 @@ void Board::determineColTypes()
 }
 
 void Board::removeOutOfBounds(){
-    std::vector<int> delRow;
-    std::vector<int> delCol;
+    std::vector<size_t> delRow;
+    std::vector<size_t> delCol;
     for (size_t i = 0; i < elements.size(); i++){
-        std::pair<int,int> rowcol = getRowCol(i);
+        std::pair<size_t,size_t> rowcol = getRowCol(i);
         int row = rowcol.first;
         int col = rowcol.second;
         if (elements[i].isOutOfBounds()){
@@ -98,7 +116,7 @@ void Board::removeOutOfBounds(){
         }
     }
 
-    std::vector<int> checkColsRemoved, checkRowsRemoved;
+    std::vector<size_t> checkColsRemoved, checkRowsRemoved;
     if (delCol.size() > 0)
         checkColsRemoved = removeColsRequest(delCol);
     if (delRow.size() > 0)

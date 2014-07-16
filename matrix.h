@@ -1,9 +1,12 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include "square.h" // why do i need to include this. If not get incomplete type error
+
 #include <vector>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 // Class stores element in a std::vector
 template <class T>
@@ -11,7 +14,16 @@ class matrix
 {
 public:
     matrix();
-    matrix(int nRows, int nCols)
+    matrix(size_t nRows, size_t nCols, T initval)
+    {
+        this->nCols = nCols;
+        this->nRows = nRows;
+
+        std::vector<T> tmp(nRows * nCols, initval);
+        elements = tmp;
+
+    }
+    matrix(size_t nRows, size_t nCols)
     {
         this->nCols = nCols;
         this->nRows = nRows;
@@ -23,18 +35,22 @@ public:
 
     matrix<T> operator+(const matrix<T> m);
 
-    T getElement(int row, int col);
+    T getElement(size_t row, size_t col);
+    T getElement(size_t index);
 
-    T& getRef(int rowIdx, int colIdx);
 
-    void setElement(T element, int row, int col);
+    const T& getRef(size_t rowIdx, size_t colIdx) const;
+    const T& getRef(size_t index) const;
+    const std::vector<T>& getRefs() const;
 
-    int getNumCols(){return nCols;}
-    int getNumRows(){return nRows;}
+    void setElement(size_t row, size_t col, T element);
 
-    std::vector<T> getRow(int rowIdx);
+    size_t getNumCols(){return nCols;}
+    size_t getNumRows(){return nRows;}
 
-    std::vector<T> getCol(int colIdx);
+    std::vector<T> getRow(size_t rowIdx);
+
+    std::vector<T> getCol(size_t colIdx);
 
     void appendRow(std::vector<T> row);
     void prependRow(std::vector<T> row);
@@ -42,23 +58,25 @@ public:
     void appendCol(std::vector<T> col);
     void prependCol(std::vector<T> col);
 
-    void addToElement(T, int row, int col);
-    void addToColumn(std::vector<T> increments, int col);
-    void addToRow(std::vector<T> increments, int row);
+    void addToElement(size_t row, size_t col, T increment);
+    void addToCol(size_t col, std::vector<T> increments);
+    void addToRow(size_t row, std::vector<T> increments);
 
-    bool removeColRequest(int idx);
-    std::vector<int> removeColsRequest(std::vector<int> cols);
-    bool removeRowRequest(int idx);
-    std::vector<int> removeRowsRequest(std::vector<int> rows);
+    bool removeColRequest(size_t idx);
+    std::vector<size_t> removeColsRequest(std::vector<size_t> cols);
+
+    bool removeRowRequest(size_t idx);
+    std::vector<size_t> removeRowsRequest(std::vector<size_t> rows);
+    void removeRowsAgressive(std::vector<size_t> rows);
 
 protected:
     std::vector<T> elements;
 
-    int nRows;
-    int nCols;
+    size_t nRows;
+    size_t nCols;
 
-    int getIndex(int row, int col);
-    std::pair<int,int> getRowCol(int index);
+    size_t getIndex(size_t row, size_t col) const;
+    std::pair<size_t,size_t> getRowCol(size_t index);
 
 };
 
@@ -87,95 +105,117 @@ matrix<T> matrix<T>::operator+(const matrix<T> m){
 }
 
 template <typename T>
-T matrix<T>::getElement(int row, int col)
+T matrix<T>::getElement(size_t row, size_t col)
 {
-    int idx = getIndex(row, col);
+    size_t idx = getIndex(row, col);
 
     T element = elements.at(idx);
     return element;
 }
 
 template <typename T>
-T &matrix<T>::getRef(int rowIdx, int colIdx){
-    int idx = getIndex(rowIdx, colIdx);
-
-    if (idx > (int)elements.size()-1){
-        throw std::out_of_range("Out of range!");
-    }
-    T& element = elements.at(idx);
-    return element;
+T matrix<T>::getElement(size_t index){
+    if (index >= elements.size())
+        throw std::out_of_range("Matrix has " + std::to_string(elements.size()) + " elements");
+    return elements.at(index);
 }
 
 template <typename T>
-void matrix<T>::setElement(T element, int row, int col){
+const T &matrix<T>::getRef(size_t rowIdx, size_t colIdx) const{
+    size_t idx = getIndex(rowIdx, colIdx);
+
+    if (idx > elements.size()-1){
+        throw std::out_of_range("Out of range!");
+    }
+    const T& ref = elements.at(idx);
+    return ref;
+}
+
+template <typename T>
+const T &matrix<T>::getRef(size_t index) const{
+    if (index >= elements.size())
+        throw std::out_of_range("Out of range");
+    const T& ref = elements.at(index);
+    return ref;
+}
+
+template <typename T>
+const std::vector<T> &matrix<T>::getRefs() const
+{
+    const std::vector<T>& refs = elements;
+    return refs;
+}
+
+template <typename T>
+void matrix<T>::setElement(size_t row, size_t col, T element){
     if (row > nRows || col > nCols){
         throw std::out_of_range("Out of range!");
     }
 
-    int idx = getIndex(row, col);
+    size_t idx = getIndex(row, col);
     elements.at(idx) = element;
 }
 
 template <typename T>
-void matrix<T>::addToElement(T increment, int row, int col){
+void matrix<T>::addToElement(size_t row, size_t col, T increment){
     if (row > nRows || col > nCols){
         throw std::out_of_range("Out of range!");
     }
 
-    int idx = getIndex(row, col);
-    elements.at(idx) += element;
+    size_t idx = getIndex(row, col);
+    elements.at(idx) += increment;
 }
 
 template <typename T>
-void matrix<T>::addToRow(std::vector<T> increments, int row){
-    if (increment.size() != nCols){
-        throw std::out_of_range("Row must be of length"+nCols);
+void matrix<T>::addToRow(size_t row, std::vector<T> increments){
+    if (increments.size() != nCols){
+        throw std::out_of_range("Row must be of length " + std::to_string(nCols));
     }
 
-    for (size_t col = 0; col < incremens.size(); col++){
-        int idx = getIndex(row, col);
-        elements.at(idx) += inrements.at(col);
+    for (size_t col = 0; col < increments.size(); col++){
+        size_t idx = getIndex(row, col);
+        elements.at(idx) += increments.at(col);
     }
 }
 
 template <typename T>
-void matrix<T>::addToCol(std::vector<T> increments, int col){
-    if (increment.size() != nRows){
-        throw std::out_of_range("Row must be of length"+nRows);
+void matrix<T>::addToCol(size_t col, std::vector<T> increments){
+    if (increments.size() != nRows){
+        throw std::out_of_range("Col must be of length " + std::to_string(nRows));
     }
 
-    for (size_t row = 0; row < incremens.size(); row++){
-        int idx = getIndex(row, col);
+    for (size_t row = 0; row < increments.size(); row++){
+        size_t idx = getIndex(row, col);
         elements.at(idx) += increments.at(row);
     }
 }
 
 template <typename T>
-std::vector<T> matrix<T>::getRow(int rowIdx)
+std::vector<T> matrix<T>::getRow(size_t rowIdx)
 {
 
     if (rowIdx >= nRows){
         throw std::invalid_argument("row index > number of rows in matrix");
     }
 
-    int idx1 = rowIdx * nCols;
-    int idx2 = idx1 + nCols;
+    size_t idx1 = rowIdx * nCols;
+    size_t idx2 = idx1 + nCols;
 
     std::vector<T> row(&elements[idx1], &elements[idx2]);
     return row;
 }
 
 template <typename T>
-std::vector<T> matrix<T>::getCol(int colIdx)
+std::vector<T> matrix<T>::getCol(size_t colIdx)
 {
     if (colIdx >= nCols){
         throw std::invalid_argument("col index > number of columns in matrix");
     }
 
     std::vector<T> column(nRows);
-    for (int i = 0; i < nRows; i++){
+    for (size_t i = 0; i < nRows; i++){
 
-        int elementIdx = colIdx + nCols * i;
+        size_t elementIdx = colIdx + nCols * i;
         T element = elements.at(elementIdx);
         column.at(i) = element;
     }
@@ -189,7 +229,7 @@ void matrix<T>::appendRow(std::vector<T> row)
     if (row.empty())
         return;
 
-    if ((int)row.size() != nCols){
+    if (row.size() != nCols){
         std::invalid_argument("This row has the wrong length for this matrix");
     }
 
@@ -209,7 +249,7 @@ template <typename T>
 void matrix<T>::prependRow(std::vector<T> row){
     if (row.empty())
         return;
-    if ((int)row.size() != nCols){
+    if (row.size() != nCols){
         std::invalid_argument("This row has the wrong length for this matrix");
     }
     
@@ -232,7 +272,7 @@ void matrix<T>::appendCol(std::vector<T> col)
         return;
 
 
-    if ((int)col.size() != nRows){
+    if (col.size() != nRows){
         std::invalid_argument("This column has the wrong length for this matrix");
     }
 
@@ -246,7 +286,7 @@ void matrix<T>::appendCol(std::vector<T> col)
     std::vector<T> elementsOld = elements; //std::vector = gives a copy
     elements.clear();
 
-    int j = 0;
+    size_t j = 0;
     for (size_t i = 0; i < elementsOld.size(); i++){
 
         elements.push_back(elementsOld.at(i));
@@ -267,7 +307,7 @@ void matrix<T>::prependCol(std::vector<T> col){
         return;
 
 
-    if ((int)col.size() != nRows){
+    if (col.size() != nRows){
         std::invalid_argument("This column has the wrong length for this matrix");
     }
 
@@ -281,7 +321,7 @@ void matrix<T>::prependCol(std::vector<T> col){
     std::vector<T> elementsOld = elements; //std::vector = gives a copy
     elements.clear();
 
-    int j = 0;
+    size_t j = 0;
     for (size_t i = 0; i < elementsOld.size(); i++){
         bool doInsert = i % nCols == 0;
         if (doInsert){
@@ -295,7 +335,14 @@ void matrix<T>::prependCol(std::vector<T> col){
 }
 
 template <typename T>
-bool matrix<T>::removeRowRequest(int row){
+bool matrix<T>::removeRowRequest(size_t row){
+    if (nRows == 1){
+        throw std::invalid_argument("This board only has one row left, will not remove it");
+    }
+
+    if (nRows == 0){
+        throw std::invalid_argument("This board is empty");
+    }
     if (row != 0 && row != nRows-1){
         std::cout << "Request to remove row " << row << " denied, can only remove first and last row" << std::endl;
         return false;
@@ -309,6 +356,7 @@ bool matrix<T>::removeRowRequest(int row){
     if (row == 0){
         elements.erase(elements.begin(), elements.begin() + nCols);
     }
+
     else if (row == nRows - 1){
         elements.erase(elements.end() - nCols, elements.end());
     }
@@ -319,19 +367,19 @@ bool matrix<T>::removeRowRequest(int row){
 }
 
 template <typename T>
-std::vector<int> matrix<T>::removeRowsRequest(std::vector<int> rows){
+std::vector<size_t> matrix<T>::removeRowsRequest(std::vector<size_t> rows){
     if (rows.empty()){
         throw std::invalid_argument("Input vector is empty");
     }
 
     std::sort(rows.begin(), rows.end());
 
-    std::vector<int> isRemoved;
+    std::vector<size_t> isRemoved;
     //remove from top
     if (rows[0] == 0){
-        int idx = 0;
+        size_t idx = 0;
         while (rows[idx] == idx){
-            bool check = removeRowRequest(idx);
+            bool check = removeRowRequest(0); // remove the first row
             if (check)
                 isRemoved.push_back(idx);
             idx++;
@@ -339,23 +387,43 @@ std::vector<int> matrix<T>::removeRowsRequest(std::vector<int> rows){
     }
 
     //remove from bottom
-    int rowsIdx = rows.size()-1;
-    int idxRequested = rows[rowsIdx];
-    int idxAllowed = nRows-1;
+    size_t decrement = isRemoved.size(); // board may have shrunk in previous block. If previously wanted row 9 to be removed, this may now be row 8
+    size_t rowsIdx = rows.size()-1;
+    size_t idxRequested = rows[rowsIdx] - decrement;
+    size_t idxAllowed = nRows-1;
     while (idxRequested == idxAllowed){
-        bool check = removeRowRequest(idxRequested);
+        bool check = removeRowRequest(nRows-1); // remove the last row
         if (check)
             isRemoved.push_back(idxRequested);
-        idxRequested = rows[rowsIdx--];
 
+        std::cout << rowsIdx << std::endl;
+        idxRequested = rows[--rowsIdx] - decrement;
+        std::cout << rowsIdx << std::endl;
         idxAllowed--;
+
     }
 
     return isRemoved;
 }
 
 template <typename T>
-bool matrix<T>::removeColRequest(int col){
+void matrix<T>::removeRowsAgressive(std::vector<size_t> rows){
+    if (rows.empty()){
+        throw std::invalid_argument("Input vector is empty");
+    }
+    // TODO
+}
+
+template <typename T>
+bool matrix<T>::removeColRequest(size_t col){
+    if (nCols == 1){
+        throw std::invalid_argument("This board only has one column left, will not remove it");
+    }
+
+    if (nCols == 0){
+        throw std::invalid_argument("This board is empty");
+    }
+
     if (col != 0 && col != nCols-1){
         std::cout << "Request to remove col " << col << " denied, can only remove first and last col" << std::endl;
         return false;
@@ -368,9 +436,9 @@ bool matrix<T>::removeColRequest(int col){
 
     std::vector<T> newElements(elements.size() - nRows);
 
-    int count = 0;
+    size_t count = 0;
     for (size_t i = 0; i < elements.size(); i++){
-        int thiscol = (int) i % nCols;
+        size_t thiscol = i % nCols;
         if (thiscol != col){
             newElements[count++] = elements[i];
         }
@@ -383,19 +451,19 @@ bool matrix<T>::removeColRequest(int col){
 }
 
 template <typename T>
-std::vector<int> matrix<T>::removeColsRequest(std::vector<int> cols){
+std::vector<size_t> matrix<T>::removeColsRequest(std::vector<size_t> cols){
     if (cols.empty()){
         throw std::invalid_argument("Input vector is empty");
     }
-    std::vector<int> isRemoved;
+    std::vector<size_t> isRemoved;
 
     std::sort(cols.begin(), cols.end());
 
     //remove from left
     if (cols[0] == 0){
-        int idx = 0;
+        size_t idx = 0;
         while (cols[idx] == idx){
-            bool check = removeColRequest(idx);
+            bool check = removeColRequest(0);
             if (check)
                 isRemoved.push_back(idx);
             idx++;
@@ -403,14 +471,15 @@ std::vector<int> matrix<T>::removeColsRequest(std::vector<int> cols){
     }
 
     //remove from right
-    int colsIdx = cols.size()-1;
-    int idxRequested = cols[colsIdx];
-    int idxAllowed = nCols-1;
+    size_t decrement = isRemoved.size(); // board may have shrunk in previous block. If previously wanted col 9 to be removed, this may now be col 8
+    size_t colsIdx = cols.size()-1;
+    size_t idxRequested = cols[colsIdx] - decrement;
+    size_t idxAllowed = nCols-1;
     while (idxRequested == idxAllowed){
-        bool check = removeColRequest(idxRequested);
+        bool check = removeColRequest(nCols-1);
         if (check)
             isRemoved.push_back(idxRequested);
-        idxRequested = cols[colsIdx--];
+        idxRequested = cols[colsIdx--] - decrement;
         idxAllowed--;
     }
     return isRemoved;
@@ -420,15 +489,15 @@ std::vector<int> matrix<T>::removeColsRequest(std::vector<int> cols){
 
 
 template <typename T>
-int matrix<T>::getIndex(int row, int col)
+size_t matrix<T>::getIndex(size_t row, size_t col) const
 {
     return row * nCols + col;
 }
 
 template <typename T>
-std::pair<int,int> matrix<T>::getRowCol(int index){
-    std::pair<int,int> result;
-    result.first = (int) index / nCols;
+std::pair<size_t, size_t> matrix<T>::getRowCol(size_t index){
+    std::pair<size_t,size_t> result;
+    result.first = index / nCols;
     result.second = index % nCols - 1;
     return result;
 }

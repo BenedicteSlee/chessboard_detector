@@ -16,22 +16,23 @@ class BoardDetector
 {
 public:
     ~BoardDetector();
-    BoardDetector(cv::Mat&,std::vector<Line>);
+    BoardDetector(cv::Mat&, std::vector<Line>);
 
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
     Corners getCorners();
+
+    Board detect();
 
 
 private:
     void categorizeLines();
     void findVanishingPoint();
     void filterBasedOnSquareSize(Board& Board, Remover& remover);
-    void filterBasedOnRowType(Board& Board, std::vector<int> rowTypes);
-    void filterBasedOnColType(Board& Board, std::vector<int> colTypes);
+    void filterBasedOnRowType(Board& Board, Remover& remover);
+    void filterBasedOnColType(Board& Board, Remover& remover);
     void requestColumnExpansion(Board &board);
     void requestRowExpansion(Board& board);
-
 
     cv::Mat image;
     cv::Mat image_gray;

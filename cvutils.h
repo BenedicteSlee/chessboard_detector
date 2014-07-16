@@ -1,10 +1,12 @@
 #ifndef CVUTILS_H
 #define CVUTILS_H
 
-
+#include <algorithm>
+#include <iostream>
+#include <numeric>
+#include <vector>
 #include <opencv2/opencv.hpp>
 #include "typedefs.h"
-#include <vector>
 
 namespace cvutils {
 
@@ -13,6 +15,8 @@ void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point2d a, cv::Point2d b);
 Points2d sortSquareCorners(Points2d&);
+
+void plotPoints(cv::Mat& image, Points2d& points);
 
 cv::Point doubleToInt(cv::Point2d point2d);
 Points doubleToInt(Points2d points2d);
@@ -78,7 +82,7 @@ void sortPoints(T& points)
 
     std::sort(atans.begin(), atans.end(),
               [] (const std::pair<int, double>& left, const std::pair<int, double>& right) -> bool
-                    {return left.second > right.second;});
+    {return left.second > right.second;});
 
 
     Points2d originalPoints = points;
@@ -137,7 +141,7 @@ double meanNoOutliers(std::vector<T> vec){
 }
 
 template<typename T>
-std::vector<int> flagOutliers(std::vector<T> vec, double tolerancePct = 0.1){
+std::vector<size_t> flagOutliers(std::vector<T> vec, double tolerancePct = 0.1){
     if (vec.empty() || vec.size() == 0){
         throw std::invalid_argument("This vector is empty!");
     }
@@ -154,7 +158,7 @@ std::vector<int> flagOutliers(std::vector<T> vec, double tolerancePct = 0.1){
     }
 
 
-    std::vector<int> flags(vec.size());
+    std::vector<size_t> flags(vec.size());
     for (size_t i = 0; i < vec.size(); i++){
         if (dists[i] > tolerance){
             flags.at(i) = 1;
@@ -163,11 +167,7 @@ std::vector<int> flagOutliers(std::vector<T> vec, double tolerancePct = 0.1){
         }
 
     }
-
-
-
     return flags;
-
 }
 
 }

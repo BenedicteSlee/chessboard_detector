@@ -9,10 +9,11 @@ Preprocess::Preprocess(cv::Mat & image_)
 {
     image = image_;
     houghThreshold = 96;
-    minLineLength = 105;
+    //minLineLength = 105;
+    minLineLength = 200;
     maxLineGap = 139;
-    gaussianBlurSize = cv::Size(3,3); // must be odd
-    gaussianBlurSigma = 2;
+    gaussianBlurSize = cv::Size(5,5); // must be odd
+    gaussianBlurSigma = 3;
     edgeDetection();
     lineDetection();
 }

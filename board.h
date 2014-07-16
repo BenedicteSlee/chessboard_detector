@@ -12,6 +12,9 @@ public:
 
     std::vector<int> getRowTypes();
     std::vector<int> getColTypes();
+    size_t size(){return nRows * nCols;}
+
+    //int squareId(cv::Points2d point);
 
     void draw();
 
@@ -19,6 +22,7 @@ public:
 
     void expand(Direction dir);
 
+    int squareId(cv::Point2d point);
 private:
     cv::Mat& image;
     std::vector<int> rowTypes;
@@ -32,7 +36,6 @@ private:
 
 
 };
-
 
 
 #endif // GAMEBOARD_H

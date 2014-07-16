@@ -46,7 +46,7 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
     if (ui->UseDefaultImage->isChecked()){
-        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/chessboard1.jpg");
+        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers6.jpg");
         cv::cvtColor(img_rgb, img_gray, CV_RGB2GRAY);
         cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     }
@@ -67,7 +67,7 @@ void MainWindow::on_pushButton_2_clicked()
     /// Apply the Hough Transform to find the circles
     //cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 200, 100, 0, 0 );
 
-    cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 90, 50, 0, 0 );
+    cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 5, 50, 5, 50 );
 
 
 
@@ -84,13 +84,14 @@ void MainWindow::on_pushButton_2_clicked()
      }
 
     /// Show your results
-    //cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-    //cv::imshow( "Hough Circle Transform Demo", src );
-    //cv::waitKey(0);
+    cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
+    cv::imshow( "Hough Circle Transform Demo", src );
+    cv::waitKey(100);
 
     } else {
         std::cout << "No circles found" << std::endl;
     }
+
 
     // Find houghlines
     std::vector<Line> houghlines;
@@ -98,13 +99,32 @@ void MainWindow::on_pushButton_2_clicked()
     Preprocess prep = Preprocess(img);
     prep.getLines(houghlines);
 
-    prep.showCanny();
-    prep.showHoughlines();
+    //prep.showCanny();
+    //prep.showHoughlines();
 
     // chessboard detector
     BoardDetector cbd = BoardDetector(img, houghlines);
+    Board board = cbd.detect();
+
+    auto elements = board.getRefs();
+    std::vector<int> squaresWithPiece;
+    Points2d centres;
+    for (size_t i = 0; i < circles.size(); i++){
+        auto x = circles[i][0];
+        auto y = circles[i][1];
+        centres.push_back(cv::Point2d(x,y));
+        cv::Point2d point(x, y);
+        auto it2 = std::find_if(elements.begin(), elements.end(), [&](const Square& element){return element.containsPoint(point);});
+        int dist = std::distance(elements.begin(), it2);
+        if (dist < elements.size())
+            squaresWithPiece.push_back(dist);
+
+    }
+    std::sort(squaresWithPiece.begin(), squaresWithPiece.end());
 
 
+    cvutils::plotPoints(img, centres);
+    int hei = 2;
 
 
     /*

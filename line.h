@@ -12,16 +12,17 @@ public:
     Line();
     Line(std::vector<cv::Point2d>);
     Line(cv::Point2d, cv::Point2d);
+    Line(double slope, double yIntercept);
 
-    int Intersection(Line&, cv::Point2d&);
+    int Intersection(Line&, cv::Point2d&) const;
 
     static void Intersections(std::vector<Line>& lines, std::vector<cv::Point2d> &intersections, cv::Point2d limits, std::vector<double>& distances); //TODO make own class called Lines with these methods?
     static void RemoveDuplicateIntersections(std::vector<cv::Point2d> &src, std::vector<cv::Point2d> &dst, std::vector<double>& distances);
 
     void FrameIntersections(const cv::Mat& image, Points2d frameintersections);
 
-    int ylookup(int, int type = 1);
-    int xlookup(int, int type = 1);
+    double ylookup(double, int type = 1) const;
+    double xlookup(double, int type = 1) const;
 
     std::vector<cv::Point2d> points;
     double yIntercept;

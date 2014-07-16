@@ -10,6 +10,7 @@
 #include "board.h"
 #include "squareExpander.h"
 #include "remover.h"
+#include "regression.h"
 
 BoardDetector::~BoardDetector()
 {
@@ -27,55 +28,6 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
 
-    Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
-
-    possibleBoard.draw();
-    cv::destroyAllWindows();
-    //findVanishingPoint(); // use?
-    //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
-
-    Remover remover(possibleBoard);
-
-    filterBasedOnSquareSize(possibleBoard, remover);
-    possibleBoard.draw();
-    std::vector<int> rowTypes = possibleBoard.getRowTypes();
-    filterBasedOnRowType(possibleBoard, rowTypes);
-
-    possibleBoard.draw();cv::destroyAllWindows();
-    std::vector<int> colTypes = possibleBoard.getColTypes();
-    filterBasedOnColType(possibleBoard, colTypes);
-
-    possibleBoard.draw();
-
-    //filterBasedOnSquareSize(possibleBoard);
-    possibleBoard.draw();
-
-    std::pair<int,int> status = possibleBoard.getStatus();
-
-    bool addColumns = false;
-    bool addRows = false;
-
-    if (status.first > 0)
-        addRows = true;
-
-    while (addRows){
-        requestRowExpansion(possibleBoard);
-        status = possibleBoard.getStatus();
-        possibleBoard.draw();
-        if (status.first <= 0)
-            addRows = false;
-    }
-
-    if (status.second > 0) // cols are missing
-        addColumns = true;
-
-    while (addColumns){
-        requestColumnExpansion(possibleBoard);
-        status  = possibleBoard.getStatus();
-        possibleBoard.draw();
-        if (status.second <= 0)
-            addColumns = false;
-    }
 }
 
 Lines BoardDetector::get_hlinesSorted()
@@ -91,6 +43,71 @@ Lines BoardDetector::get_vlinesSorted()
 Corners BoardDetector::getCorners()
 {
     return corners;
+}
+
+Board BoardDetector::detect()
+{
+    bool doDraw = false;
+
+    Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
+
+    if (doDraw) possibleBoard.draw();
+    cv::destroyAllWindows();
+    //findVanishingPoint(); // use?
+    //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
+
+    Remover remover(possibleBoard);
+
+    filterBasedOnSquareSize(possibleBoard, remover);
+    indices colreq1 = remover.getCurrentColRequests();
+    indices rowreq1 = remover.getCurrentRowRequests();
+    //remover.remove();
+    //possibleBoard.draw();
+
+    filterBasedOnRowType(possibleBoard, remover);
+    indices colreq2 = remover.getCurrentColRequests();
+    indices rowreq2 = remover.getCurrentRowRequests();
+    //remover.remove();
+    //possibleBoard.draw();
+
+    filterBasedOnColType(possibleBoard, remover);
+    indices colreq3 = remover.getCurrentColRequests();
+    indices rowreq3 = remover.getCurrentRowRequests();
+
+    remover.remove();
+    if (doDraw) possibleBoard.draw();
+
+    std::pair<int,int> status = possibleBoard.getStatus();
+
+    bool addColumns = false;
+    bool addRows = false;
+
+    if (status.first > 0)
+        addRows = true;
+
+    while (addRows){
+        requestRowExpansion(possibleBoard);
+        status = possibleBoard.getStatus();
+        if (doDraw) possibleBoard.draw();
+        if (status.first <= 0)
+            addRows = false;
+    }
+
+    if (status.second > 0) // cols are missing
+        addColumns = true;
+
+    while (addColumns){
+        requestColumnExpansion(possibleBoard);
+        status  = possibleBoard.getStatus();
+        if (doDraw) possibleBoard.draw();
+        if (status.second <= 0)
+            addColumns = false;
+    }
+
+    //const Square& square = possibleBoard.getRef(0);
+    //bool check = square.containsPoint(cv::Point2d(200,200));
+
+    return possibleBoard;
 }
 
 void BoardDetector::categorizeLines(){
@@ -126,7 +143,7 @@ void BoardDetector::categorizeLines(){
         double yint1 = yints[i-1].second;
         double yint2 = yints[i].second;
         double diff =  abs(yint1 - yint2);
-        if (diff < 2)
+        if (diff < 3)
             removeIdx1[i] = 1;
         else
             removeIdx1[i] = 0;
@@ -219,150 +236,68 @@ void BoardDetector::findVanishingPoint(){
 
 void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover)
 {
-    int nCols = board.getNumCols();
-    int nRows = board.getNumRows();
+    size_t nCols = board.getNumCols();
+    size_t nRows = board.getNumRows();
 
     std::vector<int> hlengths(nCols);
     std::vector<int> vlengths(nRows);
 
-    matrix<int> remove1, remove2;
-
-    std::vector<int> houtliers(nCols,0), voutliers(nRows,0);
-
     // Flag outliers based on horizontal lengths
-    for (int row = 0; row < nRows; row++){
+    std::vector<size_t> houtliers(nCols,0);
+    for (size_t row = 0; row < nRows; row++){
         Squares squares = board.getRow(row);
         for (size_t col = 0; col < squares.size(); col++){
             hlengths.at(col) = squares.at(col).getHLength();
         }
         houtliers = cvutils::flagOutliers(hlengths);
-        remover.addToRow(houtliers);
+        remover.addToRow(row, houtliers);
     }
-
-    /*
-    std::vector<int> removeIdx;
-    for (int i = 0; i < board.getNumCols(); i++){
-        std::vector<int> flags = remove1.getCol(i);
-        int nkeep = std::count(flags.begin(), flags.end(), 0);
-        if (nkeep / (double) nRows < 0.6){ // less than 60% flagged for removal
-            bool colRemoved = board.removeColRequest(i);
-            if (colRemoved)
-                removeIdx.push_back(i);
-        }
-    }
-
-
-    if (!removeIdx.empty()){
-        std::cout << "Filter by square size removed columns: ";
-        for (size_t i = 0; i < removeIdx.size()-1; i++){
-            std::cout << removeIdx.at(i) << ",";
-        }
-        std::cout << removeIdx.at(removeIdx.size()-1) << std::endl;
-    } else {
-        std::cout << "Filter by square size did not remove any columns" << std::endl;
-    }
-    */
 
     // TODO BETTER METHOD FOR CORRECTING FOR VIEWPOINT EFFECT
     // Flag outliers based on vertical lengths
-    for (int col = 0; col < board.getNumCols(); col++){
+    for (size_t col = 0; col < board.getNumCols(); col++){
         Squares squares = board.getCol(col);
         for (size_t row = 0; row < squares.size(); row++){
             vlengths.at(row) = squares.at(row).getVLength();
         }
 
-        double midmean = cvutils::meanNoOutliers(vlengths);
-
-        for (size_t j = 1; j < vlengths.size(); j++){
-            if (vlengths.at(j) < 0.5*midmean)
-                //voutliers.at(j) = 1;
-                remover.addToElement(1,row,col);
+        //double midmean = cvutils::meanNoOutliers(vlengths);
+        Regression<int> reg(vlengths);
+        std::vector<double> errors = reg.squaredErrors();
+        double meanerror = cv::mean(errors)[0];
+        for (size_t row = 0; row < squares.size(); row++){
+            bool doVote = errors.at(row) > meanerror;
+            if (doVote)
+                remover.addToElement(row, col, 1);
         }
     }
-
-    /*
-    std::vector<int> removeIdx2;
-    for (int i = 0; i < board.getNumRows(); i++){
-        std::vector<int> flags = remove2.getRow(i);
-        int nkeep = std::count(flags.begin(), flags.end(), 0);
-        if (nkeep / (double) board.getNumRows() < 0.6){ // less than 60% flagged for removal
-            bool rowRemoved = board.removeRowRequest(i);
-            if (rowRemoved)
-                removeIdx2.push_back(i);
-        }
-    }
-
-    if (!removeIdx2.empty()){
-        std::cout << "Filter by square size removed rows: ";
-        for (size_t i = 0; i < removeIdx2.size()-1; i++){
-            std::cout << removeIdx2.at(i) << ",";
-        }
-        std::cout << removeIdx2.at(removeIdx2.size()-1) << std::endl;
-    } else {
-        std::cout << "Filter by square size did not remove any rows" << std::endl;
-    }
-    */
-
 }
 
-void BoardDetector::filterBasedOnRowType(Board& board, std::vector<int> rowTypes)
+void BoardDetector::filterBasedOnRowType(Board& board, Remover& remover)
 {
+    std::vector<int> types = board.getRowTypes();
 
-    if (cv::sum(rowTypes)[0] == 0){
-        std::cout << "None of the rows seem to be part of a chessboard" << std::endl;
-        return;
-    }
-
-    std::vector<int> actuallyRemoved;
-    std::vector<int> removeIdx;
-    for (size_t i = 0; i < rowTypes.size(); i++){
-        if (rowTypes.at(i) == 0){
-            removeIdx.push_back(i);
+    std::vector<size_t> votes(board.getNumCols());
+    std::for_each(votes.begin(), votes.end(), [](size_t& v){v = 1;});
+    for (size_t row = 0; row < types.size(); row++){
+        if (types.at(row) == 0){
+            remover.addToRow(row, votes);
         }
     }
-    if (!removeIdx.empty()){
-        actuallyRemoved = board.removeRowsRequest(removeIdx);
-    }
-
-    if (!actuallyRemoved.empty())
-    {
-        std::cout << "Filter by row type removed rows: ";
-        for (size_t i = 0; i < actuallyRemoved.size(); i++){
-            std::cout << actuallyRemoved.at(i) << ",";
-        }
-    } else {
-        std::cout << "Filter by row type did not remove any rows" << std::endl;
-    }
-
 }
 
-void BoardDetector::filterBasedOnColType(Board& board, std::vector<int> colTypes)
+void BoardDetector::filterBasedOnColType(Board& board, Remover& remover)
 {
-    if (cv::sum(colTypes)[0] == 0){
-        std::cout << "None of the columns seem to be part of a chessboard" << std::endl;
-        return;
-    }
+    std::vector<int> types = board.getColTypes();
 
-    std::vector<int> actuallyRemoved;
-    std::vector<int> removeIdx;
-    for (size_t i = 0; i < colTypes.size(); i++){
-        if (colTypes.at(i) == 0){
-            removeIdx.push_back(i);
+    std::vector<size_t> votes(board.getNumRows());
+    std::for_each(votes.begin(), votes.end(), [](size_t& v){v = 1;});
+    for (size_t col = 0; col < types.size(); col++){
+        if (types.at(col) == 0){
+            remover.addToCol(col, votes);
         }
     }
-    if (!removeIdx.empty()){
-        actuallyRemoved = board.removeColsRequest(removeIdx);
-    }
 
-    if (!actuallyRemoved.empty())
-    {
-        std::cout << "Filter by col type removed cols: ";
-        for (size_t i = 0; i < actuallyRemoved.size(); i++){
-            std::cout << actuallyRemoved.at(i) << ",";
-        }
-    } else {
-        std::cout << "Filter by col type did not remove any rows" << std::endl;
-    }
 }
 
 void BoardDetector::requestColumnExpansion(Board& board)
