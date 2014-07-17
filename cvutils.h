@@ -16,7 +16,7 @@ void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point2d a, cv::Point2d b);
 Points2d sortSquareCorners(Points2d&);
 
-void plotPoints(cv::Mat& image, Points2d& points);
+void plotPoints(cv::Mat& image, Points2d& points, int radius = 2, cv::Scalar col = cv::Scalar(0,0,255), int lineThickness = 2);
 
 cv::Point doubleToInt(cv::Point2d point2d);
 Points doubleToInt(Points2d points2d);

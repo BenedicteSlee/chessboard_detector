@@ -245,22 +245,25 @@ std::vector<bool> cvutils::outOfBounds(Mat &image, Points2d points){
 }
 
 
-void cvutils::plotPoints(Mat &image, Points2d &points){
+void cvutils::plotPoints(Mat &image, Points2d &points, int radius, cv::Scalar col, int lineThickness){
     cv::Mat rgb;
 
-    image.copyTo(rgb);
+
     if (image.channels() == 1){
+        image.copyTo(rgb);
         cv::cvtColor(image, rgb, cv::COLOR_GRAY2RGB);
+    } else {
+        rgb = image;
     }
 
     for (auto it = points.begin(); it != points.end(); it++){
         cv::Point2d pt = *it;
 
         if (!negCoordinate(pt))
-            cv::circle(rgb, pt, 3, cv::Scalar(0,0,255),2);
+            cv::circle(rgb, pt, radius, col, lineThickness);
         else
             std::cout << "negative point" << std::endl;
     }
     cv::imshow("points", rgb);
-    cv::waitKey(1);
+    cv::waitKey();
 }

@@ -45,11 +45,10 @@ Corners BoardDetector::getCorners()
     return corners;
 }
 
-Board BoardDetector::detect()
+Board BoardDetector::detect(bool doDraw)
 {
-    bool doDraw = false;
-
     Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
+    //auto hlines = get_hlinesSorted();
 
     if (doDraw) possibleBoard.draw();
     cv::destroyAllWindows();
@@ -136,9 +135,9 @@ void BoardDetector::categorizeLines(){
     }
 
     std::sort(yints.begin(), yints.end(), cvutils::pairIsLess);
-    // Remove duplicate horizontal lines
 
-    std::vector<int> removeIdx1(yints.size());
+    // Remove duplicate horizontal lines
+    std::vector<int> removeIdx1(yints.size(), 0);
     for (size_t i = 1; i < yints.size(); ++i) {
         double yint1 = yints[i-1].second;
         double yint2 = yints[i].second;
@@ -149,11 +148,20 @@ void BoardDetector::categorizeLines(){
             removeIdx1[i] = 0;
     }
 
+    // remove false horizontal lines
+    std::vector<double> slopes(hlinesIdx.size());
+    for (size_t i = 0; i < hlinesIdx.size(); i++){
+        slopes[i] = lines[hlinesIdx[i]].slope;
+    }
+    double meanNoOutliers = cvutils::meanNoOutliers(slopes);
+    double tolerance = meanNoOutliers * 0.1;
     // Add sorted unique horizontal lines to field
     for (size_t i = 0; i < hlinesIdx.size(); ++i) {
-        if (removeIdx1[i] != 1){
+
+        if (removeIdx1[i] == 0){
             Line line = lines.at(hlinesIdx[yints[i].first]);
-            hlinesSorted.push_back(line);
+            //if (std::abs(line.slope - meanNoOutliers) <= tolerance)
+                hlinesSorted.push_back(line);
         }
     }
 
@@ -184,9 +192,11 @@ void BoardDetector::categorizeLines(){
     }
 
     // Add sorted unique vertical lines to field
-    for (size_t i = 0; i < vlinesIdx.size(); ++i) {
-        if (removeIdx2[i] != 1){
-            Line line = lines.at(vlinesIdx[xints[i].first]);
+    for (size_t i = 0; i < vlinesIdx.size(); i++) {
+        if (removeIdx2[i] == 0){
+            int idx1 = xints[i].first;
+            int idx2 = vlinesIdx[idx1];
+            Line line = lines.at(idx2);
             vlinesSorted.push_back(line);
         }
     }

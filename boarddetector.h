@@ -22,7 +22,7 @@ public:
     Lines get_vlinesSorted();
     Corners getCorners();
 
-    Board detect();
+    Board detect(bool doDraw = false);
 
 
 private:

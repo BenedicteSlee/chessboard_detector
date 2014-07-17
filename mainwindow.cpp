@@ -70,7 +70,6 @@ void MainWindow::on_pushButton_2_clicked()
     cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 5, 50, 5, 50 );
 
 
-
     if (circles.size() > 0){
     /// Draw the circles detected
     for( size_t i = 0; i < circles.size(); i++ )
@@ -99,43 +98,41 @@ void MainWindow::on_pushButton_2_clicked()
     Preprocess prep = Preprocess(img);
     prep.getLines(houghlines);
 
-    //prep.showCanny();
-    //prep.showHoughlines();
+    prep.showCanny();
+    prep.showHoughlines();
 
     // chessboard detector
     BoardDetector cbd = BoardDetector(img, houghlines);
-    Board board = cbd.detect();
+    Board board = cbd.detect(true);
 
+    // detect pieces based on houghcircles on whole board
+    cv::Mat rgb;
+    cv::cvtColor(img, rgb, cv::COLOR_GRAY2RGB);
     auto elements = board.getRefs();
     std::vector<int> squaresWithPiece;
-    Points2d centres;
+    Points2d centers;
     for (size_t i = 0; i < circles.size(); i++){
         auto x = circles[i][0];
         auto y = circles[i][1];
-        centres.push_back(cv::Point2d(x,y));
+        centers.push_back(cv::Point2d(x,y));
         cv::Point2d point(x, y);
         auto it2 = std::find_if(elements.begin(), elements.end(), [&](const Square& element){return element.containsPoint(point);});
-        int dist = std::distance(elements.begin(), it2);
+        size_t dist = std::distance(elements.begin(), it2);
         if (dist < elements.size())
             squaresWithPiece.push_back(dist);
-
     }
     std::sort(squaresWithPiece.begin(), squaresWithPiece.end());
+    cvutils::plotPoints(rgb, centers, 10);
 
-
-    cvutils::plotPoints(img, centres);
-    int hei = 2;
-
-
-    /*
-    // create binary image
-    cv::Mat binary;
-    cv::threshold(img_gray, binary, 90, 255, 3); // TODO threshold hardcoded to 90. Base on mean color of squares?
-    cv::imshow("binary", binary);
-    cv::waitKey(0);
-    */
-
-
+    // Detect pieces based on houghcircles on individual squares
+    Points2d centers2;
+    for (size_t i = 0; i < elements.size(); i++){
+        bool containsPiece = elements[i].containsPiece();
+        if (containsPiece){
+            centers2.push_back(elements[i].getCenter());
+       }
+    }
+    cvutils::plotPoints(rgb, centers2, 10, cv::Scalar(255,0,0));
 }
 
 void MainWindow::on_pushButton_3_clicked()

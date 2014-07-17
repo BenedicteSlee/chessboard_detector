@@ -22,6 +22,8 @@ public:
     void drawOnImg(cv::Mat& image) const;
 
     // Get and set methods
+    bool containsPiece() const;
+
     int getMeanGray();
     size_t getVLength();
     size_t getHLength();

@@ -100,7 +100,7 @@ void Line::calcIntercept(){
     yIntercept = y1 - slope*x1;
 }
 
-int Line::Intersection(Line& otherline, cv::Point2d& result) const {
+bool Line::Intersection(Line& otherline, cv::Point2d& result) const {
     // y = ax + b; y = cx + d; solve for intersection
 
     double a = slope;
@@ -110,21 +110,20 @@ int Line::Intersection(Line& otherline, cv::Point2d& result) const {
     double d = otherline.yIntercept;
 
     if ((a-c) == 0){
-        return -1; // lines are parallel
+        return false; // lines are parallel
     }
 
     if (slope == INFINITY){
         result.x = x1;
         result.y = otherline.ylookup(x1);
-        return 0;
+        return true;
     }
 
     if (otherline.slope == INFINITY){
         result.x = otherline.points.at(0).x;
         result.y = ylookup(result.x);
 
-
-        return 0;
+        return true;
     }
 
 
@@ -133,7 +132,7 @@ int Line::Intersection(Line& otherline, cv::Point2d& result) const {
 
     result.x = x;
     result.y = y;
-    return 0;
+    return true;
 }
 
 // Static methods

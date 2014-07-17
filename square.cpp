@@ -32,6 +32,7 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
     lowerRight = cornerpointsSorted[2];
     lowerLeft = cornerpointsSorted[3];
 
+    center = cvutils::centerpoint(cornerpointsSorted);
     double firstx, firsty, lastx, lasty;
     upperLeft.x < lowerLeft.x ? firstx = upperLeft.x : firstx = lowerLeft.x;
     upperLeft.y < lowerLeft.y ? firsty = upperLeft.y : firsty = lowerLeft.y;
@@ -40,31 +41,7 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
 
     area = image(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
     meanGray = calcMeanGray(area);
-    cv::Mat binArea;
-    cv::threshold(area, binArea, meanGray, 255, 0); // TODO threshold hardcoded to 90. Base on mean color of squares?
-    cv::imshow("binary", binArea);
-    cv::waitKey(1);
-    //cv::imshow("area", area);
-    //cv::waitKey(1);
-    std::vector<cv::Vec3f> circles;
-    cv::HoughCircles(binArea, circles, CV_HOUGH_GRADIENT, 1, binArea.rows/8, 30, 15, binArea.rows*0.3, binArea.rows*2);
 
-    if (!circles.empty()){
-    for( size_t i = 0; i < circles.size(); i++ )
-    {
-        cv::Point2d center((circles[i][0]), (circles[i][1]));
-        int radius = cvRound(circles[i][2]);
-        // circle center
-        circle( area, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
-        // circle outline
-        circle( area, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
-     }
-
-    /// Show your results
-    cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-    cv::imshow( "Hough Circle Transform Demo", area );
-    cv::waitKey(100);
-    }
     //////////
     hlength = cv::norm(upperRight-upperLeft);
     vlength = cv::norm(upperLeft - lowerLeft);
@@ -235,6 +212,40 @@ void Square::drawOnImg(cv::Mat& image) const
     cv::fillConvexPoly(image, cps, col);
     cv::imshow("Square", image);
     cv::waitKey();
+}
+
+bool Square::containsPiece() const{
+    bool doDraw = false;
+    cv::Mat binarea;
+    cv::threshold(area, binarea, meanGray, 255, 0);
+
+    std::vector<cv::Vec3f> circles;
+    cv::HoughCircles(binarea, circles, CV_HOUGH_GRADIENT, 1, binarea.rows, 20, 15, binarea.rows*0.3, binarea.rows*1.5);
+
+    if (!circles.empty() && doDraw){
+        for( size_t i = 0; i < circles.size(); i++ )
+        {
+            cv::Mat areaToDrawOn;
+            area.copyTo(areaToDrawOn);
+            cv::Point2d center((circles[i][0]), (circles[i][1]));
+            int radius = cvRound(circles[i][2]);
+            // circle center
+            cv::circle( areaToDrawOn, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+            // circle outline
+            cv::circle( areaToDrawOn, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+        }
+
+        /// Show results
+
+        cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
+        cv::imshow( "Hough Circle Transform Demo", area );
+        cv::waitKey(100);
+
+    }
+    if (!circles.empty())
+        return true;
+
+    return false;
 }
 
 std::vector<cv::Point2d> Square::getCornerpointsSorted() const

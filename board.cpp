@@ -13,6 +13,13 @@ Board::Board(cv::Mat& image_) : image(image_)
 
 Board::Board(cv::Mat &image_, Lines hlinesSorted, Lines vlinesSorted) : image(image_)
 {
+    if (hlinesSorted.empty()){
+        throw std::invalid_argument("Vector with horizontal lines does not contain any elements");
+    }
+
+    if (vlinesSorted.empty()){
+        throw std::invalid_argument("Vector with vertical lines does not contain any elements");
+    }
     nCols = vlinesSorted.size() - 1;
     nRows = hlinesSorted.size() - 1;
 

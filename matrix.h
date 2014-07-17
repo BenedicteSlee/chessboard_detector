@@ -201,7 +201,7 @@ std::vector<T> matrix<T>::getRow(size_t rowIdx)
     size_t idx1 = rowIdx * nCols;
     size_t idx2 = idx1 + nCols;
 
-    std::vector<T> row(&elements[idx1], &elements[idx2]);
+   std::vector<T> row(&elements[idx1], &elements[idx2]);
     return row;
 }
 
