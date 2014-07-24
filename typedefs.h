@@ -7,7 +7,9 @@ class Line;
 class Square;
 class Corner;
 class Layer;
+struct Piece;
 
+typedef std::vector<Piece> Pieces;
 typedef std::vector<size_t> indices;
 typedef std::vector<cv::Point> Points;
 typedef std::vector<cv::Point2d> Points2d;

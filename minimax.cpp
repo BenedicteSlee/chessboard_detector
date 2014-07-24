@@ -1,14 +1,14 @@
 #include <algorithm>
 #include <limits>
 #include <cstdlib>
-
 /*
+
 namespace checkers
 {
 
 int evaluatedStates = 0;
 
-int evaluate(const GameState &state)
+int evaluate(const GameState &state) /// send inn matrix of piece placements, return heuristic for current player
 {
     // FIXME: Improve heuristics.
     int redScore = 0;
@@ -37,7 +37,7 @@ int minimax(const GameState &state, int depth, int a, int b, bool max)
         return evaluate(state);
     }
     std::vector<GameState> possibleMoves;
-    state.findPossibleMoves(possibleMoves);
+    state.findPossibleMoves(possibleMoves); /// Find possible moves
     if (max) {
         for (const GameState &move : possibleMoves) {
             a = std::max(a, minimax(move, depth - 1, a, b, false));
