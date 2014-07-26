@@ -35,8 +35,8 @@ public:
 
     matrix<T> operator+(const matrix<T> m);
 
-    T getElement(size_t row, size_t col);
-    T getElement(size_t index);
+    T getElement(size_t row, size_t col) const;
+    T getElement(size_t index) const;
 
 
     const T& getRef(size_t rowIdx, size_t colIdx) const;
@@ -45,12 +45,12 @@ public:
 
     void setElement(size_t row, size_t col, T element);
 
-    size_t getNumCols(){return nCols;}
-    size_t getNumRows(){return nRows;}
+    size_t getNumCols() const {return nCols;}
+    size_t getNumRows() const {return nRows;}
 
-    std::vector<T> getRow(size_t rowIdx);
+    std::vector<T> getRow(size_t rowIdx) const;
 
-    std::vector<T> getCol(size_t colIdx);
+    std::vector<T> getCol(size_t colIdx) const;
 
     void appendRow(std::vector<T> row);
     void prependRow(std::vector<T> row);
@@ -76,8 +76,9 @@ protected:
     size_t nCols;
 
     size_t getIndex(size_t row, size_t col) const;
-    std::pair<size_t,size_t> getRowCol(size_t index);
+    std::pair<size_t,size_t> getRowCol(size_t index) const;
 
+    bool getSmartIndex(size_t row, size_t col, size_t &idx) const;
 };
 
 template <typename T>
@@ -105,7 +106,7 @@ matrix<T> matrix<T>::operator+(const matrix<T> m){
 }
 
 template <typename T>
-T matrix<T>::getElement(size_t row, size_t col)
+T matrix<T>::getElement(size_t row, size_t col) const
 {
     size_t idx = getIndex(row, col);
 
@@ -114,14 +115,16 @@ T matrix<T>::getElement(size_t row, size_t col)
 }
 
 template <typename T>
-T matrix<T>::getElement(size_t index){
+T matrix<T>::getElement(size_t index) const
+{
     if (index >= elements.size())
         throw std::out_of_range("Matrix has " + std::to_string(elements.size()) + " elements");
     return elements.at(index);
 }
 
 template <typename T>
-const T &matrix<T>::getRef(size_t rowIdx, size_t colIdx) const{
+const T &matrix<T>::getRef(size_t rowIdx, size_t colIdx) const
+{
     size_t idx = getIndex(rowIdx, colIdx);
 
     if (idx > elements.size()-1){
@@ -191,7 +194,7 @@ void matrix<T>::addToCol(size_t col, std::vector<T> increments){
 }
 
 template <typename T>
-std::vector<T> matrix<T>::getRow(size_t rowIdx)
+std::vector<T> matrix<T>::getRow(size_t rowIdx) const
 {
 
     if (rowIdx >= nRows){
@@ -206,7 +209,7 @@ std::vector<T> matrix<T>::getRow(size_t rowIdx)
 }
 
 template <typename T>
-std::vector<T> matrix<T>::getCol(size_t colIdx)
+std::vector<T> matrix<T>::getCol(size_t colIdx) const
 {
     if (colIdx >= nCols){
         throw std::invalid_argument("col index > number of columns in matrix");
@@ -486,7 +489,15 @@ std::vector<size_t> matrix<T>::removeColsRequest(std::vector<size_t> cols){
 }
 
 
-
+template <typename T>
+bool matrix<T>::getSmartIndex(size_t row, size_t col, size_t &idx) const
+{
+    if (row < 0 || row >= nRows || col < 0 || col >= nCols){
+        return false;
+    }
+    idx = row * nCols + col;
+    return true;
+}
 
 template <typename T>
 size_t matrix<T>::getIndex(size_t row, size_t col) const
@@ -495,10 +506,10 @@ size_t matrix<T>::getIndex(size_t row, size_t col) const
 }
 
 template <typename T>
-std::pair<size_t, size_t> matrix<T>::getRowCol(size_t index){
+std::pair<size_t, size_t> matrix<T>::getRowCol(size_t index) const{
     std::pair<size_t,size_t> result;
     result.first = index / nCols;
-    result.second = index % nCols - 1;
+    result.second = index % nCols;
     return result;
 }
 

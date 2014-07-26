@@ -13,6 +13,8 @@
 #include <math.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+#include "state.h"
+#include "minimax.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -138,7 +140,28 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::on_pushButton_3_clicked()
 {
 
+    State state = State::createState(2);
+    state.print();
+    const State *ps = &state;
 
+    bool isEndOfGame = false;
+    int player = 1;
+    int count = 0;
+    State newstate;
+    while (!isEndOfGame && count++ < 1000){
+        newstate = checkers::play(ps, player);
+        player *= -1; // switch player
+        isEndOfGame = newstate.isEndOfGame();
+    }
+    newstate.print();
+    int hei = 1;
+
+    
+
+
+
+
+    /*
     matrix<int> m1, m2, m3, m4, m5;
 
     std::vector<int> row{1, 1, 1};
@@ -160,6 +183,7 @@ void MainWindow::on_pushButton_3_clicked()
     m5.appendRow(row);
     m5.appendRow(row);
     m5.prependRow(col);
+    */
 
 }
 
