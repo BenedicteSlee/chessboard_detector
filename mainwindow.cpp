@@ -73,21 +73,21 @@ void MainWindow::on_pushButton_2_clicked()
 
 
     if (circles.size() > 0){
-    /// Draw the circles detected
-    for( size_t i = 0; i < circles.size(); i++ )
-    {
-        cv::Point2d center((circles[i][0]), (circles[i][1]));
-        int radius = cvRound(circles[i][2]);
-        // circle center
-        circle( src, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
-        // circle outline
-        circle( src, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
-     }
+        /// Draw the circles detected
+        for( size_t i = 0; i < circles.size(); i++ )
+        {
+            cv::Point2d center((circles[i][0]), (circles[i][1]));
+            int radius = cvRound(circles[i][2]);
+            // circle center
+            circle( src, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+            // circle outline
+            circle( src, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+        }
 
-    /// Show your results
-    cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-    cv::imshow( "Hough Circle Transform Demo", src );
-    cv::waitKey(100);
+        /// Show your results
+        cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
+        cv::imshow( "Hough Circle Transform Demo", src );
+        cv::waitKey(100);
 
     } else {
         std::cout << "No circles found" << std::endl;
@@ -132,7 +132,7 @@ void MainWindow::on_pushButton_2_clicked()
         bool containsPiece = elements[i].containsPiece();
         if (containsPiece){
             centers2.push_back(elements[i].getCenter());
-       }
+        }
     }
     cvutils::plotPoints(rgb, centers2, 10, cv::Scalar(255,0,0));
 }
@@ -184,8 +184,48 @@ void MainWindow::on_pushButton_3_clicked()
     m5.appendRow(row);
     m5.prependRow(col);
     */
-
 }
+
+std::vector<State> findmoves(const State& state, int pieceidx){
+    std::vector<int> surrs = findsurroundings();
+    int currentBest = 0;
+    std::vector<int> moves;
+    Path currentpath;
+    currentpath.start = pieceidx;
+    for (int i = 0; i < 4; i++){
+        if (surr[i] * piece < 0 && surr[i+4] == 0){
+            State newstate(state, pieceidx, outermoves[i]);
+            int newpieceidx = pieceIdx + move.first*8 + move.second;
+            Path path  = findpath(newstate, newpieceidx, 10, currentpath);
+            if (path.captured > currentBest){
+                currentBest = path.captured;
+                moves = path.moves;
+            }
+        }
+    }
+}
+
+Path findpath(State &state, int pieceidx, int depth, Path currentpath){
+    if (depth == 0 || state->isEndOfGame()){
+        return currentpath;
+    }
+    std::vector<int> surrs = findsurroundings();
+    for (int i = 0; i < 4; i++){
+        if (surrs[i] * piece < 0 && surr[i+4] == 0){
+            State newstate(state, pieceidx, outermoves[i]);
+            int newpieceidx = pieceIdx + move.first*8 + move.second;
+            currentpath.moves.push_back(outermoves[i]);
+            currentpath.captured++;
+            return findpath(newstate, newpieceidx, depth--, currentpath);
+        }
+    }
+}
+
+struct Path{
+    int captured;
+    std::vector<int> moves;
+    int start;
+};
 
 
 

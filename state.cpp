@@ -4,6 +4,21 @@ State::State() : matrix<int>(8,8,0){
     nBlack = nWhite = 0;
 }
 
+void State::print(){
+    if (elements.empty()){
+        std::cout << "Cannot print empty board" << std::endl;
+        return;
+    }
+    std::cout << "-----------------------------------------" << std::endl;
+    for (int i = 0; i < 8; i++){
+        for (int j = 0; j < 8; j++){
+            std::cout << elements[getIndex(i,j)] << "\t";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "-----------------------------------------" << std::endl;
+}
+
 State::State(const State *state){
     if (!state)
         throw std::invalid_argument("Input state points to null");
@@ -35,37 +50,42 @@ std::vector<int> State::getSurroundings(size_t element) const{
     size_t col = coord.second;
 
     size_t idx;
-    bool valid = getSmartIndex(row-2, col-2, idx);
+
+    bool valid;
+
+    // Set surroundings: circle around inner loop then outer loop, starting in upper left corner
+    valid = getSmartIndex(row-1, col-1, idx);
     if (valid)
         surroundings[0] = elements[idx];
 
-    valid = getSmartIndex(row-2, col+2, idx);
+    valid = getSmartIndex(row-1, col+1, idx);
     if (valid)
         surroundings[1] = elements[idx];
 
-    valid = getSmartIndex(row-1, col-1, idx);
+    valid = getSmartIndex(row+1, col+1, idx);
     if (valid)
         surroundings[2] = elements[idx];
 
-    valid = getSmartIndex(row-1, col+1, idx);
+    valid = getSmartIndex(row+1, col-1, idx);
     if (valid)
         surroundings[3] = elements[idx];
 
-    valid = getSmartIndex(row+1, col-1, idx);
+    valid = getSmartIndex(row-2, col-2, idx);
     if (valid)
         surroundings[4] = elements[idx];
 
-    valid = getSmartIndex(row+1, col+1, idx);
+    valid = getSmartIndex(row-2, col+2, idx);
     if (valid)
         surroundings[5] = elements[idx];
 
-    valid = getSmartIndex(row+2, col-2, idx);
+    valid = getSmartIndex(row+2, col+2, idx);
     if (valid)
         surroundings[6] = elements[idx];
 
-    valid = getSmartIndex(row+2, col+2, idx);
+    valid = getSmartIndex(row+2, col-2, idx);
     if (valid)
         surroundings[7] = elements[idx];
+
 
     return surroundings;
 }
@@ -89,7 +109,7 @@ std::vector<State> State::findPossibleMoves(int player) const
 
             if (player < 0 || pieceId == 2){ // for player 2 and for player 1 kings
                 // Move towards row 0
-                if (iul == 0){
+                if (iul == 0 && !onlyForced){
                     State newstate(this, i, std::make_pair(-1,-1));
                     pmoves.push_back(newstate);
                 } else if (iul * player < 0 && oul == 0){ // then this is a forced move: clear any previous moves and just return this one
@@ -103,7 +123,7 @@ std::vector<State> State::findPossibleMoves(int player) const
                     pmoves.push_back(newstate);
                     return pmoves;
                 }
-                if (iur == 0){
+                if (iur == 0 && !onlyForced){
                     State newstate(this, i, std::make_pair(-1,1));
                     pmoves.push_back(newstate);
                 } else if (iur * player < 0 && our == 0){
@@ -114,7 +134,7 @@ std::vector<State> State::findPossibleMoves(int player) const
                 }
             }
             if (player > 0 || pieceId == 2){ // for player 1 and for player 2 kings
-                if (ill == 0){
+                if (ill == 0 && !onlyForced){
                     State newstate(this, i, std::make_pair(1,-1));
                     pmoves.push_back(newstate);
                 } else if (ill * player < 0 && oll == 0){
@@ -123,7 +143,7 @@ std::vector<State> State::findPossibleMoves(int player) const
                     pmoves.push_back(newstate);
                     return pmoves;
                 }
-                if (ilr == 0){
+                if (ilr == 0 && !onlyForced){
                     State newstate(this, i, std::make_pair(1,1));
                     pmoves.push_back(newstate);
                 } else if (ilr * player < 0 && olr == 0){
@@ -133,10 +153,10 @@ std::vector<State> State::findPossibleMoves(int player) const
                     return pmoves;
                 }
             }
-
         }
     }
     return pmoves;
+
     std::cout << "Number of moves found: " << pmoves.size() << std::endl;
 }
 
@@ -155,3 +175,5 @@ State State::createState(int id){
         return state;
     }
 }
+
+

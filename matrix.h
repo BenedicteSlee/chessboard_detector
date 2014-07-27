@@ -35,6 +35,8 @@ public:
 
     matrix<T> operator+(const matrix<T> m);
 
+    void copyTo(matrix<T> other) const;
+
     T getElement(size_t row, size_t col) const;
     T getElement(size_t index) const;
 
@@ -511,6 +513,13 @@ std::pair<size_t, size_t> matrix<T>::getRowCol(size_t index) const{
     result.first = index / nCols;
     result.second = index % nCols;
     return result;
+}
+
+template <typename T>
+void copyTo(matrix<T> other) const{
+    other.elements = elements;
+    other.nCols = nCols;
+    other.nRows = nRows;
 }
 
 #endif // MATRIX_H
