@@ -10,7 +10,7 @@
 class Remover : public matrix<size_t>
 {
 public:
-    Remover(Board& board_);
+    Remover(Board &board_);
 
     std::vector<size_t> getCurrentRowRequests();
     std::vector<size_t> getCurrentColRequests();

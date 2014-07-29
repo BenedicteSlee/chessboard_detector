@@ -14,28 +14,12 @@ class matrix
 {
 public:
     matrix();
-    matrix(size_t nRows, size_t nCols, T initval)
-    {
-        this->nCols = nCols;
-        this->nRows = nRows;
-
-        std::vector<T> tmp(nRows * nCols, initval);
-        elements = tmp;
-
-    }
-    matrix(size_t nRows, size_t nCols)
-    {
-        this->nCols = nCols;
-        this->nRows = nRows;
-
-        std::vector<T> tmp(nRows * nCols);
-        elements = tmp;
-
-    }
+    matrix(size_t nRows, size_t nCols, T initval);
+    matrix(size_t nRows, size_t nCols);
 
     matrix<T> operator+(const matrix<T> m);
 
-    void copyTo(matrix<T> other) const;
+    //void copyTo(matrix<T> other) const;
 
     T getElement(size_t row, size_t col) const;
     T getElement(size_t index) const;
@@ -91,6 +75,28 @@ matrix<T>::matrix()
 }
 
 template <typename T>
+matrix<T>::matrix(size_t nRows, size_t nCols, T initval)
+{
+    this->nCols = nCols;
+    this->nRows = nRows;
+
+    std::vector<T> tmp(nRows * nCols, initval);
+    elements = tmp;
+
+}
+
+template <typename T>
+matrix<T>::matrix(size_t nRows, size_t nCols)
+{
+    this->nCols = nCols;
+    this->nRows = nRows;
+
+    std::vector<T> tmp(nRows * nCols);
+    elements = tmp;
+
+}
+
+template <typename T>
 matrix<T> matrix<T>::operator+(const matrix<T> m){
     if (m.nRows != this->nRows || m.nCols != this->nCols){
         throw std::invalid_argument("Matrices must be of same size");
@@ -106,6 +112,13 @@ matrix<T> matrix<T>::operator+(const matrix<T> m){
     }
     return m2;
 }
+
+/*template <typename T>
+void matrix<T>::copyTo(matrix<T> other) const{
+    other.elements = elements;
+    other.nCols = nCols;
+    other.nRows = nRows;
+}*/
 
 template <typename T>
 T matrix<T>::getElement(size_t row, size_t col) const
@@ -490,7 +503,6 @@ std::vector<size_t> matrix<T>::removeColsRequest(std::vector<size_t> cols){
     return isRemoved;
 }
 
-
 template <typename T>
 bool matrix<T>::getSmartIndex(size_t row, size_t col, size_t &idx) const
 {
@@ -513,13 +525,6 @@ std::pair<size_t, size_t> matrix<T>::getRowCol(size_t index) const{
     result.first = index / nCols;
     result.second = index % nCols;
     return result;
-}
-
-template <typename T>
-void copyTo(matrix<T> other) const{
-    other.elements = elements;
-    other.nCols = nCols;
-    other.nRows = nRows;
 }
 
 #endif // MATRIX_H

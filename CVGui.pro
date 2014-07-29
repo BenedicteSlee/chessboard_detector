@@ -27,7 +27,6 @@ SOURCES += main.cpp\
     squareExpander.cpp \
     remover.cpp \
     regression.cpp \
-    circledetector.cpp \
     state.cpp \
     move.cpp
 
@@ -44,7 +43,6 @@ HEADERS  += mainwindow.h \
     squareExpander.h \
     remover.h \
     regression.h \
-    circledetector.h \
     state.h \
     move.h \
     minimax.h

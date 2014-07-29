@@ -4,7 +4,7 @@ State::State() : matrix<int>(8,8,0){
     nBlack = nWhite = 0;
 }
 
-void State::print(){
+void State::print() const{
     if (elements.empty()){
         std::cout << "Cannot print empty board" << std::endl;
         return;
@@ -17,6 +17,14 @@ void State::print(){
         std::cout << std::endl;
     }
     std::cout << "-----------------------------------------" << std::endl;
+}
+
+void State::copyTo(State &state) const {
+    state.elements = elements;
+    state.nRows = nRows;
+    state.nCols = nCols;
+    state.nBlack = nBlack;
+    state.nWhite = nWhite;
 }
 
 State::State(const State *state){
@@ -32,7 +40,8 @@ State::State(const State *state){
 State::State(const State *state, size_t pieceIdx, std::pair<int, int> move) : State(state){
     int piece = elements[pieceIdx];
     elements[pieceIdx] = 0;
-    size_t idx = pieceIdx + move.first + move.second*8; // assumes that only legal moves are passed in!! to avoid checking this twice
+    size_t idx = pieceIdx + move.first*8 + move.second; // assumes that only legal moves are passed in!! to avoid checking this twice
+    std::cout << "Old idx: " << pieceIdx << ", New idx: " << idx << std::endl;
     elements[idx] = piece;
     if (std::abs(move.first) == 2){ // jumping accross
         piece > 0 ? nWhite-- : nBlack--;
@@ -40,7 +49,20 @@ State::State(const State *state, size_t pieceIdx, std::pair<int, int> move) : St
         size_t removedPieceIdx = getIndex(pieceCoord.first+move.first/2, pieceCoord.second+move.second/2);
         elements[removedPieceIdx] = 0;
     }
-    int hei = 1;
+}
+
+State State::MultiMoves(size_t pieceIdx, std::vector<std::pair<int, int> > moves) const
+{
+    State newstate;
+    this->copyTo(newstate);
+    State *pns = &newstate;
+    for (std::pair<int,int> move : moves){
+        State newnewstate(pns, pieceIdx, move);
+        State *pnns = &newnewstate;
+        pieceIdx = pieceIdx + move.first*8 + move.second;
+        pns = pnns;
+    }
+    return newstate;
 }
 
 std::vector<int> State::getSurroundings(size_t element) const{
@@ -90,76 +112,6 @@ std::vector<int> State::getSurroundings(size_t element) const{
     return surroundings;
 }
 
-std::vector<State> State::findPossibleMoves(int player) const
-{
-    std::vector<State> pmoves; // maximum 4 possible moves
-
-    for (int i = 0; i < 64; i++){
-        int pieceId = elements[i] * player;
-        if (pieceId > 0){ // this piece can be moved by the current player
-            std::vector<int> surr = getSurroundings(i);
-            int oul = surr[0];
-            int our = surr[1];
-            int iul = surr[2];
-            int iur = surr[3];
-            int ill = surr[4];
-            int ilr = surr[5];
-            int oll = surr[6];
-            int olr = surr[7];
-
-            if (player < 0 || pieceId == 2){ // for player 2 and for player 1 kings
-                // Move towards row 0
-                if (iul == 0 && !onlyForced){
-                    State newstate(this, i, std::make_pair(-1,-1));
-                    pmoves.push_back(newstate);
-                } else if (iul * player < 0 && oul == 0){ // then this is a forced move: clear any previous moves and just return this one
-                    pmoves.clear();
-                    State newstate(this, i, std::make_pair(-2,-2));
-                    // TODO
-                    // getSuroundings
-                    // any forced moves?
-                    // perform forced move
-                    // repeat
-                    pmoves.push_back(newstate);
-                    return pmoves;
-                }
-                if (iur == 0 && !onlyForced){
-                    State newstate(this, i, std::make_pair(-1,1));
-                    pmoves.push_back(newstate);
-                } else if (iur * player < 0 && our == 0){
-                    pmoves.clear();
-                    State newstate(this, i, std::make_pair(-2,2));
-                    pmoves.push_back(newstate);
-                    return pmoves;
-                }
-            }
-            if (player > 0 || pieceId == 2){ // for player 1 and for player 2 kings
-                if (ill == 0 && !onlyForced){
-                    State newstate(this, i, std::make_pair(1,-1));
-                    pmoves.push_back(newstate);
-                } else if (ill * player < 0 && oll == 0){
-                    pmoves.clear();
-                    State newstate(this, i, std::make_pair(2,-2));
-                    pmoves.push_back(newstate);
-                    return pmoves;
-                }
-                if (ilr == 0 && !onlyForced){
-                    State newstate(this, i, std::make_pair(1,1));
-                    pmoves.push_back(newstate);
-                } else if (ilr * player < 0 && olr == 0){
-                    pmoves.clear();
-                    State newstate(this, i, std::make_pair(2,2));
-                    pmoves.push_back(newstate);
-                    return pmoves;
-                }
-            }
-        }
-    }
-    return pmoves;
-
-    std::cout << "Number of moves found: " << pmoves.size() << std::endl;
-}
-
 State State::createState(int id){
     if (id == 1){
         State state = State();
@@ -176,4 +128,143 @@ State State::createState(int id){
     }
 }
 
+std::vector<State> State::findMovesForPiece(const State *state, int pieceIdx){
+    std::vector<State> moves;
+    bool isKing, isBlack;
 
+    int piece = state->getElement(pieceIdx);
+    piece > 0 ? isBlack = true : isBlack = false;
+    std::abs(piece) == 2 ? isKing = true : isKing = false;
+
+    bool moveUp = (!isBlack || isKing);
+    bool moveDown = (isBlack || isKing);
+
+    std::vector<int> surrs = state->getSurroundings(pieceIdx);
+
+    // Inner moves (non capturing moves)
+    if (moveUp){
+        for (int i = 0; i < 2; i++){
+            if (surrs[i] == 0){
+                State newstate(state, pieceIdx, innermoves[i]);
+                moves.push_back(newstate);
+            }
+        }
+    }
+    if (moveDown){
+        for (int i = 2; i < 4; i++){
+            if (surrs[i] == 0){
+                State newstate(state, pieceIdx, innermoves[i]);
+                moves.push_back(newstate);
+                //state->print();
+                //std::cout << "move: " << innermoves[i].first << "," << innermoves[i].second << std::endl;
+                //newstate.print();
+                //std::cout << "surrs[" << i << "] = " << surrs[i] << std::endl;
+            }
+        }
+    }
+
+    // Outer moves (capturing moves)
+    int currentBest = 0;
+    Path bestPath;
+    Path currentpath;
+    currentpath.start = pieceIdx;
+
+    for (int i = 0; i < 4; i++){
+        if (surrs[i] * piece < 0 && surrs[i+4] == 0){
+            std::pair<int,int> move = outermoves[i];
+            State newstate(state, pieceIdx, move);
+            std::cout << "State before outer move:" << std::endl;
+            state->print();
+            std::cout << "State after outer move:" << std::endl;
+            newstate.print();
+
+            if (newstate.isEndOfGame()){
+                moves.push_back(newstate);
+                return moves;
+            }
+
+            State *sp = &newstate;
+            int newpieceidx = pieceIdx + move.first*8 + move.second;
+            Path path  = findPath(sp, newpieceidx, 10, currentpath, moveUp, moveDown);
+            if (path.captured > currentBest){ // only need the path with maximum captures
+                currentBest = path.captured;
+                bestPath = path;
+            }
+        }
+        State stateAfterBestPath = state->MultiMoves(bestPath.start, bestPath.moves);
+        moves.push_back(stateAfterBestPath);
+    }
+
+    return moves;
+}
+
+std::vector<State> State::findMovesForPlayer(int player) const
+{
+    std::vector<State> moves;
+    for (int i = 0; i < 64; i++){
+        int piece = getElement(i);
+        if (piece * player > 0){ // piece belongs to current player
+            std::vector<State> m = findMovesForPiece(this, i);
+            moves.insert(moves.end(), m.begin(), m.end());
+        }
+    }
+    return moves;
+}
+
+void State::addToElement(size_t row, size_t col, int increment){
+    matrix<int>::addToElement(row, col, increment);
+    increment < 0 ? nWhite++ : nBlack++;
+}
+
+Path State::findPath(State *state, int pieceIdx, int depth, Path currentpath, bool moveUp, bool moveDown){
+    std::cout << "Calling findPath" << std::endl;
+    if (depth == 0 || state->isEndOfGame()){
+        return currentpath;
+    }
+
+    std::vector<int> surrs = state->getSurroundings(pieceIdx);
+    int piece = state->getElement(pieceIdx);
+    bool isKing = moveUp && moveDown;
+    if (isKing){
+
+        for (int i = 0; i < 4; i++){
+
+            bool test = surrs[i] * piece < 0 && surrs[i+4] == 0;
+            if (test){
+                std::pair<int,int> move = outermoves[i];
+                State newstate(state, pieceIdx, move);
+                State *ps = &newstate;
+                int newpieceidx = pieceIdx + move.first*8 + move.second;
+                currentpath.add(outermoves[i]);
+                currentpath.captured++;
+                return findPath(ps, newpieceidx, --depth, currentpath, moveUp, moveDown);
+            }
+        }
+    }
+    if (moveUp && !moveDown){
+        for (int i = 0; i < 2; i++){
+            if (surrs[i] * piece < 0 && surrs[i+4] == 0){
+                std::pair<int,int> move = outermoves[i];
+                State newstate(state, pieceIdx, move);
+                State *ps = &newstate;
+                int newpieceidx = pieceIdx + move.first*8 + move.second;
+                currentpath.add(outermoves[i]);
+                currentpath.captured++;
+                return findPath(ps, newpieceidx, depth--, currentpath, moveUp, moveDown);
+            }
+        }
+    }
+    if (!moveUp && moveDown){
+        for (int i = 2; i < 4; i++){
+            if (surrs[i] * piece < 0 && surrs[i+4] == 0){
+                std::pair<int,int> move = outermoves[i];
+                State newstate(state, pieceIdx, move);
+                State *ps = &newstate;
+                int newpieceidx = pieceIdx + move.first*8 + move.second;
+                currentpath.add(outermoves[i]);
+                currentpath.captured++;
+                return findPath(ps, newpieceidx, depth--, currentpath, moveUp, moveDown);
+            }
+        }
+    }
+}

@@ -16,6 +16,7 @@
 #include "state.h"
 #include "minimax.h"
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -144,17 +145,17 @@ void MainWindow::on_pushButton_3_clicked()
     state.print();
     const State *ps = &state;
 
-    bool isEndOfGame = false;
-    int player = 1;
-    int count = 0;
-    State newstate;
-    while (!isEndOfGame && count++ < 1000){
-        newstate = checkers::play(ps, player);
-        player *= -1; // switch player
-        isEndOfGame = newstate.isEndOfGame();
-    }
+    int player = 1; // get as input from user
+
+    State newstate = checkers::play(ps, player);
+    int score = checkers::evaluate(state, player);
     newstate.print();
-    int hei = 1;
+    if (score < 0)
+        std::cout << "White wins" << std::endl;
+    else
+        std::cout << "Black wins" << std::endl;
+
+
 
     
 
@@ -186,46 +187,8 @@ void MainWindow::on_pushButton_3_clicked()
     */
 }
 
-std::vector<State> findmoves(const State& state, int pieceidx){
-    std::vector<int> surrs = findsurroundings();
-    int currentBest = 0;
-    std::vector<int> moves;
-    Path currentpath;
-    currentpath.start = pieceidx;
-    for (int i = 0; i < 4; i++){
-        if (surr[i] * piece < 0 && surr[i+4] == 0){
-            State newstate(state, pieceidx, outermoves[i]);
-            int newpieceidx = pieceIdx + move.first*8 + move.second;
-            Path path  = findpath(newstate, newpieceidx, 10, currentpath);
-            if (path.captured > currentBest){
-                currentBest = path.captured;
-                moves = path.moves;
-            }
-        }
-    }
-}
 
-Path findpath(State &state, int pieceidx, int depth, Path currentpath){
-    if (depth == 0 || state->isEndOfGame()){
-        return currentpath;
-    }
-    std::vector<int> surrs = findsurroundings();
-    for (int i = 0; i < 4; i++){
-        if (surrs[i] * piece < 0 && surr[i+4] == 0){
-            State newstate(state, pieceidx, outermoves[i]);
-            int newpieceidx = pieceIdx + move.first*8 + move.second;
-            currentpath.moves.push_back(outermoves[i]);
-            currentpath.captured++;
-            return findpath(newstate, newpieceidx, depth--, currentpath);
-        }
-    }
-}
 
-struct Path{
-    int captured;
-    std::vector<int> moves;
-    int start;
-};
 
 
 

@@ -7,8 +7,7 @@
 namespace checkers
 {
 
-int evaluatedStates = 0;
-
+int layer;
 int evaluate(const State &state, int player) /// send inn matrix of piece placements, return heuristic for current player
 {
     // FIXME: Improve heuristics.
@@ -31,29 +30,36 @@ int evaluate(const State &state, int player) /// send inn matrix of piece placem
     return playerScore - opponentScore;
 }
 
-int minimax(const State &state, int depth, int player)
+int minimax(const State &state, int depth, int a, int b, int player, bool max)
 {
+    std::cout << "minimax depth " << depth << std::endl;
     if (depth == 0 || state.isEndOfGame()) {
-        ++evaluatedStates;
+
         return evaluate(state, player);
     }
-    std::vector<State> possibleMoves = state.findPossibleMoves(player);
-
+    std::vector<State> possibleMoves = state.findMovesForPlayer(player);
+    std::cout << "Found " << possibleMoves.size() << " moves at depth " << depth<< std::endl;
+    int bestVal = 0;
     for (const State &move : possibleMoves){
-        return minimax(move, depth - 1, player * -1);
+        int newVal = minimax(move, depth-1,a,b,player,false);
+        if (newVal > bestVal){
+                bestVal = newVal;
+        }
     }
+    return bestVal;
 
-    /* TODO alpha beta pruning
+    
+    /*
     if (max) {
-        for (const GameState &move : possibleMoves) {
-            a = std::max(a, minimax(move, depth - 1, a, b, player * -1));
+        for (const State &move : possibleMoves) {
+            a = std::max(a, minimax(move, depth - 1, a, b, player, false));
             if (b <= a)
                 return b; // β cutoff.
         }
         return a;
     } else {
-        for (const GameState &move : possibleMoves) {
-            b = std::min(b, minimax(move, depth - 1, a, b, player * -1));
+        for (const State &move : possibleMoves) {
+            b = std::min(b, minimax(move, depth - 1, a, b, player, true));
             if (b <= a)
                 return a; // α cutoff.
         }
@@ -64,18 +70,26 @@ int minimax(const State &state, int depth, int player)
 
 State play(const State *state, int player)
 {
-    State bestMove(state);
+    State bestMove;
+    state->copyTo(bestMove);
 
-    std::vector<State> possibleMoves;
-    possibleMoves = state->findPossibleMoves(player);
+    layer = 0;
+    std::vector<State> possibleMoves = state->findMovesForPlayer(player);
+    std::cout << "Found: " << possibleMoves.size() << " initial moves." << std::endl;
 
-    int currentBest = 0;
+    bool foundWinner = std::any_of(possibleMoves.begin(), possibleMoves.end(), [](State s){return s.isEndOfGame();});
+    if (foundWinner){
+        std::vector<State>::iterator it = std::find_if(possibleMoves.begin(), possibleMoves.end(), [](State s){return s.isEndOfGame();});
+        return *it;
+    }
+
+    int a = -std::numeric_limits<int>::max();
+    int b = std::numeric_limits<int>::max();
     for (const State &move : possibleMoves) {
-        int v = minimax(move, 10, player);
-        if (v > currentBest)
+        int v = minimax(move, 10, a, b, player, true);
+        if (v > a)
             bestMove = move;
     }
-    //std::cerr << "Evaluated states: " << evaluatedStates << std::endl;
     return bestMove;
 }
 

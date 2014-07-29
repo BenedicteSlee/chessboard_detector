@@ -32,9 +32,6 @@ private:
     void determineColTypes();
 
     void removeOutOfBounds();
-
-
-
 };
 
 
