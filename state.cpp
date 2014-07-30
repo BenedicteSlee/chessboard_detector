@@ -53,6 +53,9 @@ State::State(const State *state, size_t pieceIdx, std::pair<int, int> move) : St
 
 State State::MultiMoves(size_t pieceIdx, std::vector<std::pair<int, int> > moves) const
 {
+    if (moves.empty())
+        throw std::invalid_argument("moves vector is empty.");
+
     State newstate;
     this->copyTo(newstate);
     State *pns = &newstate;
@@ -62,6 +65,8 @@ State State::MultiMoves(size_t pieceIdx, std::vector<std::pair<int, int> > moves
         pieceIdx = pieceIdx + move.first*8 + move.second;
         pns = pnns;
     }
+    std::cout << "Result of multimoves: " << std::endl;
+    newstate.print();
     return newstate;
 }
 
@@ -128,33 +133,37 @@ State State::createState(int id){
     }
 }
 
-std::vector<State> State::findMovesForPiece(const State *state, int pieceIdx){
+std::vector<State> State::findMovesForPiece(int pieceIdx) const{
     std::vector<State> moves;
     bool isKing, isBlack;
 
-    int piece = state->getElement(pieceIdx);
+    int piece = getElement(pieceIdx);
     piece > 0 ? isBlack = true : isBlack = false;
     std::abs(piece) == 2 ? isKing = true : isKing = false;
 
     bool moveUp = (!isBlack || isKing);
     bool moveDown = (isBlack || isKing);
 
-    std::vector<int> surrs = state->getSurroundings(pieceIdx);
+    std::vector<int> surrs = getSurroundings(pieceIdx);
 
     // Inner moves (non capturing moves)
     if (moveUp){
         for (int i = 0; i < 2; i++){
             if (surrs[i] == 0){
-                State newstate(state, pieceIdx, innermoves[i]);
+                State newstate(this, pieceIdx, innermoves[i]);
                 moves.push_back(newstate);
+                std::cout << "Adding inner move: " << std::endl;
+                newstate.print();
             }
         }
     }
     if (moveDown){
         for (int i = 2; i < 4; i++){
             if (surrs[i] == 0){
-                State newstate(state, pieceIdx, innermoves[i]);
+                State newstate(this, pieceIdx, innermoves[i]);
                 moves.push_back(newstate);
+                std::cout << "Adding inner move: " << std::endl;
+                newstate.print();
                 //state->print();
                 //std::cout << "move: " << innermoves[i].first << "," << innermoves[i].second << std::endl;
                 //newstate.print();
@@ -172,9 +181,10 @@ std::vector<State> State::findMovesForPiece(const State *state, int pieceIdx){
     for (int i = 0; i < 4; i++){
         if (surrs[i] * piece < 0 && surrs[i+4] == 0){
             std::pair<int,int> move = outermoves[i];
-            State newstate(state, pieceIdx, move);
+            currentpath.add(move);
+            State newstate(this, pieceIdx, move);
             std::cout << "State before outer move:" << std::endl;
-            state->print();
+            print();
             std::cout << "State after outer move:" << std::endl;
             newstate.print();
 
@@ -191,9 +201,11 @@ std::vector<State> State::findMovesForPiece(const State *state, int pieceIdx){
                 bestPath = path;
             }
         }
-        State stateAfterBestPath = state->MultiMoves(bestPath.start, bestPath.moves);
-        moves.push_back(stateAfterBestPath);
+
     }
+
+    State stateAfterBestPath = MultiMoves(bestPath.start, bestPath.moves);
+    moves.push_back(stateAfterBestPath);
 
     return moves;
 }
@@ -204,7 +216,7 @@ std::vector<State> State::findMovesForPlayer(int player) const
     for (int i = 0; i < 64; i++){
         int piece = getElement(i);
         if (piece * player > 0){ // piece belongs to current player
-            std::vector<State> m = findMovesForPiece(this, i);
+            std::vector<State> m = findMovesForPiece(i);
             moves.insert(moves.end(), m.begin(), m.end());
         }
     }
@@ -219,6 +231,7 @@ void State::addToElement(size_t row, size_t col, int increment){
 Path State::findPath(State *state, int pieceIdx, int depth, Path currentpath, bool moveUp, bool moveDown){
     std::cout << "Calling findPath" << std::endl;
     if (depth == 0 || state->isEndOfGame()){
+        Path hei=currentpath;
         return currentpath;
     }
 
@@ -250,7 +263,7 @@ Path State::findPath(State *state, int pieceIdx, int depth, Path currentpath, bo
                 int newpieceidx = pieceIdx + move.first*8 + move.second;
                 currentpath.add(outermoves[i]);
                 currentpath.captured++;
-                return findPath(ps, newpieceidx, depth--, currentpath, moveUp, moveDown);
+                return findPath(ps, newpieceidx, --depth, currentpath, moveUp, moveDown);
             }
         }
     }
@@ -263,7 +276,10 @@ Path State::findPath(State *state, int pieceIdx, int depth, Path currentpath, bo
                 int newpieceidx = pieceIdx + move.first*8 + move.second;
                 currentpath.add(outermoves[i]);
                 currentpath.captured++;
-                return findPath(ps, newpieceidx, depth--, currentpath, moveUp, moveDown);
+                std::cout << "State after multijump: " << std::endl;
+                newstate.print();
+                Path hei = currentpath;
+                return findPath(ps, newpieceidx, --depth, currentpath, moveUp, moveDown);
             }
         }
     }

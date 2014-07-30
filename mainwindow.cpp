@@ -147,6 +147,14 @@ void MainWindow::on_pushButton_3_clicked()
 
     int player = 1; // get as input from user
 
+    std::vector<State> moves;
+    moves = state.findMovesForPiece(19);
+
+    for (int i = 0; i < moves.size(); i++){
+        std::cout << "Move " << i << std::endl;
+        moves[i].print();
+    }
+
     State newstate = checkers::play(ps, player);
     int score = checkers::evaluate(state, player);
     newstate.print();

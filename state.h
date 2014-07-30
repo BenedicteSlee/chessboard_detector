@@ -41,7 +41,7 @@ public:
     bool isEndOfGame() const {return (nBlack == 0 || nWhite == 0);}
 
     std::vector<int> getSurroundings(size_t element) const;
-    static std::vector<State> findMovesForPiece(const State *state, int pieceIdx);
+    std::vector<State> findMovesForPiece(int pieceIdx) const;
     static Path findPath(State *state, int pieceidx, int depth, Path currentpath, bool moveUp, bool moveDown);
     std::vector<State> findMovesForPlayer(int player) const;
 
