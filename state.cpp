@@ -38,10 +38,15 @@ State::State(const State *state){
 }
 
 State::State(const State *state, size_t pieceIdx, std::pair<int, int> move) : State(state){
+    if (!state){
+        throw std::invalid_argument("pointer to state is ivalid");
+    }
+    if (state->elements.size() == 0){
+        throw std::invalid_argument("state empty");
+    }
     int piece = elements[pieceIdx];
     elements[pieceIdx] = 0;
     size_t idx = pieceIdx + move.first*8 + move.second; // assumes that only legal moves are passed in!! to avoid checking this twice
-    std::cout << "Old idx: " << pieceIdx << ", New idx: " << idx << std::endl;
     elements[idx] = piece;
     if (std::abs(move.first) == 2){ // jumping accross
         piece > 0 ? nWhite-- : nBlack--;
@@ -58,12 +63,13 @@ State State::MultiMoves(size_t pieceIdx, std::vector<std::pair<int, int> > moves
 
     State newstate;
     this->copyTo(newstate);
-    State *pns = &newstate;
+
     for (std::pair<int,int> move : moves){
+        State *pns = &newstate;
         State newnewstate(pns, pieceIdx, move);
         State *pnns = &newnewstate;
         pieceIdx = pieceIdx + move.first*8 + move.second;
-        pns = pnns;
+        newstate = newnewstate;
     }
     std::cout << "Result of multimoves: " << std::endl;
     newstate.print();
@@ -131,13 +137,33 @@ State State::createState(int id){
         state.addToElement(5,6,-1);
         return state;
     }
+    if (id == 3){
+        State state = State();
+        state.addToElement(0,1,1);
+        state.addToElement(1,2,-1);
+        state.addToElement(3,4,-1);
+        state.addToElement(5,6,-1);
+        return state;
+    }
+    if (id == 4){
+        State state = State();
+        state.addToElement(0,1,1);
+        state.addToElement(1,2,-1);
+        state.addToElement(3,4,-1);
+        state.addToElement(5,4,-1);
+        return state;
+    }
 }
 
 std::vector<State> State::findMovesForPiece(int pieceIdx) const{
+    int piece = getElement(pieceIdx);
+    if (piece == 0){
+        throw std::invalid_argument("No piece at this location");
+    }
     std::vector<State> moves;
     bool isKing, isBlack;
 
-    int piece = getElement(pieceIdx);
+
     piece > 0 ? isBlack = true : isBlack = false;
     std::abs(piece) == 2 ? isKing = true : isKing = false;
 
@@ -178,8 +204,10 @@ std::vector<State> State::findMovesForPiece(int pieceIdx) const{
     Path currentpath;
     currentpath.start = pieceIdx;
 
-    for (int i = 0; i < 4; i++){
+    bool anyOutermoves = false;
+    for (int i = 0; i < 4; i++){ // for each potential move
         if (surrs[i] * piece < 0 && surrs[i+4] == 0){
+            anyOutermoves = true;
             std::pair<int,int> move = outermoves[i];
             currentpath.add(move);
             State newstate(this, pieceIdx, move);
@@ -192,7 +220,6 @@ std::vector<State> State::findMovesForPiece(int pieceIdx) const{
                 moves.push_back(newstate);
                 return moves;
             }
-
             State *sp = &newstate;
             int newpieceidx = pieceIdx + move.first*8 + move.second;
             Path path  = findPath(sp, newpieceidx, 10, currentpath, moveUp, moveDown);
@@ -201,12 +228,12 @@ std::vector<State> State::findMovesForPiece(int pieceIdx) const{
                 bestPath = path;
             }
         }
-
     }
 
-    State stateAfterBestPath = MultiMoves(bestPath.start, bestPath.moves);
-    moves.push_back(stateAfterBestPath);
-
+    if (anyOutermoves){
+        State stateAfterBestPath = MultiMoves(bestPath.start, bestPath.moves);
+        moves.push_back(stateAfterBestPath);
+    }
     return moves;
 }
 
@@ -229,7 +256,6 @@ void State::addToElement(size_t row, size_t col, int increment){
 }
 
 Path State::findPath(State *state, int pieceIdx, int depth, Path currentpath, bool moveUp, bool moveDown){
-    std::cout << "Calling findPath" << std::endl;
     if (depth == 0 || state->isEndOfGame()){
         Path hei=currentpath;
         return currentpath;

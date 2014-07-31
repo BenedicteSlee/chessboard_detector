@@ -15,7 +15,7 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include "state.h"
 #include "minimax.h"
-
+#include "testing.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -141,14 +141,14 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::on_pushButton_3_clicked()
 {
 
-    State state = State::createState(2);
+    State state = State::createState(4);
     state.print();
     const State *ps = &state;
 
     int player = 1; // get as input from user
 
     std::vector<State> moves;
-    moves = state.findMovesForPiece(19);
+    moves = state.findMovesForPiece(1);
 
     for (int i = 0; i < moves.size(); i++){
         std::cout << "Move " << i << std::endl;
@@ -156,13 +156,14 @@ void MainWindow::on_pushButton_3_clicked()
     }
 
     State newstate = checkers::play(ps, player);
-    int score = checkers::evaluate(state, player);
+    int score = checkers::evaluate(newstate, player);
     newstate.print();
     if (score < 0)
         std::cout << "White wins" << std::endl;
-    else
+    else if (score > 0)
         std::cout << "Black wins" << std::endl;
-
+    else
+        std::cout << "Its a tie!" << std::endl;
 
 
     
@@ -195,7 +196,11 @@ void MainWindow::on_pushButton_3_clicked()
     */
 }
 
-
+void MainWindow::on_pushButton_4_clicked()
+{
+    tests::test_minimax test;
+    test.test_multimoves();
+}
 
 
 
