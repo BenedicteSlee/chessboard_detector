@@ -15,7 +15,6 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include "state.h"
 #include "minimax.h"
-#include "testing.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -106,7 +105,7 @@ void MainWindow::on_pushButton_2_clicked()
 
     // chessboard detector
     BoardDetector cbd = BoardDetector(img, houghlines);
-    Board board = cbd.detect(true);
+    Board board = cbd.detect(false);
 
     // detect pieces based on houghcircles on whole board
     cv::Mat rgb;
@@ -130,12 +129,20 @@ void MainWindow::on_pushButton_2_clicked()
     // Detect pieces based on houghcircles on individual squares
     Points2d centers2;
     for (size_t i = 0; i < elements.size(); i++){
-        bool containsPiece = elements[i].containsPiece();
+        Square square = elements[i];
+        cv::Vec3i circle;
+        bool containsPiece =square.detectPieceWithHough(circle);
         if (containsPiece){
             centers2.push_back(elements[i].getCenter());
         }
     }
     cvutils::plotPoints(rgb, centers2, 10, cv::Scalar(255,0,0));
+
+    // Initial state to feed minimax
+    State state = board.initState();
+
+
+    int hei = 1;
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -143,19 +150,18 @@ void MainWindow::on_pushButton_3_clicked()
 
     State state = State::createState(4);
     state.print();
-    const State *ps = &state;
 
     int player = 1; // get as input from user
 
     std::vector<State> moves;
     moves = state.findMovesForPiece(1);
 
-    for (int i = 0; i < moves.size(); i++){
+    for (size_t i = 0; i < moves.size(); i++){
         std::cout << "Move " << i << std::endl;
         moves[i].print();
     }
 
-    State newstate = checkers::play(ps, player);
+    State newstate = checkers::play(state, player);
     int score = checkers::evaluate(newstate, player);
     newstate.print();
     if (score < 0)
@@ -198,8 +204,7 @@ void MainWindow::on_pushButton_3_clicked()
 
 void MainWindow::on_pushButton_4_clicked()
 {
-    tests::test_minimax test;
-    test.test_multimoves();
+
 }
 
 

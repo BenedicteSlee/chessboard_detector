@@ -1,13 +1,11 @@
 #include <algorithm>
 #include <limits>
 #include <cstdlib>
-
-#include <state.h>
+#include "state.h"
 
 namespace checkers
 {
 
-int layer;
 int evaluate(const State &state, int player) /// send inn matrix of piece placements, return heuristic for current player
 {
     // FIXME: Improve heuristics.
@@ -32,13 +30,11 @@ int evaluate(const State &state, int player) /// send inn matrix of piece placem
 
 int minimax(const State &state, int depth, int a, int b, int player, bool max)
 {
-    std::cout << "minimax depth " << depth << std::endl;
     if (depth == 0 || state.isEndOfGame()) {
-
         return evaluate(state, player);
     }
     std::vector<State> possibleMoves = state.findMovesForPlayer(player);
-    std::cout << "Found " << possibleMoves.size() << " moves at depth " << depth<< std::endl;
+
     int bestVal = 0;
     for (const State &move : possibleMoves){
         int newVal = minimax(move, depth-1,a,b,player,false);
@@ -68,13 +64,12 @@ int minimax(const State &state, int depth, int a, int b, int player, bool max)
     */
 }
 
-State play(const State *state, int player)
+State play(const State &state, int player)
 {
     State bestMove;
-    state->copyTo(bestMove);
+    state.copyTo(bestMove);
 
-    layer = 0;
-    std::vector<State> possibleMoves = state->findMovesForPlayer(player);
+    std::vector<State> possibleMoves = state.findMovesForPlayer(player);
     std::cout << "Found: " << possibleMoves.size() << " initial moves." << std::endl;
 
     bool foundWinner = std::any_of(possibleMoves.begin(), possibleMoves.end(), [](State s){return s.isEndOfGame();});

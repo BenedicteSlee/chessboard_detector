@@ -27,7 +27,6 @@ BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
     lines = lines_;
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
-
 }
 
 Lines BoardDetector::get_hlinesSorted()

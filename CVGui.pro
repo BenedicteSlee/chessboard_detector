@@ -28,8 +28,7 @@ SOURCES += main.cpp\
     remover.cpp \
     regression.cpp \
     state.cpp \
-    move.cpp \
-    testing.cpp
+    move.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -46,8 +45,7 @@ HEADERS  += mainwindow.h \
     regression.h \
     state.h \
     move.h \
-    minimax.h \
-    testing.h
+    minimax.h
 
 FORMS    += mainwindow.ui
 

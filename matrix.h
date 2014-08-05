@@ -83,6 +83,8 @@ matrix<T>::matrix(size_t nRows, size_t nCols, T initval)
     std::vector<T> tmp(nRows * nCols, initval);
     elements = tmp;
 
+    std::cout << "Calling matrix constructor" << std::endl;
+
 }
 
 template <typename T>

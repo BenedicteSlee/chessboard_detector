@@ -8,6 +8,7 @@
 Square::Square(){
     squareTypeDetermined = false;
     outOfBounds = false;
+    containsPieceDetermined = false;
 }
 
 Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4)
@@ -16,6 +17,7 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
 
     squareTypeDetermined = false;
     outOfBounds = false;
+    containsPieceDetermined = false;
 
     Points2d cp{corner1, corner2, corner3, corner4};
     bool negCoord = cvutils::anyNegCoordinate(cp);
@@ -214,39 +216,21 @@ void Square::drawOnImg(cv::Mat& image) const
     cv::waitKey();
 }
 
-bool Square::containsPiece() const{
-    bool doDraw = false;
+bool Square::detectPieceWithHough(cv::Vec3i &circle) const{
     cv::Mat binarea;
     cv::threshold(area, binarea, meanGray, 255, 0);
 
     std::vector<cv::Vec3f> circles;
     cv::HoughCircles(binarea, circles, CV_HOUGH_GRADIENT, 1, binarea.rows, 20, 15, binarea.rows*0.3, binarea.rows*1.5);
 
-    if (!circles.empty() && doDraw){
-        for( size_t i = 0; i < circles.size(); i++ )
-        {
-            cv::Mat areaToDrawOn;
-            area.copyTo(areaToDrawOn);
-            cv::Point2d center((circles[i][0]), (circles[i][1]));
-            int radius = cvRound(circles[i][2]);
-            // circle center
-            cv::circle( areaToDrawOn, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
-            // circle outline
-            cv::circle( areaToDrawOn, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
-        }
-
-        /// Show results
-
-        cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-        cv::imshow( "Hough Circle Transform Demo", area );
-        cv::waitKey(100);
-
-    }
-    if (!circles.empty())
+    if (circles.size() > 0){
+        circle = circles[0]; // todo use diagnostics to choose the best circle if there are more than 1
         return true;
-
+    }
     return false;
 }
+
+
 
 std::vector<cv::Point2d> Square::getCornerpointsSorted() const
 {

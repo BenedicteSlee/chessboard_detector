@@ -3,6 +3,7 @@
 
 #include "typedefs.h"
 #include "matrix.h"
+#include "state.h"
 
 class Board : public matrix<Square>
 {
@@ -23,15 +24,23 @@ public:
     void expand(Direction dir);
 
     int squareId(cv::Point2d point);
+    
+    int determinePieceColorThreshold();
+
+    State initState();
+
 private:
     cv::Mat& image;
     std::vector<int> rowTypes;
     std::vector<int> colTypes;
+    std::vector<int> pieceColors;
+    std::vector<std::pair<size_t, cv::Vec3i>> circles;
 
     void determineRowTypes();
     void determineColTypes();
-
     void removeOutOfBounds();
+
+    void detectPieces();
 };
 
 

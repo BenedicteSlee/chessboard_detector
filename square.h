@@ -22,8 +22,6 @@ public:
     void drawOnImg(cv::Mat& image) const;
 
     // Get and set methods
-    bool containsPiece() const;
-
     int getMeanGray();
     size_t getVLength();
     size_t getHLength();
@@ -32,14 +30,28 @@ public:
     std::vector<cv::Point2d> getCornerpointsSorted() const;
     Lines getBordersSorted();
     int getSquareType() const {return squareType;}
-    static std::vector<int> getSquareTypes(Squares);
-    cv::Point2d getCenter(){return center;}
-    // Add features
-    //void addCorner(Corner corner);
-    void determineType();
-    Points2d getVanishingPoints(){return vanishingPoints;}
     bool isOutOfBounds(){return outOfBounds;}
+    cv::Point2d getCenter(){return center;}
+    Points2d getVanishingPoints(){return vanishingPoints;}
+
+    // Methods: diagnostics on square
+    void determineType();
+    bool detectPieceWithHough(cv::Vec3i &) const;
+    int determinePieceColor(cv::Vec3i circle) const{
+        int x = circle[0];
+        int y = circle[1];
+        int vsize = vlength/3;
+        int hsize = hlength/3;
+        cv::Mat subarea = area(cv::Rect(x-hsize, y-vsize, hsize*2, vsize*2));
+
+        int meancol = cv::mean(subarea)[0];
+        return meancol;
+    }
+
     bool containsPoint(cv::Point2d point) const;
+
+    // static methoda
+    static std::vector<int> getSquareTypes(Squares);
 
 private:
     // Variables
@@ -59,6 +71,8 @@ private:
     bool squareTypeDetermined;
     bool outOfBounds;
     int imsize;
+    int draughtsPiece;
+    bool containsPieceDetermined;
 
     // Methods
     void calcVanishingPoints();

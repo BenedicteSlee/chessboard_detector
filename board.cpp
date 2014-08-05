@@ -4,6 +4,7 @@
 #include "typedefs.h"
 #include "matrix.h"
 #include "squareExpander.h"
+#include "state.h"
 
 Board::Board(cv::Mat& image_) : image(image_)
 {
@@ -146,6 +147,7 @@ void Board::removeOutOfBounds(){
 
 }
 
+
 std::vector<int> Board::getRowTypes()
 {
     if (rowTypes.empty()){
@@ -255,5 +257,42 @@ void Board::expand(Direction dir)
         this->appendCol(newsquares);
         break;
     }
+}
+
+
+void Board::detectPieces(){
+    for (size_t i = 0; i < elements.size(); i++){
+        Square &square = elements[i];
+        cv::Vec3i circle;
+        bool pieceDetected = square.detectPieceWithHough(circle);
+        if (pieceDetected){
+            circles.push_back(std::make_pair(i,circle));
+        }
+    }
+}
+
+int Board::determinePieceColorThreshold(){
+    for (size_t i = 0; i < circles.size(); i++){
+        Square square = elements[circles[i].first];
+        cv::Vec3i circle = circles[i].second;
+        int col = square.determinePieceColor(circle);
+        pieceColors.push_back(col);
+    }
+    return cv::mean(pieceColors)[0];
+}
+
+State Board::initState(){
+    detectPieces();
+    int threshold = determinePieceColorThreshold();
+
+    std::vector<std::pair<size_t, int>> pieces;
+
+    for (size_t i = 0; i < circles.size(); i++){
+        int piece;
+        pieceColors.at(i) > threshold ? piece = 1 : piece = -1;
+        pieces.push_back(std::make_pair(circles[i].first, piece));
+    }
+    State state(pieces);
+    return state;
 }
 
