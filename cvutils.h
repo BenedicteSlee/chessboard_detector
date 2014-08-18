@@ -15,7 +15,7 @@ void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point2d a, cv::Point2d b);
 Points2d sortSquareCorners(Points2d&);
-
+void rotate(cv::Mat &src, cv::Mat &dst, int angle);
 void plotPoints(cv::Mat& image, Points2d& points, int radius = 2, cv::Scalar col = cv::Scalar(0,0,255), int lineThickness = 2);
 
 cv::Point doubleToInt(cv::Point2d point2d);
@@ -147,8 +147,10 @@ std::vector<size_t> flagOutliers(std::vector<T> vec, double tolerancePct = 0.1){
     }
 
     double mean = meanNoOutliers(vec);
+    std::cout << "mean: " << mean << std::endl;
 
     double tolerance = mean * tolerancePct;
+    std::cout << "tolerance: " << tolerance << std::endl;
 
     std::vector<double> dists(vec.size());
 
@@ -165,6 +167,7 @@ std::vector<size_t> flagOutliers(std::vector<T> vec, double tolerancePct = 0.1){
         } else {
             flags.at(i) = 0;
         }
+        std::cout << "flag[" <<i <<"]: " << flags.at(i) << std::endl;
 
     }
     return flags;

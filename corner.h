@@ -10,13 +10,15 @@ class Corner
 {
 
 public:
-    Corner(){classified = false;}
+    Corner();
     Corner(const cv::Mat&, cv::Point2d, int);
     cv::Mat getArea();
     int getNRegions();
     bool isOutOfBounds(){return outOfBounds;}
+    static int cornernumber;
 
 private:
+
     cv::Mat area;
     cv::Point2d initialCornerpoint;
     cv::Point2d cornerpoint;

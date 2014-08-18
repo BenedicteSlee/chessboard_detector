@@ -217,6 +217,9 @@ std::vector<T> matrix<T>::getRow(size_t rowIdx) const
     if (rowIdx >= nRows){
         throw std::invalid_argument("row index > number of rows in matrix");
     }
+    if (elements.size() == 0){
+        throw std::invalid_argument("empty matrix");
+    }
 
     size_t idx1 = rowIdx * nCols;
     size_t idx2 = idx1 + nCols;
@@ -357,11 +360,11 @@ void matrix<T>::prependCol(std::vector<T> col){
 template <typename T>
 bool matrix<T>::removeRowRequest(size_t row){
     if (nRows == 1){
-        throw std::invalid_argument("This board only has one row left, will not remove it");
+        throw std::invalid_argument("This matrix only has one row left, will not remove it");
     }
 
     if (nRows == 0){
-        throw std::invalid_argument("This board is empty");
+        throw std::invalid_argument("This matrix is empty");
     }
     if (row != 0 && row != nRows-1){
         std::cout << "Request to remove row " << row << " denied, can only remove first and last row" << std::endl;
@@ -441,7 +444,7 @@ bool matrix<T>::removeColRequest(size_t col){
     }
 
     if (nCols == 0){
-        throw std::invalid_argument("This board is empty");
+        throw std::invalid_argument("This matrix is empty");
     }
 
     if (col != 0 && col != nCols-1){

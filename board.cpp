@@ -167,10 +167,9 @@ std::vector<int> Board::getColTypes()
 void Board::draw()
 {
     if (elements.empty()){
-        std::cout << "This board is empty" << std::endl;
+        std::cout << "This board is empty, can't draw" << std::endl;
         return;
     }
-
 
     if (!image.data){
         throw std::invalid_argument("draw() has no image to draw on");
@@ -195,6 +194,36 @@ void Board::draw()
         }
     }
     cv::waitKey();
+}
+
+void Board::write(std::string filename)
+{
+    if (elements.empty()){
+        std::cout << "This board is empty, can't write" << std::endl;
+        return;
+    }
+
+    if (!image.data){
+        throw std::invalid_argument("draw() has no image to draw on");
+    }
+    cv::Mat img_draw;
+    image.copyTo(img_draw);
+    cv::cvtColor(img_draw, img_draw, cv::COLOR_GRAY2BGR);
+    cv::RNG rng = cv::RNG(1234);
+
+    for (size_t i = 0; i < elements.size(); i++) {
+        cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
+        Points2d cps = elements.at(i).getCornerpointsSorted();
+        if (cvutils::anyNegCoordinate(cps)){
+            std::cout << "At least one point has a negative index, cannot draw" << std::endl;
+            return;
+        } else {
+            Points cornerpoints = cvutils::doubleToInt(cps);
+            cv::fillConvexPoly(img_draw, cornerpoints, col);
+        }
+    }
+
+    cv::imwrite(filename, img_draw);
 }
 
 std::pair<int,int> Board::getStatus()

@@ -1,6 +1,7 @@
 #ifndef GAMEBOARD_H
 #define GAMEBOARD_H
 
+#include <string>
 #include "typedefs.h"
 #include "matrix.h"
 #include "state.h"
@@ -18,6 +19,7 @@ public:
     //int squareId(cv::Points2d point);
 
     void draw();
+    void write(std::string filename);
 
     std::pair<int,int> getStatus();
 

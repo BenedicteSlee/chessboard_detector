@@ -11,6 +11,7 @@
 #include "squareExpander.h"
 #include "remover.h"
 #include "regression.h"
+#include "report.h"
 
 BoardDetector::~BoardDetector()
 {
@@ -44,31 +45,32 @@ Corners BoardDetector::getCorners()
     return corners;
 }
 
-Board BoardDetector::detect(bool doDraw)
+Board BoardDetector::detect(bool doDraw, bool doWrite, Report *report)
 {
     Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
     //auto hlines = get_hlinesSorted();
 
     if (doDraw) possibleBoard.draw();
+    if (doWrite) possibleBoard.write("/Users/benedicte/Dropbox/kings/thesis/report/case1/board1.png");
     cv::destroyAllWindows();
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
     Remover remover(possibleBoard);
 
-    filterBasedOnSquareSize(possibleBoard, remover);
+    filterBasedOnSquareSize(possibleBoard, remover, report);
     indices colreq1 = remover.getCurrentColRequests();
     indices rowreq1 = remover.getCurrentRowRequests();
     //remover.remove();
     //possibleBoard.draw();
 
-    filterBasedOnRowType(possibleBoard, remover);
+    filterBasedOnRowType(possibleBoard, remover, report);
     indices colreq2 = remover.getCurrentColRequests();
     indices rowreq2 = remover.getCurrentRowRequests();
     //remover.remove();
     //possibleBoard.draw();
 
-    filterBasedOnColType(possibleBoard, remover);
+    filterBasedOnColType(possibleBoard, remover, report);
     indices colreq3 = remover.getCurrentColRequests();
     indices rowreq3 = remover.getCurrentRowRequests();
 
@@ -106,6 +108,35 @@ Board BoardDetector::detect(bool doDraw)
     //bool check = square.containsPoint(cv::Point2d(200,200));
 
     return possibleBoard;
+}
+
+void BoardDetector::printHoughAfterCategorization(std::string filename)
+{
+    cv::Mat output;
+    image.copyTo(output);
+    if (output.channels() != 3){
+        cv::cvtColor(output, output, cv::COLOR_GRAY2BGR);
+    }
+
+    /*
+    for (size_t i = 0; i < lines.size(); i++){
+        Line &line = lines[i];
+        cv::line(output, line.points[0], line.points[1], cv::Scalar(0,0,255));
+    }
+    */
+
+    cv::Scalar col(20,110,255);
+    for (size_t i = 0; i < vlinesSorted.size(); i++){
+        Line &line = vlinesSorted[i];
+        cv::line(output, line.points[0], line.points[1], col);
+    }
+
+    for (size_t i = 0; i < hlinesSorted.size(); i++){
+        Line &line = hlinesSorted[i];
+        cv::line(output, line.points[0], line.points[1], col);
+    }
+
+    cv::imwrite(filename, output);
 }
 
 void BoardDetector::categorizeLines(){
@@ -243,7 +274,7 @@ void BoardDetector::findVanishingPoint(){
     vanishingPoint = cvutils::centerpoint(voters);
 }
 
-void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover)
+void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover, Report* report)
 {
     size_t nCols = board.getNumCols();
     size_t nRows = board.getNumRows();
@@ -251,23 +282,28 @@ void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover)
     std::vector<int> hlengths(nCols);
     std::vector<int> vlengths(nRows);
 
+    std::cout << "FILTER BASED ON SQUARE SIZE" << std::endl;
+
     // Flag outliers based on horizontal lengths
     std::vector<size_t> houtliers(nCols,0);
     for (size_t row = 0; row < nRows; row++){
+        std::cout << "ROW " << row << std::endl;
         Squares squares = board.getRow(row);
         for (size_t col = 0; col < squares.size(); col++){
             hlengths.at(col) = squares.at(col).getHLength();
+            std::cout << "hlengths.at(" <<col<<"):\t" <<hlengths.at(col) << std::endl;
         }
         houtliers = cvutils::flagOutliers(hlengths);
         remover.addToRow(row, houtliers);
     }
 
-    // TODO BETTER METHOD FOR CORRECTING FOR VIEWPOINT EFFECT
     // Flag outliers based on vertical lengths
     for (size_t col = 0; col < board.getNumCols(); col++){
+        std::cout << "COL " << col << std::endl;
         Squares squares = board.getCol(col);
         for (size_t row = 0; row < squares.size(); row++){
             vlengths.at(row) = squares.at(row).getVLength();
+            std::cout << "vlengths.at(" << row << "):\t" << vlengths.at(row) << std::endl;
         }
 
         //double midmean = cvutils::meanNoOutliers(vlengths);
@@ -280,9 +316,14 @@ void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover)
                 remover.addToElement(row, col, 1);
         }
     }
+
+    if (report != 0){
+        report->hlengths = hlengths;
+        report->vlengths = vlengths;
+    }
 }
 
-void BoardDetector::filterBasedOnRowType(Board& board, Remover& remover)
+void BoardDetector::filterBasedOnRowType(Board& board, Remover& remover, Report *report)
 {
     std::vector<int> types = board.getRowTypes();
 
@@ -293,9 +334,13 @@ void BoardDetector::filterBasedOnRowType(Board& board, Remover& remover)
             remover.addToRow(row, votes);
         }
     }
+
+    if (report != 0){
+        report->rowtypes = types;
+    }
 }
 
-void BoardDetector::filterBasedOnColType(Board& board, Remover& remover)
+void BoardDetector::filterBasedOnColType(Board& board, Remover& remover, Report *report)
 {
     std::vector<int> types = board.getColTypes();
 
@@ -305,6 +350,10 @@ void BoardDetector::filterBasedOnColType(Board& board, Remover& remover)
         if (types.at(col) == 0){
             remover.addToCol(col, votes);
         }
+    }
+
+    if (report != 0){
+        report->coltypes = types;
     }
 
 }

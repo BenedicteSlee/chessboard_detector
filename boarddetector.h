@@ -2,15 +2,14 @@
 #define POSTPROCESS_H
 
 #include <vector>
+#include <string>
 #include "Line.h"
 #include "cvutils.h"
 #include "corner.h"
 #include "typedefs.h"
 #include "board.h"
 #include "remover.h"
-
-
-
+#include "report.h"
 
 class BoardDetector
 {
@@ -22,15 +21,16 @@ public:
     Lines get_vlinesSorted();
     Corners getCorners();
 
-    Board detect(bool doDraw = false);
+    Board detect(bool doDraw = false, bool doWrite = false, Report *report = 0);
+    void printHoughAfterCategorization(std::string filename);
 
 
 private:
     void categorizeLines();
     void findVanishingPoint();
-    void filterBasedOnSquareSize(Board& Board, Remover& remover);
-    void filterBasedOnRowType(Board& Board, Remover& remover);
-    void filterBasedOnColType(Board& Board, Remover& remover);
+    void filterBasedOnSquareSize(Board& Board, Remover& remover, Report *report);
+    void filterBasedOnRowType(Board& Board, Remover& remover, Report *report);
+    void filterBasedOnColType(Board& Board, Remover& remover, Report *report);
     void requestColumnExpansion(Board &board);
     void requestRowExpansion(Board& board);
 

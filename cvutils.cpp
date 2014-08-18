@@ -267,3 +267,11 @@ void cvutils::plotPoints(Mat &image, Points2d &points, int radius, cv::Scalar co
     cv::imshow("points", rgb);
     cv::waitKey();
 }
+
+
+void cvutils::rotate(Mat &src, Mat &dst, int angle)
+{
+    cv::Point2f p(src.cols/2.0, src.rows/2.0);
+    Mat r = cv::getRotationMatrix2D(p, angle, 1.0);
+    warpAffine(src, dst, r, Size(src.cols, src.rows));
+}

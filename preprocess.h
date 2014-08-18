@@ -12,12 +12,12 @@ public:
     Preprocess(cv::Mat&);
     void getLines(Lines&);
 
-
-
     void showCanny();
     void showHoughlines();
 
     cv::Mat getCanny(){return canny;}
+    cv::Mat getHough();
+    cv::Mat getBlurred(){return blurred;}
 
 private:
     int houghThreshold;
@@ -28,7 +28,7 @@ private:
 
     Lines lines;
     std::vector<cv::Vec4i> houghlines;
-    cv::Mat image, canny;
+    cv::Mat image, blurred, canny, imgHough;
     void edgeDetection(bool doBlur = true);
     void lineDetection();
 };

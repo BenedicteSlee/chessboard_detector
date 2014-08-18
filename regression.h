@@ -2,6 +2,7 @@
 #define REGRESSION_H
 
 #include <vector>
+#include <iostream>
 #include "Line.h"
 
 template <class T>
@@ -33,7 +34,15 @@ public:
         yIntercept = (ySum - slope * xSum) / data.size();
 
         line = Line(slope, yIntercept);
+
+        std::cout << "--------------" << std::endl;
+        std::cout << "Linear Regression" << std::endl;
+        std::cout << "Slope: " << slope << std::endl;
+        std::cout << "Interc: " << yIntercept << std::endl;
+        std::cout << "--------------" << std::endl;
+
     }
+
 
     double squaredError(int i){
         return pow(std::abs(data[i] - line.ylookup(i)), 2);

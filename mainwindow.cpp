@@ -1,3 +1,6 @@
+#include <iostream>
+#include <fstream>
+#include <ctime>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "opencvbook.cpp"
@@ -15,6 +18,9 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include "state.h"
 #include "minimax.h"
+#include "utils.h"
+
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -38,7 +44,6 @@ void MainWindow::on_pushButton_clicked()
     img_rgb = cv::imread(fileName.toStdString().data());
     if (img_rgb.data){
         //ui->pushButton_2->setEnabled(true);
-
         // Convert image to graylevel and normalize
         cv::cvtColor(img_rgb, img_gray, CV_RGB2GRAY);
         cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
@@ -47,18 +52,27 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButton_2_clicked()
 {
+    //std::string filename =  "Report_" + utils::currentDateTime();
+
     if (ui->UseDefaultImage->isChecked()){
-        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers6.jpg");
+        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
+        cvutils::rotate(img_rgb,img_rgb,-90);
         cv::cvtColor(img_rgb, img_gray, CV_RGB2GRAY);
-        cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+        cv::normalize(img_gray, img_norm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     }
 
     cv::Mat img;
 
-    cv::resize(img_gray, img, cv::Size(1000, img_gray.rows * 1000/img_gray.cols));
-    ///// CIRCLES
-    ///
-    ///
+    cv::resize(img_norm, img, cv::Size(1000, img_norm.rows * 1000/img_norm.cols));
+
+    std::vector<cv::Mat> channels(3);
+    cv::split(img_rgb, channels);
+
+    //cv::imshow("red", channels[0]);
+    //cv::waitKey(0);
+
+    // C I R C L E S
+
     cv::Mat src;
 
     Preprocess prepcircles = Preprocess(img);
@@ -70,7 +84,6 @@ void MainWindow::on_pushButton_2_clicked()
     //cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 200, 100, 0, 0 );
 
     cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 5, 50, 5, 50 );
-
 
     if (circles.size() > 0){
         /// Draw the circles detected
@@ -85,9 +98,9 @@ void MainWindow::on_pushButton_2_clicked()
         }
 
         /// Show your results
-        cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-        cv::imshow( "Hough Circle Transform Demo", src );
-        cv::waitKey(100);
+        //cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
+        //cv::imshow( "Hough Circle Transform Demo", src );
+        //cv::waitKey();
 
     } else {
         std::cout << "No circles found" << std::endl;
@@ -100,12 +113,29 @@ void MainWindow::on_pushButton_2_clicked()
     Preprocess prep = Preprocess(img);
     prep.getLines(houghlines);
 
-    prep.showCanny();
-    prep.showHoughlines();
+    // save images
+    bool saveimages = false;
+    if (saveimages){
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/rgb.png", img_rgb);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/gray.png", img_gray);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/normalized.png", img_norm);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/resized.png", img);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/canny.png", prep.getCanny());
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough.png", prep.getHough());
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/blurred.png", prep.getBlurred());
+    }
+
+    //prep.showCanny();
+    //prep.showHoughlines();
 
     // chessboard detector
     BoardDetector cbd = BoardDetector(img, houghlines);
-    Board board = cbd.detect(false);
+    Board board = cbd.detect(true, true);
+
+    if (saveimages){
+        cbd.printHoughAfterCategorization("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough2.png");
+        board.write("/Users/benedicte/Dropbox/kings/thesis/report/case1/final.png");
+    }
 
     // detect pieces based on houghcircles on whole board
     cv::Mat rgb;
@@ -124,14 +154,15 @@ void MainWindow::on_pushButton_2_clicked()
             squaresWithPiece.push_back(dist);
     }
     std::sort(squaresWithPiece.begin(), squaresWithPiece.end());
-    cvutils::plotPoints(rgb, centers, 10);
+    //cvutils::plotPoints(rgb, centers, 10);
+
 
     // Detect pieces based on houghcircles on individual squares
     Points2d centers2;
     for (size_t i = 0; i < elements.size(); i++){
         Square square = elements[i];
         cv::Vec3i circle;
-        bool containsPiece =square.detectPieceWithHough(circle);
+        bool containsPiece = square.detectPieceWithHough(circle);
         if (containsPiece){
             centers2.push_back(elements[i].getCenter());
         }
@@ -140,9 +171,6 @@ void MainWindow::on_pushButton_2_clicked()
 
     // Initial state to feed minimax
     State state = board.initState();
-
-
-    int hei = 1;
 }
 
 void MainWindow::on_pushButton_3_clicked()

@@ -2,6 +2,10 @@
 #include "cvutils.h"
 #include "typedefs.h"
 #include <opencv2/opencv.hpp>
+#include <fstream>
+#include <string>
+
+Corner::Corner(){classified = false;}
 
 Corner::Corner(const cv::Mat& image, cv::Point2d cornerpoint, int radius)
 {
@@ -66,7 +70,6 @@ void Corner::classify(){
 
     for (int i = 0; i < nLayers; i++)
     {
-
         int n = 2 * (nc-1-i*2) + 2 * (nr-1-i*2); // number of pixels in layer
         std::vector<int> layer(n);
 
@@ -107,8 +110,23 @@ void Corner::classify(){
             idx++;
         }
 
-
         layers.push_back(layer);
+
+        bool doWriteReport = true;
+        if (doWriteReport){
+            std::ofstream layerReport;
+            if (!layerReport.is_open())
+                layerReport.open("/Users/benedicte/Dropbox/kings/thesis/layerReport.csv");
+
+            layerReport << "corner_" << cornerpoint.x << "_" <<cornerpoint.y << "__layer_" << i << "," << std::endl;
+            for (size_t x = 0; x < layer.size()-1; x++){
+                layerReport << layer[x] << ", ";
+            }
+            layerReport << layer[layer.size()-1] << std::endl;
+
+            layerReport.close();
+        }
+
     }
 
     // binarize

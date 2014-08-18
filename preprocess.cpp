@@ -30,16 +30,24 @@ void Preprocess::showCanny()
 
 void Preprocess::showHoughlines()
 {
-    cv::Mat imgHough;
-    image.copyTo(imgHough);
-    for( size_t i = 0; i < houghlines.size(); i++ )
-    {
-        cv::Vec4i l = houghlines[i];
-        cv::line(imgHough, cv::Point2d(l[0], l[1]), cv::Point2d(l[2], l[3]), cv::Scalar(255,0,0), 1, CV_AA);
+    if (!imgHough.data){
+        getHough();
     }
-
     cv::imshow("Probabilistic Hough", imgHough);
     cv::waitKey(0);
+}
+
+cv::Mat Preprocess::getHough(){
+    if (!imgHough.data){
+        image.copyTo(imgHough);
+        cv::cvtColor(imgHough, imgHough, cv::COLOR_GRAY2BGR);
+        for( size_t i = 0; i < houghlines.size(); i++ )
+        {
+            cv::Vec4i l = houghlines[i];
+            cv::line(imgHough, cv::Point2d(l[0], l[1]), cv::Point2d(l[2], l[3]), cv::Scalar(20,110,255), 1, CV_AA);
+        }
+    }
+    return imgHough;
 }
 
 void Preprocess::edgeDetection(bool doBlur){
@@ -50,9 +58,11 @@ void Preprocess::edgeDetection(bool doBlur){
         gray = image;
     }
     if (doBlur){
+        //cv::GaussianBlur(gray, blurred, gaussianBlurSize, gaussianBlurSigma);
         cv::GaussianBlur(gray, gray, gaussianBlurSize, gaussianBlurSigma);
     }
-    cv::Canny(gray, canny, 30, 200, 3);
+    blurred = gray;
+    cv::Canny(blurred, canny, 30, 200, 3);
 }
 
 void Preprocess::lineDetection()
