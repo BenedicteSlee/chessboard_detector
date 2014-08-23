@@ -41,8 +41,12 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
     upperRight.x > lowerRight.x ? lastx = upperRight.x : lastx = lowerRight.x;
     upperRight.y > lowerRight.y ? lasty = upperRight.y : lasty = lowerRight.y;
 
-    area = image(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
-    meanGray = calcMeanGray(area);
+    try{
+        area = image(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
+        meanGray = calcMeanGray(area);
+    } catch(std::exception &e){
+        outOfBounds = true;
+    }
 
     //////////
     hlength = cv::norm(upperRight-upperLeft);
@@ -53,8 +57,7 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
 
     if (!image.data){
         throw std::invalid_argument("Image is empty, cannot create corners.");
-    } else {
-
+    } else if (!outOfBounds) {
         createCorners(image);
     }
 }

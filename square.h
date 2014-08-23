@@ -49,6 +49,7 @@ public:
     }
 
     bool containsPoint(cv::Point2d point) const;
+    std::vector<Corner> getCorners() const {return corners;}
 
     // static methoda
     static std::vector<int> getSquareTypes(Squares);

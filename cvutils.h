@@ -28,8 +28,6 @@ bool outOfBounds(cv::Mat& image, cv::Point2d point2d);
 
 std::vector<bool> outOfBounds(cv::Mat& image, Points2d points);
 
-template <typename T>
-void sortPoints(T &);
 
 void dilate(std::vector<int>&);
 int sumderiv(std::vector<int>);
@@ -66,32 +64,6 @@ cv::Point2d centerpoint(std::vector<T> points){
 }
 
 
-template <typename T>
-void sortPoints(T& points)
-{ // Ref: http://www.cplusplus.com/forum/general/116020/
-    cv::Point2d center = centerpoint(points);
-
-    std::vector<std::pair<int, double> > atans(points.size());
-
-    for (size_t i = 0; i < points.size(); ++i)
-    {
-        atans[i].first = i;
-        atans[i].second = atan2(points[i].y - center.y, points[i].x - center.x);
-
-    }
-
-    std::sort(atans.begin(), atans.end(),
-              [] (const std::pair<int, double>& left, const std::pair<int, double>& right) -> bool
-    {return left.second > right.second;});
-
-
-    Points2d originalPoints = points;
-
-    for (size_t i = 0; i < points.size(); ++i) {
-        points[i] = originalPoints[atans[i].first];
-    }
-
-}
 
 template<typename T>
 std::vector<double> Stats(std::vector<T> input){

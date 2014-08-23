@@ -5,11 +5,12 @@
 #include "Line.h"
 #include "cvutils.h"
 #include "typedefs.h"
+#include "settings.h"
 
 class Preprocess
 {
 public:
-    Preprocess(cv::Mat&);
+    Preprocess(cv::Mat&, Settings::PreprocessSettings settings);
     void getLines(Lines&);
 
     void showCanny();
@@ -20,6 +21,7 @@ public:
     cv::Mat getBlurred(){return blurred;}
 
 private:
+    Settings::PreprocessSettings settings;
     int houghThreshold;
     int minLineLength;
     int maxLineGap;

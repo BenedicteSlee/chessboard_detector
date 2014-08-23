@@ -2,7 +2,6 @@
 
 State::State() : matrix<int>(8,8,0){
     nBlack = nWhite = 0;
-    std::cout << "Calling State default constructor" << std::endl;
 }
 
 void State::print() const{

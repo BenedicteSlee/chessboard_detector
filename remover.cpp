@@ -47,8 +47,4 @@ void Remover::remove(){
         board.removeColsRequest(colRequests);
         this->removeColsRequest(colRequests);
     }
-
-
-
-
 }

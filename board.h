@@ -9,9 +9,9 @@
 class Board : public matrix<Square>
 {
 public:
-    Board(cv::Mat &image_);
+    explicit Board(cv::Mat &image_);
     Board(cv::Mat& image_, Lines sortedHorizontalLines, Lines sortedVerticalLines);
-
+    
     std::vector<int> getRowTypes();
     std::vector<int> getColTypes();
     size_t size(){return nRows * nCols;}
@@ -20,6 +20,7 @@ public:
 
     void draw();
     void write(std::string filename);
+    void writeLayerReport(std::string filename);
 
     std::pair<int,int> getStatus();
 

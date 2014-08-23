@@ -1,19 +1,15 @@
 #include "preprocess.h"
 #include "Line.h"
 #include "typedefs.h"
-#include "square.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include "settings.h"
+#include "square.h"
 
-Preprocess::Preprocess(cv::Mat & image_)
+
+Preprocess::Preprocess(cv::Mat & image_, Settings::PreprocessSettings settings_)
 {
-    image = image_;
-    houghThreshold = 96;
-    //minLineLength = 105;
-    minLineLength = 200;
-    maxLineGap = 139;
-    gaussianBlurSize = cv::Size(5,5); // must be odd
-    gaussianBlurSigma = 3;
+    settings = settings_;
     edgeDetection();
     lineDetection();
 }

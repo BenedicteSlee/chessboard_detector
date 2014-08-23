@@ -13,6 +13,7 @@ Corner::Corner(const cv::Mat& image, cv::Point2d cornerpoint, int radius)
         throw std::invalid_argument("Image is empty, cannot create corner");
     }
     classified = false;
+
     this->initialCornerpoint = cornerpoint;
     this->cornerpoint = cornerpoint;
     this->radius = radius;
@@ -29,11 +30,13 @@ Corner::Corner(const cv::Mat& image, cv::Point2d cornerpoint, int radius)
     area = image(cv::Rect(x,y, radius*2 , radius*2));
     }
     catch (std::exception& e){
-        std::cout << "error" << std::endl;
+        outOfBounds = true;
+        std::cout << "Corner is too close to image border" << std::endl;
     }
     //recalculateCornerpoint(); //TODO
 
-    classify(); // set nRegions;
+    if (!outOfBounds)
+        classify(); // set nRegions;
 }
 
 cv::Mat Corner::getArea()
@@ -111,22 +114,6 @@ void Corner::classify(){
         }
 
         layers.push_back(layer);
-
-        bool doWriteReport = true;
-        if (doWriteReport){
-            std::ofstream layerReport;
-            if (!layerReport.is_open())
-                layerReport.open("/Users/benedicte/Dropbox/kings/thesis/layerReport.csv");
-
-            layerReport << "corner_" << cornerpoint.x << "_" <<cornerpoint.y << "__layer_" << i << "," << std::endl;
-            for (size_t x = 0; x < layer.size()-1; x++){
-                layerReport << layer[x] << ", ";
-            }
-            layerReport << layer[layer.size()-1] << std::endl;
-
-            layerReport.close();
-        }
-
     }
 
     // binarize

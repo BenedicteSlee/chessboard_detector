@@ -25,8 +25,8 @@ public:
     T getElement(size_t index) const;
 
 
-    const T& getRef(size_t rowIdx, size_t colIdx) const;
-    const T& getRef(size_t index) const;
+    const T& getElementRef(size_t rowIdx, size_t colIdx) const;
+    const T& getElementRef(size_t index) const;
     const std::vector<T>& getRefs() const;
 
     void setElement(size_t row, size_t col, T element);
@@ -82,9 +82,6 @@ matrix<T>::matrix(size_t nRows, size_t nCols, T initval)
 
     std::vector<T> tmp(nRows * nCols, initval);
     elements = tmp;
-
-    std::cout << "Calling matrix constructor" << std::endl;
-
 }
 
 template <typename T>
@@ -140,7 +137,7 @@ T matrix<T>::getElement(size_t index) const
 }
 
 template <typename T>
-const T &matrix<T>::getRef(size_t rowIdx, size_t colIdx) const
+const T &matrix<T>::getElementRef(size_t rowIdx, size_t colIdx) const
 {
     size_t idx = getIndex(rowIdx, colIdx);
 
@@ -152,7 +149,7 @@ const T &matrix<T>::getRef(size_t rowIdx, size_t colIdx) const
 }
 
 template <typename T>
-const T &matrix<T>::getRef(size_t index) const{
+const T &matrix<T>::getElementRef(size_t index) const{
     if (index >= elements.size())
         throw std::out_of_range("Out of range");
     const T& ref = elements.at(index);
@@ -224,7 +221,11 @@ std::vector<T> matrix<T>::getRow(size_t rowIdx) const
     size_t idx1 = rowIdx * nCols;
     size_t idx2 = idx1 + nCols;
 
-   std::vector<T> row(&elements[idx1], &elements[idx2]);
+    if (idx2 > elements.size()){
+        throw std::out_of_range("Trying to access element" + std::to_string(idx2) + " but elements is only " + std::to_string(elements.size()) + " long.");
+    }
+
+    std::vector<T> row(&elements[idx1], &elements[idx2]);
     return row;
 }
 

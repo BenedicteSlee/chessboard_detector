@@ -16,6 +16,8 @@ public:
     int getNRegions();
     bool isOutOfBounds(){return outOfBounds;}
     static int cornernumber;
+    std::vector<std::vector<int>> getLayers(){return layers;}
+    std::vector<std::vector<int>> getBinaryLayers() {return binaryLayers;}
 
 private:
 

@@ -55,7 +55,8 @@ void MainWindow::on_pushButton_2_clicked()
     //std::string filename =  "Report_" + utils::currentDateTime();
 
     if (ui->UseDefaultImage->isChecked()){
-        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
+        //img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
+        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/boards/brown.jpg");
         cvutils::rotate(img_rgb,img_rgb,-90);
         cv::cvtColor(img_rgb, img_gray, CV_RGB2GRAY);
         cv::normalize(img_gray, img_norm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
@@ -75,7 +76,8 @@ void MainWindow::on_pushButton_2_clicked()
 
     cv::Mat src;
 
-    Preprocess prepcircles = Preprocess(img);
+    Settings::PreprocessSettings settings;
+    Preprocess prepcircle(img, settings);
     //src = prepcircles.getCanny();
     img.copyTo(src);
     std::vector<cv::Vec3f> circles;
@@ -107,13 +109,41 @@ void MainWindow::on_pushButton_2_clicked()
     }
 
 
-    // Find houghlines
+    // chessboard detector
     std::vector<Line> houghlines;
-    
-    Preprocess prep = Preprocess(img);
-    prep.getLines(houghlines);
+    bool tryAgain = true;
+    BoardDetector cbd = BoardDetector(img, houghlines);
+    Preprocess prep = Preprocess(img, settings);
+    Board board(img);
+
+    std::string path = "/Users/benedicte/Dropbox/kings/thesis/report/case1/";
+    while (tryAgain){
+        try{
+            prep.getLines(houghlines);
+            //prep.showCanny();
+            //prep.showHoughlines();
+            Board initboard = cbd.detect(true, &path);
+            board = initboard;
+            tryAgain = false;
+        } catch(std::exception &e){
+            std::cout << e.what() << std::endl;
+            tryAgain = true;
+            if (settings.gaussianBlurSigma == 1){
+                settings.gaussianBlurSize = cv::Size(3,3);
+            }
+            if (settings.gaussianBlurSize == cv::Size(3,3)){
+                settings.gaussianBlurSize = cv::Size(1,1);
+            }
+            if (settings.gaussianBlurSigma == 1 && settings.gaussianBlurSize == cv::Size(1,1)){
+                throw("I give up");
+            }
+            settings.gaussianBlurSigma = 1;
+        }
+    }
+
 
     // save images
+    /*
     bool saveimages = false;
     if (saveimages){
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/rgb.png", img_rgb);
@@ -124,18 +154,12 @@ void MainWindow::on_pushButton_2_clicked()
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough.png", prep.getHough());
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/blurred.png", prep.getBlurred());
     }
-
-    //prep.showCanny();
-    //prep.showHoughlines();
-
-    // chessboard detector
-    BoardDetector cbd = BoardDetector(img, houghlines);
-    Board board = cbd.detect(true, true);
-
     if (saveimages){
         cbd.printHoughAfterCategorization("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough2.png");
         board.write("/Users/benedicte/Dropbox/kings/thesis/report/case1/final.png");
     }
+    */
+
 
     // detect pieces based on houghcircles on whole board
     cv::Mat rgb;
@@ -157,6 +181,7 @@ void MainWindow::on_pushButton_2_clicked()
     //cvutils::plotPoints(rgb, centers, 10);
 
 
+
     // Detect pieces based on houghcircles on individual squares
     Points2d centers2;
     for (size_t i = 0; i < elements.size(); i++){
@@ -170,7 +195,14 @@ void MainWindow::on_pushButton_2_clicked()
     cvutils::plotPoints(rgb, centers2, 10, cv::Scalar(255,0,0));
 
     // Initial state to feed minimax
+    cv::destroyAllWindows();
+
     State state = board.initState();
+
+    // WRITE REPORTS
+
+
+
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -200,7 +232,7 @@ void MainWindow::on_pushButton_3_clicked()
         std::cout << "Its a tie!" << std::endl;
 
 
-    
+
 
 
 

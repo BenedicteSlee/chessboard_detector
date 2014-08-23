@@ -1,3 +1,4 @@
+#include <fstream>
 #include "board.h"
 #include "Line.h"
 #include "square.h"
@@ -24,6 +25,7 @@ Board::Board(cv::Mat &image_, Lines hlinesSorted, Lines vlinesSorted) : image(im
     nCols = vlinesSorted.size() - 1;
     nRows = hlinesSorted.size() - 1;
 
+
     for (size_t i = 0; i < nRows; ++i) {
         Line hlineUpper = hlinesSorted.at(i);
         Line hlineLower = hlinesSorted.at(i+1);
@@ -44,16 +46,22 @@ Board::Board(cv::Mat &image_, Lines hlinesSorted, Lines vlinesSorted) : image(im
             Square sq;
             try{
                 Square square(image, upperLeft, upperRight, lowerRight, lowerLeft);
+                if (square.isOutOfBounds()){
+                    throw std::invalid_argument("Square is out of bounds");
+                }
                 sq = square;
             }
             catch(std::exception& e){
+                std::cout << e.what() << std::endl;
                 addRow = false;
             }
             row.push_back(sq);
         }
-        if (addRow)
+        if (addRow){
             elements.insert(elements.end(), row.begin(), row.end());
-
+        } else {
+            nRows--;
+        }
     }
     removeOutOfBounds();
 }
@@ -64,7 +72,6 @@ int Board::squareId(cv::Point2d point){ // TODO TEST!
     return squareId;
 }
 
-
 void Board::determineRowTypes()
 {
     rowTypes.clear();
@@ -72,7 +79,7 @@ void Board::determineRowTypes()
     for (size_t i = 0; i < nRows; i++){
         std::vector<int> histogram(5,0);
         for (size_t j = 0; j < nCols; j++){
-            const Square& square = getRef(i, j);
+            const Square& square = getElementRef(i, j);
             int type = square.getSquareType();
             ++histogram[ type ];
         }
@@ -95,7 +102,7 @@ void Board::determineColTypes()
     for (size_t i = 0; i < nCols; i++){
         std::vector<size_t> histogram(5,0);
         for (size_t j = 0; j < nRows; j++){
-            const Square& square = getRef(j, i);
+            const Square& square = getElementRef(j, i);
             int type = square.getSquareType();
             ++histogram[ type ];
         }
@@ -147,7 +154,6 @@ void Board::removeOutOfBounds(){
 
 }
 
-
 std::vector<int> Board::getRowTypes()
 {
     if (rowTypes.empty()){
@@ -182,6 +188,9 @@ void Board::draw()
 
         cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
         Points2d cps = elements.at(i).getCornerpointsSorted();
+        if (cps.size() != 4){
+            throw std::invalid_argument("Need four corner points to draw square");
+        }
         if (cvutils::anyNegCoordinate(cps)){
             std::cout << "At least one point has a negative index, cannot draw" << std::endl;
             return;
@@ -224,6 +233,29 @@ void Board::write(std::string filename)
     }
 
     cv::imwrite(filename, img_draw);
+}
+
+void Board::writeLayerReport(std::string filename)
+{
+    std::ofstream layerReport;
+    layerReport.open(filename);
+    for (int i = 0; i < 64; i++){
+        const Square &square = elements[i];
+        std::vector<Corner> corners = square.getCorners();
+            for (size_t j = 0; j < 4; j++){
+            Corner corner = corners[j];
+            std::vector<std::vector<int>> layers = corner.getLayers();
+            for (size_t k = 0; k < layers.size(); k++){
+                std::vector<int> layer = layers[k];
+                layerReport << "square_" << i << "__corner_" << j << "__layer_" << k << ",";
+                for (size_t l = 0; l < layer.size()-1; l++){
+                    layerReport << layer[l] << ",";
+                }
+                layerReport << layer[layer.size()-1] << std::endl;
+            }
+        }
+    }
+    layerReport.close();
 }
 
 std::pair<int,int> Board::getStatus()

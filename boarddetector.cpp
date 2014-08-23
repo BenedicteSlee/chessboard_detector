@@ -45,32 +45,69 @@ Corners BoardDetector::getCorners()
     return corners;
 }
 
-Board BoardDetector::detect(bool doDraw, bool doWrite, Report *report)
+bool BoardDetector::detect(Board board, bool doDraw, std::string *reportPath)
 {
     Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
     //auto hlines = get_hlinesSorted();
 
+    if (possibleBoard.getNumRows() < 3 || possibleBoard.getNumRows() < 3){
+        return false;
+    }
+
     if (doDraw) possibleBoard.draw();
-    if (doWrite) possibleBoard.write("/Users/benedicte/Dropbox/kings/thesis/report/case1/board1.png");
-    cv::destroyAllWindows();
+
+    if (reportPath != 0){
+        std::string filename1 = *reportPath + "initBoard.png";
+        possibleBoard.write(filename1);
+    }
+
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
+    // INITIAL PRUNING
+    size_t initrows = possibleBoard.getNumRows();
+    size_t initcols = possibleBoard.getNumCols();
+
+    if (initrows > 8){
+        std::vector<size_t> prunerows{0,1,2, initrows-3,initrows-2,initrows-1};
+        possibleBoard.removeRowsRequest(prunerows);
+    }
+    else if (initrows > 4){
+        std::vector<size_t> prunerows{0,1, initrows-2, initrows-1};
+        possibleBoard.removeRowsRequest(prunerows);
+    }
+
+    if (initcols > 8){
+        std::vector<size_t> prunecols{0,1,2, initcols-3,initcols-2,initcols-1};
+        possibleBoard.removeColsRequest(prunecols);
+    }
+    else if (initcols > 4){
+        std::vector<size_t> prunecols{0, 1, initcols-2,initcols-1};
+        possibleBoard.removeColsRequest(prunecols);
+    }
+
+    if (doDraw) possibleBoard.draw();
+
     Remover remover(possibleBoard);
 
-    filterBasedOnSquareSize(possibleBoard, remover, report);
+    filterBasedOnSquareSize(possibleBoard, remover);
     indices colreq1 = remover.getCurrentColRequests();
     indices rowreq1 = remover.getCurrentRowRequests();
-    //remover.remove();
-    //possibleBoard.draw();
+    remover.remove();
+    if (doDraw) possibleBoard.draw();
 
-    filterBasedOnRowType(possibleBoard, remover, report);
+    if (reportPath != 0){
+        possibleBoard.write(*reportPath + "boardAfterFilterBySize.png");
+        // possibleBoard.writeLayerReport(*reportPath + "layerReportAfterFilterBySize.csv");
+    }
+
+    filterBasedOnRowType(possibleBoard, remover);
     indices colreq2 = remover.getCurrentColRequests();
     indices rowreq2 = remover.getCurrentRowRequests();
     //remover.remove();
     //possibleBoard.draw();
 
-    filterBasedOnColType(possibleBoard, remover, report);
+    filterBasedOnColType(possibleBoard, remover);
     indices colreq3 = remover.getCurrentColRequests();
     indices rowreq3 = remover.getCurrentRowRequests();
 
@@ -274,7 +311,7 @@ void BoardDetector::findVanishingPoint(){
     vanishingPoint = cvutils::centerpoint(voters);
 }
 
-void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover, Report* report)
+void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover)
 {
     size_t nCols = board.getNumCols();
     size_t nRows = board.getNumRows();
@@ -316,14 +353,9 @@ void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover, Repo
                 remover.addToElement(row, col, 1);
         }
     }
-
-    if (report != 0){
-        report->hlengths = hlengths;
-        report->vlengths = vlengths;
-    }
 }
 
-void BoardDetector::filterBasedOnRowType(Board& board, Remover& remover, Report *report)
+void BoardDetector::filterBasedOnRowType(Board& board, Remover& remover)
 {
     std::vector<int> types = board.getRowTypes();
 
@@ -334,13 +366,9 @@ void BoardDetector::filterBasedOnRowType(Board& board, Remover& remover, Report 
             remover.addToRow(row, votes);
         }
     }
-
-    if (report != 0){
-        report->rowtypes = types;
-    }
 }
 
-void BoardDetector::filterBasedOnColType(Board& board, Remover& remover, Report *report)
+void BoardDetector::filterBasedOnColType(Board& board, Remover& remover)
 {
     std::vector<int> types = board.getColTypes();
 
@@ -351,11 +379,6 @@ void BoardDetector::filterBasedOnColType(Board& board, Remover& remover, Report 
             remover.addToCol(col, votes);
         }
     }
-
-    if (report != 0){
-        report->coltypes = types;
-    }
-
 }
 
 void BoardDetector::requestColumnExpansion(Board& board)
@@ -392,7 +415,6 @@ void BoardDetector::requestRowExpansion(Board &board)
         dir = DOWN;
 
     board.expand(dir);
-
 }
 
 
