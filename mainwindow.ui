@@ -56,7 +56,7 @@
      <rect>
       <x>60</x>
       <y>10</y>
-      <width>160</width>
+      <width>190</width>
       <height>161</height>
      </rect>
     </property>
@@ -64,17 +64,7 @@
      <item>
       <widget class="QPushButton" name="pushButton">
        <property name="text">
-        <string>Open global::image</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="UseDefaultglobal::image">
-       <property name="text">
-        <string>Use default global::image</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
+        <string>Choose Image</string>
        </property>
       </widget>
      </item>

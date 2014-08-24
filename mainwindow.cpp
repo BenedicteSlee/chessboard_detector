@@ -21,6 +21,8 @@
 #include "utils.h"
 #include "global.h"
 
+cv::Mat global::image, global::image_gray, global::image_norm, global::image_rgb;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -37,88 +39,46 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Open global::image"), "/Users/benedicte/Dropbox/kings/thesis/global::images",
-                                                    tr("global::image Files (*.png *.jpg *.jpeg *.bmp)"));
+                                                    tr("Open image"), "/Users/benedicte/Dropbox/kings/thesis/images",
+                                                    tr("image Files (*.png *.jpg *.jpeg *.bmp)"));
 
     global::image_rgb = cv::imread(fileName.toStdString().data());
-    if (global::image_rgb.data){
-        //ui->pushButton_2->setEnabled(true);
-        // Convert global::image to graylevel and normalize
-        cv::cvtColor(global::image_rgb, global::image_gray, CV_RGB2GRAY);
-        cv::normalize(global::image_gray, global::image_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    }
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
     //std::string filename =  "Report_" + utils::currentDateTime();
 
-    if (ui->UseDefaultglobal::image_imp->isChecked()){
-        //img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/global::images/checkers7.jpg");
-        global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/boards/brown.jpg");
-        cvutils::rotate(global::image_rgb,global::image_rgb,-90);
-        cv::cvtColor(global::image_rgb, global::image_gray, CV_RGB2GRAY);
-        cv::normalize(global::image_gray, global::image_norm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    }
-
-    cv::resize(global::image_norm, global::image, cv::Size(1000, global::image_norm.rows * 1000/global::image_norm.cols));
-
-    std::vector<cv::Mat> channels(3);
-    cv::split(global::image_rgb, channels);
-
-    //cv::imshow("red", channels[0]);
-    //cv::waitKey(0);
-
-    // C I R C L E S
-
-    cv::Mat src;
-
-    Settings::PreprocessSettings settings;
-    Preprocess prepcircle(global::image, settings);
-    //src = prepcircles.getCanny();
-    global::image.copyTo(src);
-    std::vector<cv::Vec3f> circles;
-
-    /// Apply the Hough Transform to find the circles
-    //cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 200, 100, 0, 0 );
-
-    cv::HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows/8, 5, 50, 5, 50 );
-
-    if (circles.size() > 0){
-        /// Draw the circles detected
-        for( size_t i = 0; i < circles.size(); i++ )
-        {
-            cv::Point2d center((circles[i][0]), (circles[i][1]));
-            int radius = cvRound(circles[i][2]);
-            // circle center
-            circle( src, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
-            // circle outline
-            circle( src, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+    //if (ui->UseDefaultglobal::image_imp->isChecked()){
+    if (!global::image_rgb.data){
+        global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
+        //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/boards/green2.jpg");
+        if (global::image_rgb.data){
+            cvutils::rotate(global::image_rgb,global::image_rgb,-90);
+        } else {
+            throw std::invalid_argument("Image could not be read");
         }
-
-        /// Show your results
-        //cv::namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-        //cv::imshow( "Hough Circle Transform Demo", src );
-        //cv::waitKey();
-
-    } else {
-        std::cout << "No circles found" << std::endl;
     }
 
+    // Set up global image variables
+     Preprocess prep;
+     Settings::PreprocessSettings settings;
+     prep.detectLines(settings);
 
     // chessboard detector
-    std::vector<Line> houghlines;
+    Lines houghlines;
+    prep.getLines(houghlines);
+    prep.showCanny();
+    prep.showHoughlines();
+    BoardDetector cbd = BoardDetector(houghlines); // set up a board detector
+    Board board; // container for the detected board
     bool tryAgain = true;
-    BoardDetector cbd = BoardDetector(global::image, houghlines);
-    Preprocess prep = Preprocess(global::image, settings);
-    Board board;
 
-    std::string path = "/Users/benedicte/Dropbox/kings/thesis/report/case1/";
+    std::string reportPath = "/Users/benedicte/Dropbox/kings/thesis/report/case1/";
     while (tryAgain){
-        prep.getLines(houghlines);
         //prep.showCanny();
         //prep.showHoughlines();
-        bool boardDetected = cbd.detect(board, true, &path);
+        bool boardDetected = cbd.detect(board, false, &reportPath);
         if (boardDetected){
             tryAgain = false;
         } else {
@@ -175,6 +135,7 @@ void MainWindow::on_pushButton_2_clicked()
     //cvutils::plotPoints(rgb, centers, 10);
     */
 
+    /*
     // Detect pieces based on houghcircles on individual squares
     auto elements = board.getElementRefs();
     Points2d centers2;
@@ -186,7 +147,12 @@ void MainWindow::on_pushButton_2_clicked()
             centers2.push_back(elements[i].getCenter());
         }
     }
-    cvutils::plotPoints(global::image_rgb, centers2, 10, cv::Scalar(255,0,0));
+    */
+
+    cv::destroyAllWindows();
+    board.detectPieces();
+
+    board.drawWithPieces();
 
     // Initial state to feed minimax
     cv::destroyAllWindows();

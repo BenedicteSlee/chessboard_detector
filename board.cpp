@@ -1,4 +1,5 @@
 #include <fstream>
+#include <string>
 #include "board.h"
 #include "Line.h"
 #include "square.h"
@@ -8,14 +9,18 @@
 #include "state.h"
 #include "global.h"
 
+
+std::vector<cv::Mat> global::channels; // forward declaration
+
 Board::Board()
 {
+    piecesDetected = false;
     nCols = 0;
     nRows = 0;
 }
 
-Board::Board(Lines hlinesSorted, Lines vlinesSorted)
-{
+void Board::initBoard(Lines hlinesSorted, Lines vlinesSorted)
+{    
     if (hlinesSorted.empty()){
         throw std::invalid_argument("Vector with horizontal lines does not contain any elements");
     }
@@ -23,9 +28,9 @@ Board::Board(Lines hlinesSorted, Lines vlinesSorted)
     if (vlinesSorted.empty()){
         throw std::invalid_argument("Vector with vertical lines does not contain any elements");
     }
+    piecesDetected = false;
     nCols = vlinesSorted.size() - 1;
     nRows = hlinesSorted.size() - 1;
-
 
     for (size_t i = 0; i < nRows; ++i) {
         Line hlineUpper = hlinesSorted.at(i);
@@ -206,6 +211,30 @@ void Board::draw()
     cv::waitKey();
 }
 
+void Board::drawWithPieces()
+{
+    if (!piecesDetected)
+        detectPieces();
+
+    cv::Mat dst;
+    global::image.copyTo(dst);
+
+    std::vector<cv::Scalar> cols{cv::Scalar(255,0,0), cv::Scalar(0,255,255)};
+    for (size_t i = 0; i < pieces.size(); i++){
+        auto piece = pieces[i];
+        int idx = piece.first;
+        int id = piece.second;
+
+        Square &square = elements[idx];
+        auto center = square.getCenter();
+        cv::Scalar col;
+        id > 0 ? col = cols[0] : col = cols[1];
+        cv::circle(dst, center, 10, col);
+    }
+    cv::imshow("Pieces", dst);
+    cv::waitKey();
+}
+
 void Board::write(std::string filename)
 {
     if (elements.empty()){
@@ -243,7 +272,7 @@ void Board::writeLayerReport(std::string filename)
     for (int i = 0; i < 64; i++){
         const Square &square = elements[i];
         std::vector<Corner> corners = square.getCorners();
-            for (size_t j = 0; j < 4; j++){
+        for (size_t j = 0; j < 4; j++){
             Corner corner = corners[j];
             std::vector<std::vector<int>> layers = corner.getLayers();
             for (size_t k = 0; k < layers.size(); k++){
@@ -299,7 +328,7 @@ void Board::expand(Direction dir)
 
     Squares newsquares(size);
     for (size_t i = 0; i < size; i++){
-        SquareExpander se(global::image, baseSquares[i], dir);
+        SquareExpander se(baseSquares[i], dir);
         //if (!success)
         //  break;
         newsquares[i] = se.getSquare();
@@ -321,21 +350,33 @@ void Board::expand(Direction dir)
     }
 }
 
+void Board::detectCircles(){
+    if (elements.size() == 0){
+        throw std::invalid_argument("Board is empty, can't detect circles");
+    }
 
-void Board::detectPieces(){
-    for (size_t i = 0; i < elements.size(); i++){
-        Square &square = elements[i];
-        cv::Vec3i circle;
-        bool pieceDetected = square.detectPieceWithHough(circle);
-        if (pieceDetected){
-            circles.push_back(std::make_pair(i,circle));
+    std::vector<std::string> cols{"red", "green","blue"};
+
+    for (int i = 0; i < 3; i++){
+        cv::Mat channel = global::channels[i];
+
+        for (size_t j = 0; j < elements.size(); j++){
+            Square &square = elements[j];
+            if (!square.containsPiece()){
+                cv::Vec3i circle;
+                bool pieceDetected = square.detectPieceWithHough(channel, circle);
+                if (pieceDetected){
+                    circles.push_back(std::make_pair(j,circle));
+                    std::cout << "Piece detected in " << cols[i] << " channel" << std::endl;
+                }
+            }
         }
     }
 }
 
 int Board::determinePieceColorThreshold(){
     for (size_t i = 0; i < circles.size(); i++){
-        Square square = elements[circles[i].first];
+        Square& square = elements[circles[i].first];
         cv::Vec3i circle = circles[i].second;
         int col = square.determinePieceColor(circle);
         pieceColors.push_back(col);
@@ -343,17 +384,22 @@ int Board::determinePieceColorThreshold(){
     return cv::mean(pieceColors)[0];
 }
 
-State Board::initState(){
-    detectPieces();
+void Board::detectPieces()
+{
+    detectCircles();
     int threshold = determinePieceColorThreshold();
-
-    std::vector<std::pair<size_t, int>> pieces;
 
     for (size_t i = 0; i < circles.size(); i++){
         int piece;
         pieceColors.at(i) > threshold ? piece = 1 : piece = -1;
         pieces.push_back(std::make_pair(circles[i].first, piece));
     }
+    piecesDetected = true;
+}
+
+State Board::initState(){
+    if (!piecesDetected)
+        detectPieces();
     State state(pieces);
     return state;
 }

@@ -10,6 +10,7 @@ Square::Square(){
     squareTypeDetermined = false;
     outOfBounds = false;
     containsPieceDetermined = false;
+    doesContainPiece = false;
 }
 
 Square::Square(cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4)
@@ -19,6 +20,7 @@ Square::Square(cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv
     squareTypeDetermined = false;
     outOfBounds = false;
     containsPieceDetermined = false;
+    doesContainPiece = false;
 
     Points2d cp{corner1, corner2, corner3, corner4};
     bool negCoord = cvutils::anyNegCoordinate(cp);
@@ -36,7 +38,7 @@ Square::Square(cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv
     lowerLeft = cornerpointsSorted[3];
 
     center = cvutils::centerpoint(cornerpointsSorted);
-    double firstx, firsty, lastx, lasty;
+
     upperLeft.x < lowerLeft.x ? firstx = upperLeft.x : firstx = lowerLeft.x;
     upperLeft.y < lowerLeft.y ? firsty = upperLeft.y : firsty = lowerLeft.y;
     upperRight.x > lowerRight.x ? lastx = upperRight.x : lastx = lowerRight.x;
@@ -143,8 +145,8 @@ int Square::calcMeanGray(cv::Mat& image)
 {
     cv::Mat gray;
 
-    if (global::image.channels() == 3){
-        cv::cvtColor(global::image, gray, CV_RGB2GRAY);
+    if (image.channels() == 3){
+        cv::cvtColor(image, gray, CV_RGB2GRAY);
         cv::normalize(gray, gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     } else {
         gray = global::image;
@@ -216,12 +218,12 @@ void Square::drawOnImg(cv::Mat& image) const
     cv::RNG rng = cv::RNG(123);
     cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
     Points cps = cvutils::doubleToInt(cornerpointsSorted);
-    cv::fillConvexPoly(global::image, cps, col);
-    cv::imshow("Square", global::image);
+    cv::fillConvexPoly(image, cps, col);
+    cv::imshow("Square", image);
     cv::waitKey();
 }
 
-bool Square::detectPieceWithHough(cv::Vec3i &circle) const{
+bool Square::detectPieceWithHough(cv::Vec3i &circle){
     cv::Mat binarea;
     cv::threshold(area, binarea, meanGray, 255, 0);
 
@@ -230,12 +232,45 @@ bool Square::detectPieceWithHough(cv::Vec3i &circle) const{
 
     if (circles.size() > 0){
         circle = circles[0]; // todo use diagnostics to choose the best circle if there are more than 1
+        doesContainPiece = true;
         return true;
     }
     return false;
 }
 
+bool Square::detectPieceWithHough(cv::Mat &image_channel, cv::Vec3i &circle){
+    cv::Mat binarea;
+    cv::Mat channelArea = image_channel(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
 
+    int channelMeanGray =  calcMeanGray(channelArea);
+    cv::threshold(channelArea, binarea, channelMeanGray, 255, 0);
+
+    cv::imshow("channel area", channelArea);
+    cv::waitKey();
+
+    std::vector<cv::Vec3f> circles;
+    cv::HoughCircles(binarea, circles, CV_HOUGH_GRADIENT, 1, binarea.rows, 20, 15, binarea.rows*0.3, binarea.rows*1.5);
+
+    if (circles.size() > 0){
+        circle = circles[0]; // todo use diagnostics to choose the best circle if there are more than 1
+        cv::circle(channelArea, cv::Point(circle[0], circle[1]), circle[2], cv::Scalar(255,0,0));
+        cv::imshow("circle", channelArea); cv::waitKey();
+        doesContainPiece = true;
+        return true;
+    }
+    return false;
+}
+
+int Square::determinePieceColor(cv::Vec3i circle) const{
+    int x = circle[0];
+    int y = circle[1];
+    int vsize = vlength/3;
+    int hsize = hlength/3;
+    cv::Mat subarea = area(cv::Rect(x-hsize, y-vsize, hsize*2, vsize*2));
+
+    int meancol = cv::mean(subarea)[0];
+    return meancol;
+}
 
 std::vector<cv::Point2d> Square::getCornerpointsSorted() const
 {

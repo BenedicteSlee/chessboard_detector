@@ -10,8 +10,8 @@ class Board : public matrix<Square>
 {
 public:
     Board();
-    Board(Lines sortedHorizontalLines, Lines sortedVerticalLines);
-    
+
+    void initBoard(Lines sortedHorizontalLines, Lines sortedVerticalLines);
     std::vector<int> getRowTypes();
     std::vector<int> getColTypes();
     size_t size(){return nRows * nCols;}
@@ -19,6 +19,7 @@ public:
     //int squareId(cv::Points2d point);
 
     void draw();
+    void drawWithPieces();
     void write(std::string filename);
     void writeLayerReport(std::string filename);
 
@@ -27,22 +28,24 @@ public:
     void expand(Direction dir);
 
     int squareId(cv::Point2d point);
-    
-    int determinePieceColorThreshold();
-
+    void detectPieces();
     State initState();
 
 private:
     std::vector<int> rowTypes;
     std::vector<int> colTypes;
     std::vector<int> pieceColors;
+    std::vector<std::pair<size_t, int>> pieces;
     std::vector<std::pair<size_t, cv::Vec3i>> circles;
 
     void determineRowTypes();
     void determineColTypes();
     void removeOutOfBounds();
 
-    void detectPieces();
+    void detectCircles();
+    int determinePieceColorThreshold();
+    bool piecesDetected;
+
 };
 
 

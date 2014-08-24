@@ -17,13 +17,8 @@ BoardDetector::~BoardDetector()
 {
 }
 
-BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
+BoardDetector::BoardDetector(std::vector<Line> lines_)
 {
-    global::image = global::image_;
-
-    if (global::image.channels() != 1){
-        throw std::invalid_argument("Give me a grayscale global::image");
-    }
 
     lines = lines_;
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
@@ -45,76 +40,77 @@ Corners BoardDetector::getCorners()
     return corners;
 }
 
-bool BoardDetector::detect(Board dst, bool doDraw, std::string *reportPath)
+bool BoardDetector::detect(Board& dst, bool doDraw, std::string *reportPath)
 {
-    Board board(hlinesSorted, vlinesSorted);
+
+    dst.initBoard(hlinesSorted, vlinesSorted);
     //auto hlines = get_hlinesSorted();
 
-    if (board.getNumRows() < 3 || board.getNumRows() < 3){
+    if (dst.getNumRows() < 3 || dst.getNumRows() < 3){
         return false;
     }
 
-    if (doDraw) board.draw();
+    if (doDraw) dst.draw();
 
     if (reportPath != 0){
         std::string filename1 = *reportPath + "initBoard.png";
-        board.write(filename1);
+        dst.write(filename1);
     }
 
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
     // INITIAL PRUNING
-    size_t initrows = board.getNumRows();
-    size_t initcols = board.getNumCols();
+    size_t initrows = dst.getNumRows();
+    size_t initcols = dst.getNumCols();
 
     if (initrows > 8){
         std::vector<size_t> prunerows{0,1,2, initrows-3,initrows-2,initrows-1};
-        board.removeRowsRequest(prunerows);
+        dst.removeRowsRequest(prunerows);
     }
     else if (initrows > 4){
         std::vector<size_t> prunerows{0,1, initrows-2, initrows-1};
-        board.removeRowsRequest(prunerows);
+        dst.removeRowsRequest(prunerows);
     }
 
     if (initcols > 8){
         std::vector<size_t> prunecols{0,1,2, initcols-3,initcols-2,initcols-1};
-        board.removeColsRequest(prunecols);
+        dst.removeColsRequest(prunecols);
     }
     else if (initcols > 4){
         std::vector<size_t> prunecols{0, 1, initcols-2,initcols-1};
-        board.removeColsRequest(prunecols);
+        dst.removeColsRequest(prunecols);
     }
 
-    if (doDraw) board.draw();
+    if (doDraw) dst.draw();
 
-    Remover remover(board);
+    Remover remover(dst);
 
-    filterBasedOnSquareSize(board, remover);
+    filterBasedOnSquareSize(dst, remover);
     indices colreq1 = remover.getCurrentColRequests();
     indices rowreq1 = remover.getCurrentRowRequests();
     remover.remove();
-    if (doDraw) board.draw();
+    if (doDraw) dst.draw();
 
     if (reportPath != 0){
-        board.write(*reportPath + "boardAfterFilterBySize.png");
+        dst.write(*reportPath + "boardAfterFilterBySize.png");
         // possibleBoard.writeLayerReport(*reportPath + "layerReportAfterFilterBySize.csv");
     }
 
-    filterBasedOnRowType(board, remover);
+    filterBasedOnRowType(dst, remover);
     indices colreq2 = remover.getCurrentColRequests();
     indices rowreq2 = remover.getCurrentRowRequests();
     //remover.remove();
     //possibleBoard.draw();
 
-    filterBasedOnColType(board, remover);
+    filterBasedOnColType(dst, remover);
     indices colreq3 = remover.getCurrentColRequests();
     indices rowreq3 = remover.getCurrentRowRequests();
 
     remover.remove();
-    if (doDraw) board.draw();
+    if (doDraw) dst.draw();
 
-    std::pair<int,int> status = board.getStatus();
+    std::pair<int,int> status = dst.getStatus();
 
     bool addColumns = false;
     bool addRows = false;
@@ -123,9 +119,9 @@ bool BoardDetector::detect(Board dst, bool doDraw, std::string *reportPath)
         addRows = true;
 
     while (addRows){
-        requestRowExpansion(board);
-        status = board.getStatus();
-        if (doDraw) board.draw();
+        requestRowExpansion(dst);
+        status = dst.getStatus();
+        if (doDraw) dst.draw();
         if (status.first <= 0)
             addRows = false;
     }
@@ -134,16 +130,17 @@ bool BoardDetector::detect(Board dst, bool doDraw, std::string *reportPath)
         addColumns = true;
 
     while (addColumns){
-        requestColumnExpansion(board);
-        status  = board.getStatus();
-        if (doDraw) board.draw();
+        requestColumnExpansion(dst);
+        status  = dst.getStatus();
+        if (doDraw) dst.draw();
         if (status.second <= 0)
             addColumns = false;
     }
 
+
+
     //const Square& square = possibleBoard.getRef(0);
     //bool check = square.containsPoint(cv::Point2d(200,200));
-    dst = board;
     return true;
 }
 

@@ -10,11 +10,12 @@
 class Preprocess
 {
 public:
-    Preprocess(cv::Mat&, Settings::PreprocessSettings settings);
+    Preprocess();
     void getLines(Lines&);
 
     void showCanny();
     void showHoughlines();
+    void detectLines(Settings::PreprocessSettings settings);
 
     cv::Mat getCanny(){return canny;}
     cv::Mat getHough();
@@ -30,7 +31,7 @@ private:
 
     Lines lines;
     std::vector<cv::Vec4i> houghlines;
-    cv::Mat image, blurred, canny, imgHough;
+    cv::Mat blurred, canny, imgHough;
     void edgeDetection(bool doBlur = true);
     void lineDetection();
 };

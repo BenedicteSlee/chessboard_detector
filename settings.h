@@ -6,7 +6,7 @@
 namespace Settings{
 
 struct PreprocessSettings{
-    int houghThreshold, minLineLength, maxLineGap, gaussianBlurSigma;
+    int houghThreshold, minLineLength, maxLineGap, gaussianBlurSigma, cannyLow, cannyHigh, cannySobel;
     cv::Size gaussianBlurSize;
 
     PreprocessSettings(){
@@ -16,6 +16,9 @@ struct PreprocessSettings{
         maxLineGap = 139;
         gaussianBlurSize = cv::Size(5,5); // must be odd
         gaussianBlurSigma = 3;
+        cannyLow = 30;
+        cannyHigh = 200;
+        cannySobel = 3;
     }
 };
 

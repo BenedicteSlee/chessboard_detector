@@ -14,7 +14,7 @@ class Square
 {
 public:
     // Constructors
-    ~Square(){}
+    ~Square(){doesContainPiece = false;}
     Square();
     Square(cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4);
 
@@ -37,20 +37,13 @@ public:
 
     // Methods: diagnostics on square
     void determineType();
-    bool detectPieceWithHough(cv::Vec3i &) const;
-    int determinePieceColor(cv::Vec3i circle) const{
-        int x = circle[0];
-        int y = circle[1];
-        int vsize = vlength/3;
-        int hsize = hlength/3;
-        cv::Mat subarea = area(cv::Rect(x-hsize, y-vsize, hsize*2, vsize*2));
-
-        int meancol = cv::mean(subarea)[0];
-        return meancol;
-    }
+    bool detectPieceWithHough(cv::Vec3i &);
+    bool detectPieceWithHough(cv::Mat &image_channel, cv::Vec3i &circle);
+    int determinePieceColor(cv::Vec3i circle) const;
 
     bool containsPoint(cv::Point2d point) const;
     std::vector<Corner> getCorners() const {return corners;}
+    bool containsPiece(){return doesContainPiece;}
 
     // static methoda
     static std::vector<int> getSquareTypes(Squares);
@@ -59,6 +52,7 @@ private:
     // Variables
     int meanGray;
     cv::Mat area;
+    double firstx, firsty, lastx, lasty;
     std::vector<cv::Point2d> cornerpoints;
     std::vector<cv::Point2d> cornerpointsSorted;
     std::vector<Corner> corners;
@@ -75,6 +69,7 @@ private:
     int imsize;
     int draughtsPiece;
     bool containsPieceDetermined;
+    bool doesContainPiece;
 
     // Methods
     void calcVanishingPoints();

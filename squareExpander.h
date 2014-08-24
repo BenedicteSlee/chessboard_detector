@@ -8,12 +8,11 @@
 class SquareExpander
 {
 public:
-    SquareExpander(cv::Mat& image_, Square square_, Direction dir_);
+    SquareExpander(Square square_, Direction dir_);
     Square getSquare(){return newSquare;}
     bool hasExpanded(){return canExpand;}
 
 private:
-    cv::Mat& image;
     Square baseSquare;
     Square newSquare;
     Points2d cpoints;
@@ -29,7 +28,7 @@ private:
     void nameBorders();
     bool calculateExtrapolatedPoints();
     void createSquare();
-    void draw(cv::Mat global::image);
+    void draw(cv::Mat image);
 
 
 

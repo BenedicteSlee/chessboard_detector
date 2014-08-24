@@ -15,13 +15,13 @@ class BoardDetector
 {
 public:
     ~BoardDetector();
-    BoardDetector(cv::Mat&, std::vector<Line>);
+    BoardDetector(std::vector<Line>);
 
     Lines get_hlinesSorted();
     Lines get_vlinesSorted();
     Corners getCorners();
 
-    bool detect(Board dst, bool doDraw = false, std::string *reportPath = 0);
+    bool detect(Board &dst, bool doDraw = false, std::string *reportPath = 0);
     void printHoughAfterCategorization(std::string filename);
 
 private:

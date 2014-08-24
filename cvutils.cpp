@@ -230,7 +230,7 @@ bool cvutils::anyNegCoordinate(Points2d points2d)
 }
 
 
-bool cvutils::outOfBounds(Mat &global::image, Point2d point2d){
+bool cvutils::outOfBounds(Mat &image, Point2d point2d){
     bool isOutOfBounds = (point2d.x > global::image.cols || point2d.x < 0 || point2d.y > global::image.rows || point2d.y < 0);
     return isOutOfBounds;
 }
@@ -245,7 +245,7 @@ std::vector<bool> cvutils::outOfBounds(Mat &image, Points2d points){
 }
 
 
-void cvutils::plotPoints(Mat &global::image, Points2d &points, int radius, cv::Scalar col, int lineThickness){
+void cvutils::plotPoints(Mat &image, Points2d &points, int radius, cv::Scalar col, int lineThickness){
     cv::Mat rgb;
 
 

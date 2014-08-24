@@ -14,7 +14,7 @@ void SquareExpander::calculatePoints()
     leftMid = cvutils::centerpoint(cpoints.at(0), cpoints.at(3));
 }
 
-SquareExpander::SquareExpander(cv::Mat& image_, Square square_, Direction dir_) : global::image(global::image_)
+SquareExpander::SquareExpander(Square square_, Direction dir_)
 {
 
     canExpand = false;
@@ -147,7 +147,7 @@ void SquareExpander::createSquare()
     newSquare = sq;
 }
 
-void SquareExpander::draw(cv::Mat global::image)
+void SquareExpander::draw(cv::Mat image)
 {
     cv::Mat rgb;
     if (global::image.channels() == 1){
