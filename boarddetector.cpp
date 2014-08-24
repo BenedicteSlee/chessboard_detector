@@ -19,10 +19,10 @@ BoardDetector::~BoardDetector()
 
 BoardDetector::BoardDetector(cv::Mat& image_, std::vector<Line> lines_)
 {
-    image = image_;
+    global::image = global::image_;
 
-    if (image.channels() != 1){
-        throw std::invalid_argument("Give me a grayscale image");
+    if (global::image.channels() != 1){
+        throw std::invalid_argument("Give me a grayscale global::image");
     }
 
     lines = lines_;
@@ -45,76 +45,76 @@ Corners BoardDetector::getCorners()
     return corners;
 }
 
-bool BoardDetector::detect(Board board, bool doDraw, std::string *reportPath)
+bool BoardDetector::detect(Board dst, bool doDraw, std::string *reportPath)
 {
-    Board possibleBoard = Board(image, hlinesSorted, vlinesSorted);
+    Board board(hlinesSorted, vlinesSorted);
     //auto hlines = get_hlinesSorted();
 
-    if (possibleBoard.getNumRows() < 3 || possibleBoard.getNumRows() < 3){
+    if (board.getNumRows() < 3 || board.getNumRows() < 3){
         return false;
     }
 
-    if (doDraw) possibleBoard.draw();
+    if (doDraw) board.draw();
 
     if (reportPath != 0){
         std::string filename1 = *reportPath + "initBoard.png";
-        possibleBoard.write(filename1);
+        board.write(filename1);
     }
 
     //findVanishingPoint(); // use?
     //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
     // INITIAL PRUNING
-    size_t initrows = possibleBoard.getNumRows();
-    size_t initcols = possibleBoard.getNumCols();
+    size_t initrows = board.getNumRows();
+    size_t initcols = board.getNumCols();
 
     if (initrows > 8){
         std::vector<size_t> prunerows{0,1,2, initrows-3,initrows-2,initrows-1};
-        possibleBoard.removeRowsRequest(prunerows);
+        board.removeRowsRequest(prunerows);
     }
     else if (initrows > 4){
         std::vector<size_t> prunerows{0,1, initrows-2, initrows-1};
-        possibleBoard.removeRowsRequest(prunerows);
+        board.removeRowsRequest(prunerows);
     }
 
     if (initcols > 8){
         std::vector<size_t> prunecols{0,1,2, initcols-3,initcols-2,initcols-1};
-        possibleBoard.removeColsRequest(prunecols);
+        board.removeColsRequest(prunecols);
     }
     else if (initcols > 4){
         std::vector<size_t> prunecols{0, 1, initcols-2,initcols-1};
-        possibleBoard.removeColsRequest(prunecols);
+        board.removeColsRequest(prunecols);
     }
 
-    if (doDraw) possibleBoard.draw();
+    if (doDraw) board.draw();
 
-    Remover remover(possibleBoard);
+    Remover remover(board);
 
-    filterBasedOnSquareSize(possibleBoard, remover);
+    filterBasedOnSquareSize(board, remover);
     indices colreq1 = remover.getCurrentColRequests();
     indices rowreq1 = remover.getCurrentRowRequests();
     remover.remove();
-    if (doDraw) possibleBoard.draw();
+    if (doDraw) board.draw();
 
     if (reportPath != 0){
-        possibleBoard.write(*reportPath + "boardAfterFilterBySize.png");
+        board.write(*reportPath + "boardAfterFilterBySize.png");
         // possibleBoard.writeLayerReport(*reportPath + "layerReportAfterFilterBySize.csv");
     }
 
-    filterBasedOnRowType(possibleBoard, remover);
+    filterBasedOnRowType(board, remover);
     indices colreq2 = remover.getCurrentColRequests();
     indices rowreq2 = remover.getCurrentRowRequests();
     //remover.remove();
     //possibleBoard.draw();
 
-    filterBasedOnColType(possibleBoard, remover);
+    filterBasedOnColType(board, remover);
     indices colreq3 = remover.getCurrentColRequests();
     indices rowreq3 = remover.getCurrentRowRequests();
 
     remover.remove();
-    if (doDraw) possibleBoard.draw();
+    if (doDraw) board.draw();
 
-    std::pair<int,int> status = possibleBoard.getStatus();
+    std::pair<int,int> status = board.getStatus();
 
     bool addColumns = false;
     bool addRows = false;
@@ -123,9 +123,9 @@ bool BoardDetector::detect(Board board, bool doDraw, std::string *reportPath)
         addRows = true;
 
     while (addRows){
-        requestRowExpansion(possibleBoard);
-        status = possibleBoard.getStatus();
-        if (doDraw) possibleBoard.draw();
+        requestRowExpansion(board);
+        status = board.getStatus();
+        if (doDraw) board.draw();
         if (status.first <= 0)
             addRows = false;
     }
@@ -134,23 +134,23 @@ bool BoardDetector::detect(Board board, bool doDraw, std::string *reportPath)
         addColumns = true;
 
     while (addColumns){
-        requestColumnExpansion(possibleBoard);
-        status  = possibleBoard.getStatus();
-        if (doDraw) possibleBoard.draw();
+        requestColumnExpansion(board);
+        status  = board.getStatus();
+        if (doDraw) board.draw();
         if (status.second <= 0)
             addColumns = false;
     }
 
     //const Square& square = possibleBoard.getRef(0);
     //bool check = square.containsPoint(cv::Point2d(200,200));
-
-    return possibleBoard;
+    dst = board;
+    return true;
 }
 
 void BoardDetector::printHoughAfterCategorization(std::string filename)
 {
     cv::Mat output;
-    image.copyTo(output);
+    global::image.copyTo(output);
     if (output.channels() != 3){
         cv::cvtColor(output, output, cv::COLOR_GRAY2BGR);
     }

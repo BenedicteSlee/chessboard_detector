@@ -18,7 +18,7 @@ void cvutils::PrintJpg(cv::Mat& img, const std::string& filename, int quality){
     std::vector<int> imwriteparams;
     imwriteparams.push_back(CV_IMWRITE_JPEG_QUALITY);
     imwriteparams.push_back(quality);
-    cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/images/"+filename+".jpg",img, imwriteparams);
+    cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/global::images/"+filename+".jpg",img, imwriteparams);
 }
 
 void cvutils::PrintMatToConsole(Mat& mat, int lastRow, int lastCol)
@@ -230,8 +230,8 @@ bool cvutils::anyNegCoordinate(Points2d points2d)
 }
 
 
-bool cvutils::outOfBounds(Mat &image, Point2d point2d){
-    bool isOutOfBounds = (point2d.x > image.cols || point2d.x < 0 || point2d.y > image.rows || point2d.y < 0);
+bool cvutils::outOfBounds(Mat &global::image, Point2d point2d){
+    bool isOutOfBounds = (point2d.x > global::image.cols || point2d.x < 0 || point2d.y > global::image.rows || point2d.y < 0);
     return isOutOfBounds;
 }
 
@@ -239,21 +239,21 @@ bool cvutils::outOfBounds(Mat &image, Point2d point2d){
 std::vector<bool> cvutils::outOfBounds(Mat &image, Points2d points){
     std::vector<bool> result(points.size());
     for (size_t i = 0; i < points.size(); i++){
-        result[i] = outOfBounds(image, points[i]);
+        result[i] = outOfBounds(global::image, points[i]);
     }
     return result;
 }
 
 
-void cvutils::plotPoints(Mat &image, Points2d &points, int radius, cv::Scalar col, int lineThickness){
+void cvutils::plotPoints(Mat &global::image, Points2d &points, int radius, cv::Scalar col, int lineThickness){
     cv::Mat rgb;
 
 
-    if (image.channels() == 1){
-        image.copyTo(rgb);
-        cv::cvtColor(image, rgb, cv::COLOR_GRAY2RGB);
+    if (global::image.channels() == 1){
+        global::image.copyTo(rgb);
+        cv::cvtColor(global::image, rgb, cv::COLOR_GRAY2RGB);
     } else {
-        rgb = image;
+        rgb = global::image;
     }
 
     for (auto it = points.begin(); it != points.end(); it++){

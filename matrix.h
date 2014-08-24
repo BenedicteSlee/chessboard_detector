@@ -27,7 +27,7 @@ public:
 
     const T& getElementRef(size_t rowIdx, size_t colIdx) const;
     const T& getElementRef(size_t index) const;
-    const std::vector<T>& getRefs() const;
+    const std::vector<T>& getElementRefs() const;
 
     void setElement(size_t row, size_t col, T element);
 
@@ -157,7 +157,7 @@ const T &matrix<T>::getElementRef(size_t index) const{
 }
 
 template <typename T>
-const std::vector<T> &matrix<T>::getRefs() const
+const std::vector<T> &matrix<T>::getElementRefs() const
 {
     const std::vector<T>& refs = elements;
     return refs;

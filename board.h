@@ -9,8 +9,8 @@
 class Board : public matrix<Square>
 {
 public:
-    explicit Board(cv::Mat &image_);
-    Board(cv::Mat& image_, Lines sortedHorizontalLines, Lines sortedVerticalLines);
+    Board();
+    Board(Lines sortedHorizontalLines, Lines sortedVerticalLines);
     
     std::vector<int> getRowTypes();
     std::vector<int> getColTypes();
@@ -33,7 +33,6 @@ public:
     State initState();
 
 private:
-    cv::Mat& image;
     std::vector<int> rowTypes;
     std::vector<int> colTypes;
     std::vector<int> pieceColors;

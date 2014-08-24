@@ -14,7 +14,7 @@ void SquareExpander::calculatePoints()
     leftMid = cvutils::centerpoint(cpoints.at(0), cpoints.at(3));
 }
 
-SquareExpander::SquareExpander(cv::Mat &image_, Square square_, Direction dir_) : image(image_)
+SquareExpander::SquareExpander(cv::Mat& image_, Square square_, Direction dir_) : global::image(global::image_)
 {
 
     canExpand = false;
@@ -27,7 +27,7 @@ SquareExpander::SquareExpander(cv::Mat &image_, Square square_, Direction dir_) 
     namePoints();
     nameBorders();
     canExpand = calculateExtrapolatedPoints();
-    //draw(image);
+    //draw(global::image);
     createSquare();
     //if (canExpand){
     //    createSquare();
@@ -143,17 +143,17 @@ void SquareExpander::createSquare()
 {
     if (!canExpand)
         return;
-    Square sq(image, c1, c2, K, L);
+    Square sq(c1, c2, K, L);
     newSquare = sq;
 }
 
-void SquareExpander::draw(cv::Mat image)
+void SquareExpander::draw(cv::Mat global::image)
 {
     cv::Mat rgb;
-    if (image.channels() == 1){
-        cv::cvtColor(image, rgb, cv::COLOR_GRAY2RGB);
+    if (global::image.channels() == 1){
+        cv::cvtColor(global::image, rgb, cv::COLOR_GRAY2RGB);
     }
-    else rgb = image;
+    else rgb = global::image;
 
     cv::Scalar col1 = cv::Scalar(0,255,0);
     cv::Scalar col2 = cv::Scalar(0,0,255);

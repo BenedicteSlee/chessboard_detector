@@ -8,6 +8,7 @@
 #include "Line.h"
 #include "typedefs.h"
 #include "corner.h"
+#include "global.h"
 
 class Square
 {
@@ -15,7 +16,7 @@ public:
     // Constructors
     ~Square(){}
     Square();
-    Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4);
+    Square(cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4);
 
     // Methods
     void draw() const;
@@ -26,7 +27,7 @@ public:
     size_t getVLength();
     size_t getHLength();
     Points2d getCornerpoints();
-    void setCornerpoints(cv::Mat image, cv::Point2d, cv::Point2d, cv::Point2d, cv::Point2d);
+    void setCornerpoints(cv::Mat& image, cv::Point2d, cv::Point2d, cv::Point2d, cv::Point2d);
     std::vector<cv::Point2d> getCornerpointsSorted() const;
     Lines getBordersSorted();
     int getSquareType() const {return squareType;}
@@ -78,7 +79,7 @@ private:
     // Methods
     void calcVanishingPoints();
     void calcBorders();
-    int calcMeanGray(cv::Mat &image);
+    int calcMeanGray(cv::Mat& image);
     void createCorners(cv::Mat& image);
 };
 

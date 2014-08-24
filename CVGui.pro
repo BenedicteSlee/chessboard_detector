@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     remover.cpp \
     regression.cpp \
     state.cpp \
-    report.cpp
+    report.cpp \
+    piecedetector.cpp
 
 HEADERS  += mainwindow.h \
     Line.h \
@@ -48,7 +49,8 @@ HEADERS  += mainwindow.h \
     utils.h \
     report.h \
     settings.h \
-    global.h
+    global.h \
+    piecedetector.h
 
 FORMS    += mainwindow.ui
 

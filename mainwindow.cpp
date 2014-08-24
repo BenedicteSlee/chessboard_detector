@@ -19,8 +19,7 @@
 #include "state.h"
 #include "minimax.h"
 #include "utils.h"
-
-
+#include "global.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -38,15 +37,15 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Open Image"), "/Users/benedicte/Dropbox/kings/thesis/images",
-                                                    tr("Image Files (*.png *.jpg *.jpeg *.bmp)"));
+                                                    tr("Open global::image"), "/Users/benedicte/Dropbox/kings/thesis/global::images",
+                                                    tr("global::image Files (*.png *.jpg *.jpeg *.bmp)"));
 
-    img_rgb = cv::imread(fileName.toStdString().data());
-    if (img_rgb.data){
+    global::image_rgb = cv::imread(fileName.toStdString().data());
+    if (global::image_rgb.data){
         //ui->pushButton_2->setEnabled(true);
-        // Convert image to graylevel and normalize
-        cv::cvtColor(img_rgb, img_gray, CV_RGB2GRAY);
-        cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+        // Convert global::image to graylevel and normalize
+        cv::cvtColor(global::image_rgb, global::image_gray, CV_RGB2GRAY);
+        cv::normalize(global::image_gray, global::image_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     }
 }
 
@@ -54,20 +53,18 @@ void MainWindow::on_pushButton_2_clicked()
 {
     //std::string filename =  "Report_" + utils::currentDateTime();
 
-    if (ui->UseDefaultImage->isChecked()){
-        //img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
-        img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/boards/brown.jpg");
-        cvutils::rotate(img_rgb,img_rgb,-90);
-        cv::cvtColor(img_rgb, img_gray, CV_RGB2GRAY);
-        cv::normalize(img_gray, img_norm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    if (ui->UseDefaultglobal::image_imp->isChecked()){
+        //img_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/global::images/checkers7.jpg");
+        global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/boards/brown.jpg");
+        cvutils::rotate(global::image_rgb,global::image_rgb,-90);
+        cv::cvtColor(global::image_rgb, global::image_gray, CV_RGB2GRAY);
+        cv::normalize(global::image_gray, global::image_norm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     }
 
-    cv::Mat img;
-
-    cv::resize(img_norm, img, cv::Size(1000, img_norm.rows * 1000/img_norm.cols));
+    cv::resize(global::image_norm, global::image, cv::Size(1000, global::image_norm.rows * 1000/global::image_norm.cols));
 
     std::vector<cv::Mat> channels(3);
-    cv::split(img_rgb, channels);
+    cv::split(global::image_rgb, channels);
 
     //cv::imshow("red", channels[0]);
     //cv::waitKey(0);
@@ -77,9 +74,9 @@ void MainWindow::on_pushButton_2_clicked()
     cv::Mat src;
 
     Settings::PreprocessSettings settings;
-    Preprocess prepcircle(img, settings);
+    Preprocess prepcircle(global::image, settings);
     //src = prepcircles.getCanny();
-    img.copyTo(src);
+    global::image.copyTo(src);
     std::vector<cv::Vec3f> circles;
 
     /// Apply the Hough Transform to find the circles
@@ -112,22 +109,19 @@ void MainWindow::on_pushButton_2_clicked()
     // chessboard detector
     std::vector<Line> houghlines;
     bool tryAgain = true;
-    BoardDetector cbd = BoardDetector(img, houghlines);
-    Preprocess prep = Preprocess(img, settings);
-    Board board(img);
+    BoardDetector cbd = BoardDetector(global::image, houghlines);
+    Preprocess prep = Preprocess(global::image, settings);
+    Board board;
 
     std::string path = "/Users/benedicte/Dropbox/kings/thesis/report/case1/";
     while (tryAgain){
-        try{
-            prep.getLines(houghlines);
-            //prep.showCanny();
-            //prep.showHoughlines();
-            Board initboard = cbd.detect(true, &path);
-            board = initboard;
+        prep.getLines(houghlines);
+        //prep.showCanny();
+        //prep.showHoughlines();
+        bool boardDetected = cbd.detect(board, true, &path);
+        if (boardDetected){
             tryAgain = false;
-        } catch(std::exception &e){
-            std::cout << e.what() << std::endl;
-            tryAgain = true;
+        } else {
             if (settings.gaussianBlurSigma == 1){
                 settings.gaussianBlurSize = cv::Size(3,3);
             }
@@ -142,10 +136,10 @@ void MainWindow::on_pushButton_2_clicked()
     }
 
 
-    // save images
+    // save global::images
     /*
-    bool saveimages = false;
-    if (saveimages){
+    bool saveglobal::images = false;
+    if (saveglobal::images){
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/rgb.png", img_rgb);
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/gray.png", img_gray);
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/normalized.png", img_norm);
@@ -154,7 +148,7 @@ void MainWindow::on_pushButton_2_clicked()
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough.png", prep.getHough());
         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/blurred.png", prep.getBlurred());
     }
-    if (saveimages){
+    if (saveglobal::images){
         cbd.printHoughAfterCategorization("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough2.png");
         board.write("/Users/benedicte/Dropbox/kings/thesis/report/case1/final.png");
     }
@@ -162,9 +156,9 @@ void MainWindow::on_pushButton_2_clicked()
 
 
     // detect pieces based on houghcircles on whole board
-    cv::Mat rgb;
-    cv::cvtColor(img, rgb, cv::COLOR_GRAY2RGB);
-    auto elements = board.getRefs();
+    //cv::cvtColor(img, rgb, cv::COLOR_GRAY2RGB);
+    /*
+    auto elements = board.getElementRefs();
     std::vector<int> squaresWithPiece;
     Points2d centers;
     for (size_t i = 0; i < circles.size(); i++){
@@ -179,10 +173,10 @@ void MainWindow::on_pushButton_2_clicked()
     }
     std::sort(squaresWithPiece.begin(), squaresWithPiece.end());
     //cvutils::plotPoints(rgb, centers, 10);
-
-
+    */
 
     // Detect pieces based on houghcircles on individual squares
+    auto elements = board.getElementRefs();
     Points2d centers2;
     for (size_t i = 0; i < elements.size(); i++){
         Square square = elements[i];
@@ -192,7 +186,7 @@ void MainWindow::on_pushButton_2_clicked()
             centers2.push_back(elements[i].getCenter());
         }
     }
-    cvutils::plotPoints(rgb, centers2, 10, cv::Scalar(255,0,0));
+    cvutils::plotPoints(global::image_rgb, centers2, 10, cv::Scalar(255,0,0));
 
     // Initial state to feed minimax
     cv::destroyAllWindows();
@@ -200,9 +194,6 @@ void MainWindow::on_pushButton_2_clicked()
     State state = board.initState();
 
     // WRITE REPORTS
-
-
-
 }
 
 void MainWindow::on_pushButton_3_clicked()

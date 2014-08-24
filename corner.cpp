@@ -9,8 +9,8 @@ Corner::Corner(){classified = false;}
 
 Corner::Corner(const cv::Mat& image, cv::Point2d cornerpoint, int radius)
 {
-    if (!image.data){
-        throw std::invalid_argument("Image is empty, cannot create corner");
+    if (!global::image.data){
+        throw std::invalid_argument("global::image is empty, cannot create corner");
     }
     classified = false;
 
@@ -22,16 +22,16 @@ Corner::Corner(const cv::Mat& image, cv::Point2d cornerpoint, int radius)
     int x = (int) cornerpoint.x - radius;
     int y = (int) cornerpoint.y - radius;
 
-    (x < 0 || x > image.cols-1 || y < 0 || y > image.rows-1) ? outOfBounds = true : outOfBounds = false;
+    (x < 0 || x > global::image.cols-1 || y < 0 || y > global::image.rows-1) ? outOfBounds = true : outOfBounds = false;
     if (outOfBounds)
         return;
 
     try{
-    area = image(cv::Rect(x,y, radius*2 , radius*2));
+    area = global::image(cv::Rect(x,y, radius*2 , radius*2));
     }
     catch (std::exception& e){
         outOfBounds = true;
-        std::cout << "Corner is too close to image border" << std::endl;
+        std::cout << "Corner is too close to global::image border" << std::endl;
     }
     //recalculateCornerpoint(); //TODO
 

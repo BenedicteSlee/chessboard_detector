@@ -7,7 +7,7 @@
 #include "square.h"
 
 
-Preprocess::Preprocess(cv::Mat & image_, Settings::PreprocessSettings settings_)
+Preprocess::Preprocess(cv::Mat & global::image_, Settings::PreprocessSettings settings_)
 {
     settings = settings_;
     edgeDetection();
@@ -35,7 +35,7 @@ void Preprocess::showHoughlines()
 
 cv::Mat Preprocess::getHough(){
     if (!imgHough.data){
-        image.copyTo(imgHough);
+        global::image.copyTo(imgHough);
         cv::cvtColor(imgHough, imgHough, cv::COLOR_GRAY2BGR);
         for( size_t i = 0; i < houghlines.size(); i++ )
         {
@@ -48,10 +48,10 @@ cv::Mat Preprocess::getHough(){
 
 void Preprocess::edgeDetection(bool doBlur){
     cv::Mat gray;
-    if (image.channels() == 3){
-        cv::cvtColor(image,gray,cv::COLOR_RGB2GRAY);
+    if (global::image.channels() == 3){
+        cv::cvtColor(global::image,gray,cv::COLOR_RGB2GRAY);
     } else {
-        gray = image;
+        gray = global::image;
     }
     if (doBlur){
         //cv::GaussianBlur(gray, blurred, gaussianBlurSize, gaussianBlurSigma);
@@ -70,7 +70,7 @@ void Preprocess::lineDetection()
     {
         cv::Point2d p1(houghlines[i][0], houghlines[i][1]);
         cv::Point2d p2(houghlines[i][2], houghlines[i][3]);
-        if (cvutils::outOfBounds(image,p1) || cvutils::outOfBounds(image,p2))
+        if (cvutils::outOfBounds(global::image,p1) || cvutils::outOfBounds(global::image,p2))
             throw std::invalid_argument("A point created by Houghlines is out of bounds");
         Line l = Line(p1, p2);
         lines.push_back(l);

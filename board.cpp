@@ -6,14 +6,15 @@
 #include "matrix.h"
 #include "squareExpander.h"
 #include "state.h"
+#include "global.h"
 
-Board::Board(cv::Mat& image_) : image(image_)
+Board::Board()
 {
     nCols = 0;
     nRows = 0;
 }
 
-Board::Board(cv::Mat &image_, Lines hlinesSorted, Lines vlinesSorted) : image(image_)
+Board::Board(Lines hlinesSorted, Lines vlinesSorted)
 {
     if (hlinesSorted.empty()){
         throw std::invalid_argument("Vector with horizontal lines does not contain any elements");
@@ -45,7 +46,7 @@ Board::Board(cv::Mat &image_, Lines hlinesSorted, Lines vlinesSorted) : image(im
 
             Square sq;
             try{
-                Square square(image, upperLeft, upperRight, lowerRight, lowerLeft);
+                Square square(upperLeft, upperRight, lowerRight, lowerLeft);
                 if (square.isOutOfBounds()){
                     throw std::invalid_argument("Square is out of bounds");
                 }
@@ -137,9 +138,9 @@ void Board::removeOutOfBounds(){
     if (delRow.size() > 0)
         checkRowsRemoved = removeRowsRequest(delRow);
 
-    // if rows or cols out of bounds that are not at top/bottom or left/right then give up and ask for new image
+    // if rows or cols out of bounds that are not at top/bottom or left/right then give up and ask for new global::image
     if (checkColsRemoved.size() != delCol.size() || checkRowsRemoved.size() != delRow.size()){
-        throw std::invalid_argument("Make sure whole board is within image frame");
+        throw std::invalid_argument("Make sure whole board is within global::image frame");
     }
     std::cout << "Cols removed because contained an out of bounds square: ";
     for (size_t i = 0; i < checkColsRemoved.size(); i++){
@@ -177,11 +178,11 @@ void Board::draw()
         return;
     }
 
-    if (!image.data){
-        throw std::invalid_argument("draw() has no image to draw on");
+    if (!global::image.data){
+        throw std::invalid_argument("draw() has no global::image to draw on");
     }
     cv::Mat img_draw;
-    image.copyTo(img_draw);
+    global::image.copyTo(img_draw);
     cv::cvtColor(img_draw, img_draw, cv::COLOR_GRAY2BGR);
     cv::RNG rng = cv::RNG(1234);
     for (size_t i = 0; i < elements.size(); i++) {
@@ -212,11 +213,11 @@ void Board::write(std::string filename)
         return;
     }
 
-    if (!image.data){
-        throw std::invalid_argument("draw() has no image to draw on");
+    if (!global::image.data){
+        throw std::invalid_argument("draw() has no global::image to draw on");
     }
     cv::Mat img_draw;
-    image.copyTo(img_draw);
+    global::image.copyTo(img_draw);
     cv::cvtColor(img_draw, img_draw, cv::COLOR_GRAY2BGR);
     cv::RNG rng = cv::RNG(1234);
 
@@ -298,7 +299,7 @@ void Board::expand(Direction dir)
 
     Squares newsquares(size);
     for (size_t i = 0; i < size; i++){
-        SquareExpander se(image, baseSquares[i], dir);
+        SquareExpander se(global::image, baseSquares[i], dir);
         //if (!success)
         //  break;
         newsquares[i] = se.getSquare();

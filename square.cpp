@@ -1,7 +1,8 @@
-#include "square.h"
-#include "Line.h"
 #include <stdexcept>
 #include <opencv2/opencv.hpp>
+#include "square.h"
+#include "Line.h"
+#include "global.h"
 
 // S Q U A R E
 
@@ -11,9 +12,9 @@ Square::Square(){
     containsPieceDetermined = false;
 }
 
-Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4)
+Square::Square(cv::Point2d corner1, cv::Point2d corner2, cv::Point2d corner3, cv::Point2d corner4)
 {
-    cv::Size imsize = image.size();
+    cv::Size imsize = global::image.size();
 
     squareTypeDetermined = false;
     outOfBounds = false;
@@ -42,7 +43,8 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
     upperRight.y > lowerRight.y ? lasty = upperRight.y : lasty = lowerRight.y;
 
     try{
-        area = image(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
+        area = global::image(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
+
         meanGray = calcMeanGray(area);
     } catch(std::exception &e){
         outOfBounds = true;
@@ -55,10 +57,10 @@ Square::Square(cv::Mat& image, cv::Point2d corner1, cv::Point2d corner2, cv::Poi
     calcBorders();
     //calcVanishingPoints();
 
-    if (!image.data){
-        throw std::invalid_argument("Image is empty, cannot create corners.");
+    if (!global::image.data){
+        throw std::invalid_argument("global::image is empty, cannot create corners.");
     } else if (!outOfBounds) {
-        createCorners(image);
+        createCorners(global::image);
     }
 }
 
@@ -141,11 +143,11 @@ int Square::calcMeanGray(cv::Mat& image)
 {
     cv::Mat gray;
 
-    if (image.channels() == 3){
-        cv::cvtColor(image, gray, CV_RGB2GRAY);
+    if (global::image.channels() == 3){
+        cv::cvtColor(global::image, gray, CV_RGB2GRAY);
         cv::normalize(gray, gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     } else {
-        gray = image;
+        gray = global::image;
     }
 
     int n = 0;
@@ -207,15 +209,15 @@ void Square::drawOnImg(cv::Mat& image) const
     }
 
     if (outOfBounds){
-        std::cout << "Square is fully or partially outside of the image, cannot draw" << std::endl;
+        std::cout << "Square is fully or partially outside of the global::image, cannot draw" << std::endl;
         return;
     }
 
     cv::RNG rng = cv::RNG(123);
     cv::Scalar col = cv::Scalar(rng.uniform(0,255), rng.uniform(0,255), rng.uniform(0,255));
     Points cps = cvutils::doubleToInt(cornerpointsSorted);
-    cv::fillConvexPoly(image, cps, col);
-    cv::imshow("Square", image);
+    cv::fillConvexPoly(global::image, cps, col);
+    cv::imshow("Square", global::image);
     cv::waitKey();
 }
 
@@ -259,12 +261,12 @@ std::vector<int> Square::getSquareTypes(Squares squares)
 }
 
 void Square::createCorners(cv::Mat& image){
-    if (!image.data){
-        throw std::invalid_argument("Image is empty, won't create new corner");
+    if (!global::image.data){
+        throw std::invalid_argument("global::image is empty, won't create new corner");
     }
     int radius = 10; // TODO make dynamic
     for (size_t i = 0; i < 4; i++){
-        Corner newcorner(image, cornerpointsSorted.at(i), radius);
+        Corner newcorner(global::image, cornerpointsSorted.at(i), radius);
         if (newcorner.isOutOfBounds())
             outOfBounds = true;
         corners.push_back(newcorner);

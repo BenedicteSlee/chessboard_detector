@@ -29,7 +29,7 @@ private:
     void nameBorders();
     bool calculateExtrapolatedPoints();
     void createSquare();
-    void draw(cv::Mat image);
+    void draw(cv::Mat global::image);
 
 
 

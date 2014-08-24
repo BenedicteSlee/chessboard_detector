@@ -21,7 +21,7 @@ public:
     Lines get_vlinesSorted();
     Corners getCorners();
 
-    bool detect(Board board, bool doDraw = false, std::string *reportPath = 0);
+    bool detect(Board dst, bool doDraw = false, std::string *reportPath = 0);
     void printHoughAfterCategorization(std::string filename);
 
 private:
@@ -33,8 +33,6 @@ private:
     void requestColumnExpansion(Board &board);
     void requestRowExpansion(Board& board);
 
-    cv::Mat image;
-    cv::Mat image_gray;
     std::vector<Line> lines;
     std::vector<double> slopes;
     cv::Point2d vanishingPoint;

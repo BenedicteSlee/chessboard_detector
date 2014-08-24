@@ -7,6 +7,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include "typedefs.h"
+#include "global.h"
 
 namespace cvutils {
 
