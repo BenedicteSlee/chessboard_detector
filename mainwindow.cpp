@@ -53,6 +53,7 @@ void MainWindow::on_pushButton_2_clicked()
     std::string casen = "casestudy";
     bool saveimages = true;
     global::doDraw = true;
+    std::string reportPath = "/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/";
     //std::string filename =  "Report_" + utils::currentDateTime();
 
     //if (ui->UseDefaultglobal::image_imp->isChecked()){
@@ -82,7 +83,7 @@ void MainWindow::on_pushButton_2_clicked()
     bool tryAgain = true;
     bool boardDetected = false;
 
-    std::string reportPath = "/Users/benedicte/Dropbox/kings/thesis/report/case2/";
+
     while (tryAgain){
         prep.detectLines(settings);
         prep.getLines(houghlines);
