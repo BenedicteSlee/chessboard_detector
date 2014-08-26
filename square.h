@@ -39,7 +39,7 @@ public:
     void determineType();
     bool detectPieceWithHough(cv::Vec3i &);
     bool detectPieceWithHough(cv::Mat &image_channel, cv::Vec3i &circle);
-    int determinePieceColor(cv::Vec3i circle) const;
+    bool determinePieceColor(cv::Vec3i circle, int &color) const;
 
     bool containsPoint(cv::Point2d point) const;
     std::vector<Corner> getCorners() const {return corners;}
@@ -74,7 +74,7 @@ private:
     // Methods
     void calcVanishingPoints();
     void calcBorders();
-    int calcMeanGray(cv::Mat& image);
+    int calcMeanGray(cv::Mat& area);
     void createCorners(cv::Mat& image);
 };
 

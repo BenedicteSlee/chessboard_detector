@@ -21,10 +21,10 @@ public:
     Lines get_vlinesSorted();
     Corners getCorners();
 
-    bool detect(Board &dst, bool doDraw = false, std::string *reportPath = 0);
-    void printHoughAfterCategorization(std::string filename);
-
+    bool detect(Board &dst, std::string *reportPath = 0);
+    void writeHoughAfterCategorizationToGlobal();
 private:
+    bool boardInitialized;
     void categorizeLines();
     void findVanishingPoint();
     void filterBasedOnSquareSize(Board& Board, Remover& remover);

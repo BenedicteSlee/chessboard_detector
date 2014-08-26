@@ -21,7 +21,8 @@
 #include "utils.h"
 #include "global.h"
 
-cv::Mat global::image, global::image_gray, global::image_norm, global::image_rgb;
+cv::Mat global::image, global::image_gray, global::image_norm, global::image_rgb, global::image_pieces, global::image_hough_mod;
+bool global::doDraw;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -47,12 +48,21 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButton_2_clicked()
 {
+
+
+    std::string casen = "casestudy";
+    bool saveimages = true;
+    global::doDraw = true;
     //std::string filename =  "Report_" + utils::currentDateTime();
 
     //if (ui->UseDefaultglobal::image_imp->isChecked()){
     if (!global::image_rgb.data){
-        global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
+        //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
         //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/boards/green2.jpg");
+        //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/pieces/red.jpg");
+        global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/casestudy/casestudy.jpg");
+        //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/"+casen+".jpg");
+
         if (global::image_rgb.data){
             cvutils::rotate(global::image_rgb,global::image_rgb,-90);
         } else {
@@ -63,102 +73,83 @@ void MainWindow::on_pushButton_2_clicked()
     // Set up global image variables
      Preprocess prep;
      Settings::PreprocessSettings settings;
-     prep.detectLines(settings);
+
 
     // chessboard detector
     Lines houghlines;
-    prep.getLines(houghlines);
-    prep.showCanny();
-    prep.showHoughlines();
-    BoardDetector cbd = BoardDetector(houghlines); // set up a board detector
+
     Board board; // container for the detected board
     bool tryAgain = true;
+    bool boardDetected = false;
 
-    std::string reportPath = "/Users/benedicte/Dropbox/kings/thesis/report/case1/";
+    std::string reportPath = "/Users/benedicte/Dropbox/kings/thesis/report/case2/";
     while (tryAgain){
-        //prep.showCanny();
-        //prep.showHoughlines();
-        bool boardDetected = cbd.detect(board, false, &reportPath);
+        prep.detectLines(settings);
+        prep.getLines(houghlines);
+        BoardDetector cbd = BoardDetector(houghlines);
+        prep.showCanny();
+        prep.showHoughlines();
+        try{
+            std::cout << "Trying to detect board with blur sigma " << settings.gaussianBlurSigma << std::endl;
+            boardDetected = cbd.detect(board, &reportPath);
+        } catch(std::exception &e){
+        }
+
         if (boardDetected){
             tryAgain = false;
         } else {
+            if (settings.gaussianBlurSigma > 1)
+                settings.gaussianBlurSigma -= 1;
             if (settings.gaussianBlurSigma == 1){
                 settings.gaussianBlurSize = cv::Size(3,3);
             }
-            if (settings.gaussianBlurSize == cv::Size(3,3)){
+            if (settings.gaussianBlurSize == cv::Size(3,3) && settings.gaussianBlurSigma == 1){
                 settings.gaussianBlurSize = cv::Size(1,1);
             }
-            if (settings.gaussianBlurSigma == 1 && settings.gaussianBlurSize == cv::Size(1,1)){
-                throw("I give up");
+            if (settings.gaussianBlurSigma == 1 && settings.gaussianBlurSize == cv::Size(1,1) && settings.cannyLow > 4){
+                settings.cannyLow -= 4;
             }
-            settings.gaussianBlurSigma = 1;
+            if (settings.gaussianBlurSigma == 1 && settings.gaussianBlurSize == cv::Size(1,1) && settings.cannyLow <= 4){
+                throw std::invalid_argument("I give up");
+            }
         }
     }
 
 
-    // save global::images
-    /*
-    bool saveglobal::images = false;
-    if (saveglobal::images){
-        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/rgb.png", img_rgb);
-        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/gray.png", img_gray);
-        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/normalized.png", img_norm);
-        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/resized.png", img);
-        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/canny.png", prep.getCanny());
-        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough.png", prep.getHough());
-        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/case1/blurred.png", prep.getBlurred());
-    }
-    if (saveglobal::images){
-        cbd.printHoughAfterCategorization("/Users/benedicte/Dropbox/kings/thesis/report/case1/hough2.png");
-        board.write("/Users/benedicte/Dropbox/kings/thesis/report/case1/final.png");
-    }
-    */
+    // save images
 
 
-    // detect pieces based on houghcircles on whole board
-    //cv::cvtColor(img, rgb, cv::COLOR_GRAY2RGB);
-    /*
-    auto elements = board.getElementRefs();
-    std::vector<int> squaresWithPiece;
-    Points2d centers;
-    for (size_t i = 0; i < circles.size(); i++){
-        auto x = circles[i][0];
-        auto y = circles[i][1];
-        centers.push_back(cv::Point2d(x,y));
-        cv::Point2d point(x, y);
-        auto it2 = std::find_if(elements.begin(), elements.end(), [&](const Square& element){return element.containsPoint(point);});
-        size_t dist = std::distance(elements.begin(), it2);
-        if (dist < elements.size())
-            squaresWithPiece.push_back(dist);
+    if (saveimages){
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/rgb.png", global::image_rgb);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/gray.png", global::image_gray);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/normalized.png", global::image_norm);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/resized.png", global::image);
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/canny.png", prep.getCanny());
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/hough.png", prep.getHough());
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/blurred.png", prep.getBlurred());
     }
-    std::sort(squaresWithPiece.begin(), squaresWithPiece.end());
-    //cvutils::plotPoints(rgb, centers, 10);
-    */
+    if (saveimages){
 
-    /*
-    // Detect pieces based on houghcircles on individual squares
-    auto elements = board.getElementRefs();
-    Points2d centers2;
-    for (size_t i = 0; i < elements.size(); i++){
-        Square square = elements[i];
-        cv::Vec3i circle;
-        bool containsPiece = square.detectPieceWithHough(circle);
-        if (containsPiece){
-            centers2.push_back(elements[i].getCenter());
-        }
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/hough_mod.png", global::image_hough_mod);
+        board.write("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/final.png");
     }
-    */
 
+
+    board.draw();
     cv::destroyAllWindows();
     board.detectPieces();
 
-    board.drawWithPieces();
-
+    if (global::doDraw) board.drawWithPieces();
+    board.writeImgWithPiecesToGlobal();
+    if (saveimages){
+        cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/pieces.png", global::image_pieces);
+    }
     // Initial state to feed minimax
     cv::destroyAllWindows();
 
     State state = board.initState();
 
+    std::cout << "FINISHED" << std::endl;
     // WRITE REPORTS
 }
 

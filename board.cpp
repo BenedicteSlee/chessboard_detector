@@ -9,6 +9,7 @@
 #include "state.h"
 #include "global.h"
 
+extern bool global::doDraw;
 
 std::vector<cv::Mat> global::channels; // forward declaration
 
@@ -218,8 +219,8 @@ void Board::drawWithPieces()
 
     cv::Mat dst;
     global::image.copyTo(dst);
-
-    std::vector<cv::Scalar> cols{cv::Scalar(255,0,0), cv::Scalar(0,255,255)};
+    cv::cvtColor(dst,dst,cv::COLOR_GRAY2RGB);
+    std::vector<cv::Scalar> cols{cv::Scalar(255,0,0), cv::Scalar(0,255,0)};
     for (size_t i = 0; i < pieces.size(); i++){
         auto piece = pieces[i];
         int idx = piece.first;
@@ -229,10 +230,31 @@ void Board::drawWithPieces()
         auto center = square.getCenter();
         cv::Scalar col;
         id > 0 ? col = cols[0] : col = cols[1];
-        cv::circle(dst, center, 10, col);
+        cv::circle(dst, center, 20, col, 2);
     }
     cv::imshow("Pieces", dst);
     cv::waitKey();
+}
+
+void Board::writeImgWithPiecesToGlobal()
+{
+    if (!piecesDetected)
+        detectPieces();
+
+    cv::cvtColor(global::image,global::image_pieces,cv::COLOR_GRAY2RGB);
+    std::vector<cv::Scalar> cols{cv::Scalar(255,0,0), cv::Scalar(0,255,0)};
+    for (size_t i = 0; i < pieces.size(); i++){
+        auto piece = pieces[i];
+        int idx = piece.first;
+        int id = piece.second;
+
+        Square &square = elements[idx];
+        auto center = square.getCenter();
+        cv::Scalar col;
+        id > 0 ? col = cols[0] : col = cols[1];
+        cv::circle(global::image_pieces, center, 20, col, 2);
+    }
+
 }
 
 void Board::write(std::string filename)
@@ -355,19 +377,21 @@ void Board::detectCircles(){
         throw std::invalid_argument("Board is empty, can't detect circles");
     }
 
-    std::vector<std::string> cols{"red", "green","blue"};
+    if (blackSquares.size() != 32)
+        setBlackSquares();
 
     for (int i = 0; i < 3; i++){
         cv::Mat channel = global::channels[i];
 
-        for (size_t j = 0; j < elements.size(); j++){
-            Square &square = elements[j];
+        for (size_t j = 0; j < 32; j++){
+            int id = blackSquareIdx[j];
+            Square &square = blackSquares[j];
             if (!square.containsPiece()){
                 cv::Vec3i circle;
                 bool pieceDetected = square.detectPieceWithHough(channel, circle);
+
                 if (pieceDetected){
-                    circles.push_back(std::make_pair(j,circle));
-                    std::cout << "Piece detected in " << cols[i] << " channel" << std::endl;
+                    circles.push_back(std::make_pair(id,circle));
                 }
             }
         }
@@ -378,7 +402,8 @@ int Board::determinePieceColorThreshold(){
     for (size_t i = 0; i < circles.size(); i++){
         Square& square = elements[circles[i].first];
         cv::Vec3i circle = circles[i].second;
-        int col = square.determinePieceColor(circle);
+        int col;
+        bool colorDetermined = square.determinePieceColor(circle, col);
         pieceColors.push_back(col);
     }
     return cv::mean(pieceColors)[0];
@@ -403,4 +428,14 @@ State Board::initState(){
     State state(pieces);
     return state;
 }
+
+void Board::setBlackSquares(){
+    blackSquares.clear();
+    blackSquares.reserve(32);
+
+    for (int i = 0; i < 32; i++){
+        blackSquares.push_back(elements[blackSquareIdx[i]]);
+    }
+}
+
 

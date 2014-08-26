@@ -78,8 +78,6 @@ void Preprocess::lineDetection()
     /// Use Probabilistic Hough Transform
     cv::HoughLinesP(canny, houghlines, 1, CV_PI/180, settings.houghThreshold, settings.minLineLength, settings.maxLineGap);
 
-
-
     for (size_t i = 0; i < houghlines.size(); i++)
     {
         cv::Point2d p1(houghlines[i][0], houghlines[i][1]);

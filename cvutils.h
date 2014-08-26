@@ -12,6 +12,7 @@
 namespace cvutils {
 
 void PrintMatToConsole(cv::Mat&, int, int);
+void PrintUcharMatToConsole(cv::Mat&, int, int);
 void PrintMatToFile(cv::Mat&, int, int, std::string);
 void PrintJpg(cv::Mat&, const std::string&, int);
 bool pointIsLess(cv::Point2d a, cv::Point2d b);
@@ -41,6 +42,20 @@ cv::Point2d centerpoint(cv::Point2d point1, cv::Point2d point2);
 bool pairIsLess(const std::pair<int, double> a, const std::pair<int, double> b);
 
 bool containsPoint(const Points2d& points, const cv::Point2d& point);
+
+template <typename T>
+std::vector<T> sequence(T start, T end, T by){
+    std::vector<T> seq;
+    if (start > end){
+        return seq;
+    }
+    T current = start;
+    while (current < end){
+        seq.push_back(current);
+        current = start + by;
+    }
+    return seq;
+}
 
 template <typename T>
 cv::Point_<T> posPoint(cv::Point_<T>& point){

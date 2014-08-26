@@ -38,6 +38,23 @@ void cvutils::PrintMatToConsole(Mat& mat, int lastRow, int lastCol)
     }
 }
 
+void cvutils::PrintUcharMatToConsole(Mat& mat, int lastRow, int lastCol)
+{
+    if (lastRow == 0)
+        lastRow = mat.rows;
+    if (lastCol == 0)
+        lastCol = mat.cols;
+
+    for(int i = 0; i < lastRow; i++)
+    {
+        for (int j = 0; j < lastCol; j++)
+        {
+            cout<< (int) mat.at<uchar>(i, j) << "\t";
+        }
+        cout<<endl;
+    }
+}
+
 void cvutils::PrintMatToFile(Mat& mat, int lastRow, int lastCol, string fileName){
     if (lastRow == 0)
         lastRow = mat.rows;

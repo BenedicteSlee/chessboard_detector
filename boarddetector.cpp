@@ -12,6 +12,9 @@
 #include "remover.h"
 #include "regression.h"
 #include "report.h"
+#include "global.h"
+
+extern bool global::doDraw;
 
 BoardDetector::~BoardDetector()
 {
@@ -23,6 +26,8 @@ BoardDetector::BoardDetector(std::vector<Line> lines_)
     lines = lines_;
     //detectChessboardRegion(); // TODO Use template matching to find rough region of chessboard
     categorizeLines();
+
+
 }
 
 Lines BoardDetector::get_hlinesSorted()
@@ -40,17 +45,14 @@ Corners BoardDetector::getCorners()
     return corners;
 }
 
-bool BoardDetector::detect(Board& dst, bool doDraw, std::string *reportPath)
+bool BoardDetector::detect(Board& dst, std::string *reportPath)
 {
-
     dst.initBoard(hlinesSorted, vlinesSorted);
-    //auto hlines = get_hlinesSorted();
 
-    if (dst.getNumRows() < 3 || dst.getNumRows() < 3){
+    if (hlinesSorted.size() <= 2 || vlinesSorted.size() <= 2)
         return false;
-    }
 
-    if (doDraw) dst.draw();
+    if (global::doDraw) dst.draw();
 
     if (reportPath != 0){
         std::string filename1 = *reportPath + "initBoard.png";
@@ -64,33 +66,35 @@ bool BoardDetector::detect(Board& dst, bool doDraw, std::string *reportPath)
     size_t initrows = dst.getNumRows();
     size_t initcols = dst.getNumCols();
 
-    if (initrows > 8){
+    if (initrows > 10){
         std::vector<size_t> prunerows{0,1,2, initrows-3,initrows-2,initrows-1};
         dst.removeRowsRequest(prunerows);
     }
-    else if (initrows > 4){
+    else if (initrows > 5){
         std::vector<size_t> prunerows{0,1, initrows-2, initrows-1};
         dst.removeRowsRequest(prunerows);
     }
 
-    if (initcols > 8){
+    if (initcols > 10){
         std::vector<size_t> prunecols{0,1,2, initcols-3,initcols-2,initcols-1};
         dst.removeColsRequest(prunecols);
     }
-    else if (initcols > 4){
+    else if (initcols > 5){
         std::vector<size_t> prunecols{0, 1, initcols-2,initcols-1};
         dst.removeColsRequest(prunecols);
     }
 
-    if (doDraw) dst.draw();
+    if (global::doDraw) dst.draw();
 
     Remover remover(dst);
 
     filterBasedOnSquareSize(dst, remover);
     indices colreq1 = remover.getCurrentColRequests();
     indices rowreq1 = remover.getCurrentRowRequests();
+
     remover.remove();
-    if (doDraw) dst.draw();
+
+    if (global::doDraw) dst.draw();
 
     if (reportPath != 0){
         dst.write(*reportPath + "boardAfterFilterBySize.png");
@@ -108,8 +112,18 @@ bool BoardDetector::detect(Board& dst, bool doDraw, std::string *reportPath)
     indices rowreq3 = remover.getCurrentRowRequests();
 
     remover.remove();
-    if (doDraw) dst.draw();
+    if (global::doDraw) dst.draw();
 
+    if (reportPath != 0){
+        dst.write(*reportPath + "boardAfterFilterByType.png");
+    }
+
+    filterBasedOnSquareSize(dst, remover);
+    remover.remove();
+    if (global::doDraw) dst.draw();
+    if (reportPath != 0){
+        dst.write(*reportPath + "boardAfterFilterBySize2.png");
+    }
     std::pair<int,int> status = dst.getStatus();
 
     bool addColumns = false;
@@ -121,7 +135,7 @@ bool BoardDetector::detect(Board& dst, bool doDraw, std::string *reportPath)
     while (addRows){
         requestRowExpansion(dst);
         status = dst.getStatus();
-        if (doDraw) dst.draw();
+        if (global::doDraw) dst.draw();
         if (status.first <= 0)
             addRows = false;
     }
@@ -132,32 +146,23 @@ bool BoardDetector::detect(Board& dst, bool doDraw, std::string *reportPath)
     while (addColumns){
         requestColumnExpansion(dst);
         status  = dst.getStatus();
-        if (doDraw) dst.draw();
+        if (global::doDraw) dst.draw();
         if (status.second <= 0)
             addColumns = false;
     }
-
-
 
     //const Square& square = possibleBoard.getRef(0);
     //bool check = square.containsPoint(cv::Point2d(200,200));
     return true;
 }
 
-void BoardDetector::printHoughAfterCategorization(std::string filename)
+void BoardDetector::writeHoughAfterCategorizationToGlobal()
 {
     cv::Mat output;
     global::image.copyTo(output);
     if (output.channels() != 3){
         cv::cvtColor(output, output, cv::COLOR_GRAY2BGR);
     }
-
-    /*
-    for (size_t i = 0; i < lines.size(); i++){
-        Line &line = lines[i];
-        cv::line(output, line.points[0], line.points[1], cv::Scalar(0,0,255));
-    }
-    */
 
     cv::Scalar col(20,110,255);
     for (size_t i = 0; i < vlinesSorted.size(); i++){
@@ -170,7 +175,7 @@ void BoardDetector::printHoughAfterCategorization(std::string filename)
         cv::line(output, line.points[0], line.points[1], col);
     }
 
-    cv::imwrite(filename, output);
+    global::image_hough_mod = output;
 }
 
 void BoardDetector::categorizeLines(){
@@ -264,6 +269,8 @@ void BoardDetector::categorizeLines(){
             vlinesSorted.push_back(line);
         }
     }
+
+    writeHoughAfterCategorizationToGlobal();
 }
 
 void BoardDetector::findVanishingPoint(){

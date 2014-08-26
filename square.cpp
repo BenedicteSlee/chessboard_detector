@@ -4,8 +4,9 @@
 #include "Line.h"
 #include "global.h"
 
-// S Q U A R E
+extern bool global::doDraw;
 
+// S Q U A R E
 Square::Square(){
     squareTypeDetermined = false;
     outOfBounds = false;
@@ -141,24 +142,15 @@ void Square::calcBorders()
     borders = bds;
 }
 
-int Square::calcMeanGray(cv::Mat& image)
+int Square::calcMeanGray(cv::Mat& area)
 {
-    cv::Mat gray;
-
-    if (image.channels() == 3){
-        cv::cvtColor(image, gray, CV_RGB2GRAY);
-        cv::normalize(gray, gray, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    } else {
-        gray = global::image;
-    }
-
     int n = 0;
     int val = 0;
     for (int y = 0; y < area.rows; ++y)
     {
         for (int x = 0; x < area.cols; ++x)
         {
-            val += (int) gray.at<uchar>(y,x);
+            val += (int) area.at<uchar>(y,x);
             n += 1;
         }
     }
@@ -239,37 +231,79 @@ bool Square::detectPieceWithHough(cv::Vec3i &circle){
 }
 
 bool Square::detectPieceWithHough(cv::Mat &image_channel, cv::Vec3i &circle){
-    cv::Mat binarea;
-    cv::Mat channelArea = image_channel(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
+    cv::Mat binarea, channelArea;
 
+    try{
+        channelArea = image_channel(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
+    } catch(std::exception& e){
+        std::cout << "image channel error" << std::endl;
+    }
     int channelMeanGray =  calcMeanGray(channelArea);
-    cv::threshold(channelArea, binarea, channelMeanGray, 255, 0);
+    int thresh = channelMeanGray * 1.1;
+    cv::threshold(channelArea, binarea, thresh, 255, 0);
 
-    cv::imshow("channel area", channelArea);
-    cv::waitKey();
+    /*
+    if (global::doDraw){
+        cv::imshow("area", channelArea);
+        cv::waitKey();
+        cv::imshow("binarea", binarea);
+        cv::waitKey();
+    }
+    */
 
     std::vector<cv::Vec3f> circles;
-    cv::HoughCircles(binarea, circles, CV_HOUGH_GRADIENT, 1, binarea.rows, 20, 15, binarea.rows*0.3, binarea.rows*1.5);
+
+    try{
+        cv::HoughCircles(binarea, circles, CV_HOUGH_GRADIENT, 1, binarea.rows, 20, 15, binarea.rows*0.1, binarea.rows*3);
+    } catch(std::exception &e){
+        std::cout << "HoughCircles error" << std::endl;
+    }
 
     if (circles.size() > 0){
         circle = circles[0]; // todo use diagnostics to choose the best circle if there are more than 1
-        cv::circle(channelArea, cv::Point(circle[0], circle[1]), circle[2], cv::Scalar(255,0,0));
-        cv::imshow("circle", channelArea); cv::waitKey();
+
+        try{
+            cv::circle(channelArea, cv::Point(circle[0], circle[1]), circle[2], cv::Scalar(255,0,0));
+
+        } catch(std::exception& e){
+            std::cout << "circle error" << std::endl;
+        }
+
+        //if (global::doDraw) cv::imshow("circle", channelArea); cv::waitKey();
         doesContainPiece = true;
         return true;
     }
     return false;
 }
 
-int Square::determinePieceColor(cv::Vec3i circle) const{
+bool Square::determinePieceColor(cv::Vec3i circle, int& color) const{
     int x = circle[0];
     int y = circle[1];
     int vsize = vlength/3;
     int hsize = hlength/3;
-    cv::Mat subarea = area(cv::Rect(x-hsize, y-vsize, hsize*2, vsize*2));
+    cv::Mat subarea;
 
-    int meancol = cv::mean(subarea)[0];
-    return meancol;
+    int upperx = x - hsize;
+    int uppery = y - vsize;
+
+    if (upperx < 0)
+        upperx = 0;
+    if (uppery < 0)
+        uppery = 0;
+    if (upperx + hsize > area.cols)
+        hsize = area.cols - upperx - 2;
+    if (uppery + vsize > area.rows)
+        vsize = area.rows - uppery - 2;
+
+    try{
+        subarea = area(cv::Rect(upperx, uppery, hsize, vsize));
+    } catch(std::exception &e){
+        std::cout << "piece too close to square edge" << std::endl;
+        return false;
+    }
+
+    color = cv::mean(subarea)[0];
+    return true;
 }
 
 std::vector<cv::Point2d> Square::getCornerpointsSorted() const
