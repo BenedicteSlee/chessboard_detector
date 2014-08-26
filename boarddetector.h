@@ -26,7 +26,7 @@ public:
 private:
     bool boardInitialized;
     void categorizeLines();
-    void findVanishingPoint();
+    Lines filterBasedOnVanishingPoint(Lines vlines);
     void filterBasedOnSquareSize(Board& Board, Remover& remover);
     void filterBasedOnRowType(Board& Board, Remover& remover);
     void filterBasedOnColType(Board& Board, Remover& remover);
@@ -35,7 +35,7 @@ private:
 
     std::vector<Line> lines;
     std::vector<double> slopes;
-    cv::Point2d vanishingPoint;
+    int xvpoint;
     std::vector<int> hlinesIdx;
     std::vector<int> vlinesIdx;
     Lines hlinesSorted;

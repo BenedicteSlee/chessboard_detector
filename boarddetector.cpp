@@ -47,9 +47,11 @@ Corners BoardDetector::getCorners()
 
 bool BoardDetector::detect(Board& dst, std::string *reportPath)
 {
+    std::cout << "Horizontal lines: " << hlinesSorted.size() << std::endl;
     dst.initBoard(hlinesSorted, vlinesSorted);
 
-    if (hlinesSorted.size() <= 2 || vlinesSorted.size() <= 2)
+
+    if (hlinesSorted.size() < 2 || vlinesSorted.size() < 2)
         return false;
 
     if (global::doDraw) dst.draw();
@@ -58,9 +60,6 @@ bool BoardDetector::detect(Board& dst, std::string *reportPath)
         std::string filename1 = *reportPath + "initBoard.png";
         dst.write(filename1);
     }
-
-    //findVanishingPoint(); // use?
-    //removeSpuriousLines(); // TODO Remove lines not belonging to the chessboard
 
     // INITIAL PRUNING
     size_t initrows = dst.getNumRows();
@@ -85,6 +84,10 @@ bool BoardDetector::detect(Board& dst, std::string *reportPath)
     }
 
     if (global::doDraw) dst.draw();
+
+    if (reportPath != 0){
+        dst.write(*reportPath + "boardAfterPruning.png");
+    }
 
     Remover remover(dst);
 
@@ -211,7 +214,7 @@ void BoardDetector::categorizeLines(){
         double yint1 = yints[i-1].second;
         double yint2 = yints[i].second;
         double diff =  abs(yint1 - yint2);
-        if (diff < 3)
+        if (diff < 10)
             removeIdx1[i] = 1;
         else
             removeIdx1[i] = 0;
@@ -230,7 +233,7 @@ void BoardDetector::categorizeLines(){
         if (removeIdx1[i] == 0){
             Line line = lines.at(hlinesIdx[yints[i].first]);
             //if (std::abs(line.slope - meanNoOutliers) <= tolerance)
-                hlinesSorted.push_back(line);
+            hlinesSorted.push_back(line);
         }
     }
 
@@ -248,6 +251,8 @@ void BoardDetector::categorizeLines(){
 
     std::sort(xints.begin(), xints.end(), cvutils::pairIsLess);
 
+
+
     // Remove duplicate vertical lines
     std::vector<int> removeIdx2(xints.size());
     for (size_t i = 1; i < xints.size(); ++i) {
@@ -260,6 +265,7 @@ void BoardDetector::categorizeLines(){
             removeIdx2[i] = 0;
     }
 
+
     // Add sorted unique vertical lines to field
     for (size_t i = 0; i < vlinesIdx.size(); i++) {
         if (removeIdx2[i] == 0){
@@ -270,34 +276,46 @@ void BoardDetector::categorizeLines(){
         }
     }
 
+    // vanishing point
+
+    Lines newVlines = filterBasedOnVanishingPoint(vlinesSorted);
+
+    vlinesSorted = newVlines;
+
     writeHoughAfterCategorizationToGlobal();
 }
 
-void BoardDetector::findVanishingPoint(){
-    int numlines = (int) vlinesIdx.size();
-    Points2d vpoints;
+Lines BoardDetector::filterBasedOnVanishingPoint(Lines vlines){
+    if (vlines.size() == 0){
+        throw std::invalid_argument("Vector of lines is empty");
+    }
+
+    int numlines = (int) vlines.size();
+    int xvpoint; //only need x, y is too volatile
+    std::vector<int> vpoints;
     vpoints.reserve(numlines*(numlines-1)/2);
 
+    std::vector<cv::Vec3i> voterInfo;
     // Calculate intersection between each possible pair of lines
     // TODO: this should be gotten from findIntersections()
-    for (int i=0;i<numlines;i++){
-        int idx1 = vlinesIdx.at(i);
-        Line line1 = lines.at(idx1);
+    for (int i=0;i<vlines.size();i++){
+        Line line1 = vlines.at(i);
         for (int j=i+1;j<numlines;j++){
-            int idx2 = vlinesIdx.at(j);
-            Line line2 = lines.at(idx2);
+            Line line2 = vlines.at(j);
             cv::Point2d vpoint;
             line1.Intersection(line2, vpoint);
-            vpoints.push_back(vpoint);
+            vpoints.push_back(vpoint.x);
+            cv::Vec3i info{i,j,(int) vpoint.x};
+            voterInfo.push_back(info);
         }
     }
 
-    cv::Point2d meanpoint = cvutils::centerpoint(vpoints);
+    int meanx = cv::mean(vpoints)[0];
 
     std::vector<double> dists(vpoints.size());
     std::vector<double> stdevs(vpoints.size());
     for (size_t i=0;i<vpoints.size();i++){
-        dists[i] = cv::norm(vpoints[i] - meanpoint);
+        dists[i] = cv::norm(vpoints[i] - meanx);
     }
 
     std::vector<double> distsSorted(dists);
@@ -306,13 +324,65 @@ void BoardDetector::findVanishingPoint(){
     double quantile1 = distsSorted[quantileSize-1];
     double quantile2 = distsSorted[quantileSize*3 -1];
 
-    Points2d voters;
+    std::vector<int> voters;
     for (size_t i=0;i<vpoints.size();i++){
         if (dists[i] >= quantile1 && dists[i] <= quantile2){
             voters.push_back(vpoints[i]);
         }
     }
-    vanishingPoint = cvutils::centerpoint(voters);
+    xvpoint = cv::mean(voters)[0];
+    std::cout << "vanishing point" << xvpoint << std::endl;
+
+    // find the pair of lines that voted closest to the mean
+    cv::Vec3i winnerPair;
+    int minDist = 1000;
+    for (size_t i = 0; i < voterInfo.size(); i++){
+        int dist = std::abs(voterInfo[i][2] - xvpoint);
+        if (dist < minDist){
+            minDist = dist;
+            winnerPair = voterInfo[i];
+        }
+    }
+
+    // find lines that dont give the right vanishing point
+
+
+
+    std::vector<int> removeIdx(vlines.size(),0);
+    Line line1 = vlines.at(winnerPair[0]);
+    Line line2 = vlines.at(winnerPair[1]);
+
+    cv::Mat testimg;
+    global::image.copyTo(testimg);
+    cv::cvtColor(testimg,testimg, cv::COLOR_GRAY2RGB);
+    cv::line(testimg, line1.points[0], line1.points[1], cv::Scalar(0,0,255));
+    cv::line(testimg, line2.points[0], line2.points[1], cv::Scalar(0,0,255));
+    cv::Point2d ints1, ints2;
+    for (size_t i = 0; i < vlines.size(); i++){
+        Line line3 = vlines.at(i);
+        //cv::line(testimg,line3.points[0], line3.points[1], cv::Scalar(255,0,0));
+        //cv::imshow("line test", testimg); cv::waitKey();
+        line3.Intersection(line1, ints1);
+        line3.Intersection(line2, ints2);
+
+        bool crit1 = ints1.y > 0 && ints2.y > 0;
+        bool crit2 =  std::abs(ints1.x - xvpoint) > 100 && (std::abs(ints2.x-xvpoint) > 100);
+        if (crit1 || crit2){
+            // this line must be removed
+            removeIdx.at(i) = 1;
+        }
+    }
+
+    Lines newVlines;
+    for (size_t i = 0; i < vlines.size(); i++){
+        if (removeIdx.at(i) == 0){
+            newVlines.push_back(vlines.at(i));
+        }
+    }
+
+    std::cout << "Reduced vertical lines from " << vlines.size() << " to " << newVlines.size() << std::endl;
+     return newVlines;
+
 }
 
 void BoardDetector::filterBasedOnSquareSize(Board &board, Remover &remover)

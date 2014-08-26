@@ -235,12 +235,14 @@ bool Square::detectPieceWithHough(cv::Mat &image_channel, cv::Vec3i &circle){
 
     try{
         channelArea = image_channel(cv::Rect(firstx, firsty, lastx-firstx, lasty-firsty));
+        cv::GaussianBlur(channelArea, channelArea, cv::Size(1,1), 1);
     } catch(std::exception& e){
         std::cout << "image channel error" << std::endl;
     }
     int channelMeanGray =  calcMeanGray(channelArea);
-    int thresh = channelMeanGray * 1.1;
+    int thresh = channelMeanGray * 1.15;
     cv::threshold(channelArea, binarea, thresh, 255, 0);
+
 
     /*
     if (global::doDraw){
@@ -248,8 +250,8 @@ bool Square::detectPieceWithHough(cv::Mat &image_channel, cv::Vec3i &circle){
         cv::waitKey();
         cv::imshow("binarea", binarea);
         cv::waitKey();
-    }
-    */
+    }*/
+
 
     std::vector<cv::Vec3f> circles;
 

@@ -50,7 +50,7 @@ void MainWindow::on_pushButton_2_clicked()
 {
 
 
-    std::string casen = "casestudy";
+    std::string casen = "clutter";
     bool saveimages = true;
     global::doDraw = true;
     std::string reportPath = "/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/";
@@ -61,8 +61,8 @@ void MainWindow::on_pushButton_2_clicked()
         //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/images/checkers7.jpg");
         //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/boards/green2.jpg");
         //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/pieces/red.jpg");
-        global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/casestudy/casestudy.jpg");
-        //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/"+casen+".jpg");
+        //global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/casestudy/casestudy.jpg");
+        global::image_rgb = cv::imread("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/"+casen+".jpg");
 
         if (global::image_rgb.data){
             cvutils::rotate(global::image_rgb,global::image_rgb,-90);
@@ -71,11 +71,19 @@ void MainWindow::on_pushButton_2_clicked()
         }
     }
 
+
     // Set up global image variables
      Preprocess prep;
      Settings::PreprocessSettings settings;
+     settings.gaussianBlurSigma = 3;
+     settings.gaussianBlurSize = cv::Size(3,3);
 
-
+     // print image channels
+     if (saveimages){
+         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/image_r.png", global::image_r);
+         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/image_g.png", global::image_g);
+         cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/image_b.png", global::image_b);
+     }
     // chessboard detector
     Lines houghlines;
 
@@ -90,9 +98,24 @@ void MainWindow::on_pushButton_2_clicked()
         BoardDetector cbd = BoardDetector(houghlines);
         prep.showCanny();
         prep.showHoughlines();
+
+        if (saveimages){
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/rgb.png", global::image_rgb);
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/gray.png", global::image_gray);
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/normalized.png", global::image_norm);
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/resized.png", global::image);
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/canny.png", prep.getCanny());
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/hough.png", prep.getHough());
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/blurred.png", prep.getBlurred());
+            cv::imwrite("/Users/benedicte/Dropbox/kings/thesis/report/"+casen+"/hough_mod.png", global::image_hough_mod);
+        }
+
         try{
             std::cout << "Trying to detect board with blur sigma " << settings.gaussianBlurSigma << std::endl;
+
             boardDetected = cbd.detect(board, &reportPath);
+
+
         } catch(std::exception &e){
         }
 
@@ -111,7 +134,7 @@ void MainWindow::on_pushButton_2_clicked()
                 settings.cannyLow -= 4;
             }
             if (settings.gaussianBlurSigma == 1 && settings.gaussianBlurSize == cv::Size(1,1) && settings.cannyLow <= 4){
-                throw std::invalid_argument("I give up");
+                std::cout << "I give up" << std::endl;
             }
         }
     }

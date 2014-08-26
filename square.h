@@ -10,6 +10,7 @@
 #include "corner.h"
 #include "global.h"
 
+
 class Square
 {
 public:
